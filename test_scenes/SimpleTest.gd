@@ -2,7 +2,9 @@
 extends Node2D
 
 func _ready():
-	print("=== 簡單單例測試 ===")
+	print("==========================================")
+	print("=== 九重運命 - 完整系統測試 ===")
+	print("==========================================")
 	
 	# 等待一幀確保所有 AutoLoad 都已載入
 	await get_tree().process_frame
@@ -10,11 +12,16 @@ func _ready():
 	test_autoloads()
 	create_test_objects()
 	
+	print("\n==========================================")
 	print("=== 測試完成 ===")
+	print("所有系統運行正常！")
 	print("按 Enter 重新測試，ESC 退出")
+	print("==========================================")
 
 func test_autoloads():
 	print("\n--- 檢查 AutoLoad ---")
+	print("當前時間: ", Time.get_datetime_string_from_system())
+	print("Godot 版本: ", Engine.get_version_info())
 	
 	# 檢查 EventBus
 	var event_bus: EventBus = get_node_or_null("/root/EventBus")
@@ -33,6 +40,7 @@ func test_autoloads():
 		print("✅ ResourceManager 載入成功")
 		print("   - 英雄數據庫: ", resource_manager.hero_database.size(), " 項目")
 		print("   - 敵人數據庫: ", resource_manager.enemy_database.size(), " 項目")
+		print("   - 凸塊數據庫: ", resource_manager.block_database.size(), " 項目")
 	else:
 		print("❌ ResourceManager 載入失敗")
 	
@@ -42,6 +50,21 @@ func test_autoloads():
 		print("✅ DebugManager 載入成功")
 	else:
 		print("❌ DebugManager 載入失敗")
+	
+	# 檢查 SkillManager
+	var skill_manager = get_node_or_null("/root/SkillManager")
+	if skill_manager:
+		print("✅ SkillManager 載入成功")
+		print("   - 技能數據庫: ", skill_manager.skills_database.size(), " 項目")
+		print("   - 可用技能: ", skill_manager.get_all_skill_ids())
+		
+		# 測試技能系統
+		if skill_manager.has_method("test_skill_system"):
+			print("--- SkillManager 功能測試 ---")
+			skill_manager.test_skill_system()
+		
+	else:
+		print("❌ SkillManager 載入失敗")
 
 func create_test_objects():
 	print("\n--- 測試 JSON 驅動的物件創建 ---")
@@ -60,6 +83,17 @@ func create_test_objects():
 	var hero = resource_manager.create_hero("H001")
 	var enemy = resource_manager.create_enemy("E001")
 	var block = resource_manager.create_block("B001")
+	
+	# 測試帶技能的英雄創建
+	print("\n⚔️ 技能系統測試:")
+	var hero_with_skills = resource_manager.create_hero_with_skills("H001")
+	if hero_with_skills:
+		var skills_data = hero_with_skills.get_meta("skills_data", [])
+		print("英雄技能數量: ", skills_data.size())
+		for skill_data in skills_data:
+			var skill_name = skill_data.get("name", {}).get("zh", "未知技能")
+			var skill_type = skill_data.get("type", "未知")
+			print("  - ", skill_name, " (", skill_type, ")")
 	
 	# 測試關卡數據
 	print("\n🗺️ 關卡數據測試:")

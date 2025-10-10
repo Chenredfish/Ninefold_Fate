@@ -1,0 +1,81 @@
+{
+  "S001": {
+    "id": "S001",
+    "name": {
+      "zh": "火焰精通",
+      "en": "Fire Mastery"
+    },
+    "type": "passive",
+    "category": "damage_boost",
+    "desc": {
+      "zh": "火屬性傷害+10%",
+      "en": "+10% fire damage"
+    },
+    "parameters": {
+      "element": "fire",
+      "damage_multiplier": 1.1,
+      "trigger_condition": "on_fire_damage"
+    },
+    "script_class": "FireMasterySkill",
+    "icon_path": "res://art/skills/S001_icon.png",
+    "unlock_level": 1,
+    "max_level": 5,
+    "level_scaling": {
+      "damage_multiplier": [1.1, 1.15, 1.2, 1.25, 1.3]
+    }
+  },
+  "S002": {
+    "id": "S002",
+    "name": {
+      "zh": "火球術",
+      "en": "Fireball"
+    },
+    "type": "active",
+    "category": "spell",
+    "desc": {
+      "zh": "發射火球攻擊敵人",
+      "en": "Launch fireball at enemy"
+    },
+    "parameters": {
+      "element": "fire",
+      "base_damage": 150,
+      "range": 3,
+      "cooldown": 2,
+      "mana_cost": 30
+    },
+    "script_class": "FireballSkill",
+    "icon_path": "res://art/skills/S002_icon.png",
+    "unlock_level": 5,
+    "max_level": 10,
+    "level_scaling": {
+      "base_damage": [150, 165, 180, 195, 210, 225, 240, 255, 270, 300]
+    }
+  },
+  "S003": {
+    "id": "S003",
+    "name": {
+      "zh": "治療術",
+      "en": "Heal"
+    },
+    "type": "active",
+    "category": "support",
+    "desc": {
+      "zh": "恢復目標生命值",
+      "en": "Restore target's HP"
+    },
+    "parameters": {
+      "element": "light",
+      "heal_amount": 200,
+      "range": 2,
+      "cooldown": 3,
+      "mana_cost": 25
+    },
+    "script_class": "HealSkill",
+    "icon_path": "res://art/skills/S003_icon.png",
+    "unlock_level": 3,
+    "max_level": 8,
+    "level_scaling": {
+      "heal_amount": [200, 220, 240, 260, 280, 300, 320, 350]
+    }
+  }
+}

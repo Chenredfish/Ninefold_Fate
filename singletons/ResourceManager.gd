@@ -20,6 +20,7 @@ var preloaded_scenes: Dictionary = {}
 var current_language: String = "zh"
 
 func _ready():
+	add_to_group("autoload_resource_manager")
 	print("[ResourceManager] 資源管理系統初始化中...")
 	_load_databases()
 	_preload_common_scenes()
@@ -399,6 +400,44 @@ func return_to_pool(object_instance: Node):
 	object_instance.queue_free()
 
 # 測試方法
+# 工具方法：技能相關
+func get_skill_data(skill_id: String) -> Dictionary:
+	var skill_manager = get_node_or_null("/root/SkillManager")
+	if skill_manager:
+		return skill_manager.get_skill_data(skill_id)
+	return {}
+
+func create_hero_with_skills(hero_id: String) -> Node2D:
+	var hero = create_hero(hero_id)
+	if not hero:
+		return hero
+	
+	# 從 JSON 中獲取技能列表（简化版本 - 仅存储技能数据）
+	var hero_data = hero_database.get(hero_id, {})
+	var skills_list = hero_data.get("skills", [])
+	
+	var skill_manager = get_node_or_null("/root/SkillManager")
+	if skill_manager and skills_list.size() > 0:
+		var skill_data_list: Array = []
+		for skill_info in skills_list:
+			var skill_id: String
+			if skill_info is String:
+				skill_id = skill_info
+			elif skill_info is Dictionary:
+				skill_id = skill_info.get("id", "")
+			
+			if skill_id != "":
+				var skill_data = skill_manager.get_skill_data(skill_id)
+				if skill_data.size() > 0:
+					skill_data_list.append(skill_data)
+		
+		hero.set_meta("skills_data", skill_data_list)
+		print("[ResourceManager] 為英雄 ", hero_id, " 添加了 ", skill_data_list.size(), " 個技能数据")
+	
+	return hero
+
+# 简化版本 - 移除复杂的技能组件系统
+
 # 工具方法：訪問平衡數據
 func get_balance_value(key: String, default_value = null):
 	return balance_data.get(key, default_value)

@@ -34,6 +34,7 @@ signal level_completed(level_id: String, score: int)
 signal resource_loaded(resource_type: String, resource_id: String)
 
 func _ready():
+	add_to_group("autoload_eventbus")
 	print("[EventBus] 事件系統已初始化")
 
 # 事件發送方法
