@@ -113,11 +113,11 @@ anchor_left = 0.5
 anchor_top = 0.0
 anchor_right = 0.5
 anchor_bottom = 0.0
-offset_left = -200.0  # 400px 寬度的一半
+offset_left = -300.0  # 600px 寬度的一半
 offset_top = 500.0
-offset_right = 200.0
-offset_bottom = 900.0
-size = Vector2(400, 400)
+offset_right = 300.0
+offset_bottom = 1100.0
+size = Vector2(600, 600)
 ```
 
 ##### GridContainer (GridContainer)
@@ -134,7 +134,7 @@ anchor_bottom = 1.0
 ##### CenterSlot (Control + DropZone 腳本)
 ```gdscript
 # Control 屬性
-custom_minimum_size = Vector2(120, 120)
+custom_minimum_size = Vector2(200, 200)
 
 # DropZone 腳本屬性
 @export var accepted_tile_types: Array[String] = ["navigation"]
@@ -158,8 +158,8 @@ add_theme_stylebox_override("panel", style_box)
 ##### BattleTile (Control + DraggableTile + NavigationTile 腳本)
 ```gdscript
 # Control 屬性
-size = Vector2(160, 160)
-position = Vector2(190, 1200)
+size = Vector2(200, 200)
+position = Vector2(140, 1620)
 
 # DraggableTile 腳本屬性
 @export var tile_type: String = "navigation"
@@ -326,8 +326,8 @@ add_theme_stylebox_override("scroll", scrollbar_style)
 ##### Level1Tile (Control + LevelTile 腳本)
 ```gdscript
 # Control 屬性
-size = Vector2(180, 180)
-custom_minimum_size = Vector2(180, 180)
+size = Vector2(200, 200)
+custom_minimum_size = Vector2(200, 200)
 
 # LevelTile 腳本屬性
 @export var level_id: String = "level_001"
@@ -352,7 +352,7 @@ func setup_available_style():
     # 關卡編號
     var number_label = Label.new()
     number_label.text = "1"
-    number_label.size = Vector2(180, 180)
+    number_label.size = Vector2(200, 200)
     number_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     number_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
     number_label.add_theme_font_size_override("font_size", 32)
@@ -488,11 +488,11 @@ add_theme_stylebox_override("normal", style_box)
 
 ##### BoardRoot GridContainer (GridContainer)
 ```gdscript
-position = Vector2(90, 350)
-size = Vector2(900, 900)
-columns = 9
-add_theme_constant_override("h_separation", 4)
-add_theme_constant_override("v_separation", 4)
+position = Vector2(240, 1000)
+size = Vector2(600, 600)
+columns = 3
+add_theme_constant_override("h_separation", 0)
+add_theme_constant_override("v_separation", 0)
 
 # 背景
 var bg_style = StyleBoxFlat.new()
