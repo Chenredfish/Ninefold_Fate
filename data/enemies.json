@@ -1,0 +1,30 @@
+{
+  "E001": {
+    "id": "E001",
+    "name": {
+      "zh": "水之史萊姆",
+      "en": "Water Slime"
+    },
+    "element": "water",
+    "base_hp": 800,
+    "base_attack": 80,
+    "countdown": 3,
+    "sprite_path": "res://art/enemy/E001_sprite.png",
+    "icon_path": "res://art/enemy/E001_icon.png",
+    "tags": ["basic", "slime"]
+  },
+  "E002": {
+    "id": "E002", 
+    "name": {
+      "zh": "火之哥布林",
+      "en": "Fire Goblin"
+    },
+    "element": "fire",
+    "base_hp": 1200,
+    "base_attack": 100,
+    "countdown": 3,
+    "sprite_path": "res://art/enemy/E002_sprite.png",
+    "icon_path": "res://art/enemy/E002_icon.png",
+    "tags": ["basic", "goblin"]
+  }
+}

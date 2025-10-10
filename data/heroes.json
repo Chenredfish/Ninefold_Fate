@@ -1,0 +1,31 @@
+{
+  "H001": {
+    "id": "H001",
+    "name": {
+      "zh": "火之勇者",
+      "en": "Flame Hero"
+    },
+    "element": "fire",
+    "base_attack": 100,
+    "hp": 1000,
+    "level": 1,
+    "exp": 0,
+    "growth_curve": "linear",
+    "skills": [
+      {
+        "id": "S001",
+        "type": "passive",
+        "desc": {
+          "zh": "火屬性傷害+10%",
+          "en": "+10% fire damage"
+        }
+      }
+    ],
+    "passives": [],
+    "icon_path": "res://art/hero/H001_icon.png",
+    "sprite_path": "res://art/hero/H001_sprite.png",
+    "animation_set": "res://art/hero/H001_anim.tres",
+    "tags": ["starter", "warrior"],
+    "unlock_level": 1
+  }
+}
