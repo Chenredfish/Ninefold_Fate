@@ -1,4 +1,4 @@
-# DragDropManager.gd - 拖放系統核心管理器
+#DragDropManager .gd - 拖放系統核心管理器
 # 這是一個 AutoLoad 單例，負責統一管理整個遊戲的拖放互動
 extends Node
 

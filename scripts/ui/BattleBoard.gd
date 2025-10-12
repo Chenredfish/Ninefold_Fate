@@ -171,7 +171,7 @@ func start_shake_animation():
 	current_tween.tween_property(self, "position", original_position + Vector2(-2, 0), 0.1)
 	current_tween.tween_property(self, "position", original_position, 0.1)
 	
-	print("[BattleBoard] 震動動畫開始")
+	#print("[BattleBoard] 震動動畫開始")
 
 # 重寫脈動動畫
 func start_pulse_animation():
@@ -200,7 +200,7 @@ func stop_all_animations():
 	if highlight_overlay:
 		highlight_overlay.modulate.a = 1.0
 	
-	print("[BattleBoard] 所有動畫已停止，位置已恢復")
+	#print("[BattleBoard] 所有動畫已停止，位置已恢復")
 
 # 重寫父類的清除高亮方法，避免覆蓋格子樣式
 func clear_highlight():

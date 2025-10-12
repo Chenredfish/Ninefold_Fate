@@ -26,15 +26,6 @@ func _ready():
 	
 	# 連接訊號
 	connect_signals()
-	
-	print("\n=== 測試說明 ===")
-	print("1. 拖拽下方的功能圖塊到上方的投放區域")
-	print("2. 綠色高亮表示可以投放，紅色表示不可以")
-	print("3. 成功投放會有動畫效果和粒子")
-	print("4. 第二排：戰鬥圖塊測試（單格+多格）")
-	print("5. 關卡選擇測試請按 F3 鍵")
-	print("6. 按 R 重置測試，ESC 退出")
-	print("===========================================")
 
 # 檢查系統依賴
 func check_dependencies():
@@ -81,8 +72,8 @@ func create_background():
 func create_drop_zones():
 	# 主要投放區域（接受導航圖塊）
 	main_drop_zone = DropZone.new()
-	main_drop_zone.size = Vector2(400, 300)
-	main_drop_zone.position = Vector2(340, 200)
+	main_drop_zone.size = Vector2(300, 300)
+	main_drop_zone.position = Vector2(400, 200)
 	main_drop_zone.zone_type = "main_navigation"
 	main_drop_zone.set_accepted_types(["battle", "shop", "deck", "settings"])  # 只接受導航圖塊類型（不包含戰鬥方塊）
 	add_child(main_drop_zone)
@@ -269,36 +260,11 @@ func _on_secondary_zone_dropped(tile_data: Dictionary):
 
 # 顯示導航消息
 func show_navigation_message(scene_path: String, tile_type: String):
-	var message = Label.new()
-	message.text = "導航請求：" + tile_type + "\n目標：" + scene_path
-	message.position = Vector2(400, 800)
-	message.size = Vector2(280, 80)
-	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	message.add_theme_font_size_override("font_size", 14)
-	message.add_theme_color_override("font_color", Color.GREEN)
-	add_child(message)
-	
-	# 3秒後消失
-	var tween = create_tween()
-	tween.tween_interval(3.0)
-	tween.tween_callback(message.queue_free)
+	print("[導航] 請求導航：", tile_type, " -> ", scene_path)
 
 # 創建成功消息
 func create_success_message(text: String, pos: Vector2):
-	var message = Label.new()
-	message.text = text
-	message.position = pos + Vector2(50, -30)
-	message.size = Vector2(200, 30)
-	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	message.add_theme_font_size_override("font_size", 16)
-	message.add_theme_color_override("font_color", Color.YELLOW)
-	add_child(message)
-	
-	# 動畫效果
-	var tween = create_tween()
-	tween.tween_property(message, "position:y", message.position.y - 50, 1.0)
-	tween.parallel().tween_property(message, "modulate:a", 0.0, 1.0)
-	tween.tween_callback(message.queue_free)
+	print("[成功] ", text)
 
 # === 輸入處理 ===
 
@@ -316,14 +282,4 @@ func _input(event):
 		get_tree().reload_current_scene()
 
 # === 除錯資訊 ===
-
-func _process(_delta):
-	# 每秒顯示一次除錯資訊
-	if (Time.get_ticks_msec() % 2000) < 16:  # 大約每2秒
-		show_debug_info()
-
-func show_debug_info():
-	if DragDropManager:
-		var debug_info = DragDropManager.get_debug_info()
-		if debug_info.is_dragging:
-			print("[除錯] 拖拽中：", debug_info.dragging_tile_type, " | 投放區域數量：", debug_info.drop_zones_count)
+# 已簡化：移除定期調試輸出，保留事件驅動的日誌
