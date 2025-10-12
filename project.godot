@@ -21,6 +21,7 @@ EventBus="*res://singletons/EventBus.gd"
 ResourceManager="*res://singletons/ResourceManager.gd"
 DebugManager="*res://singletons/DebugManager.gd"
 SkillManager="*res://singletons/SkillManager.gd"
+DragDropManager="*res://singletons/DragDropManager.gd"
 
 [display]
 
