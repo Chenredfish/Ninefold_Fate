@@ -133,35 +133,156 @@ func create_battle_tiles():
 	
 	print("--- 創建戰鬥方塊 ---")
 	
-	# 使用統一工廠方法創建戰鬥方塊
-	var elements = ["fire", "water", "grass", "light", "dark"]
-	var positions = [
-		Vector2(100, 1420),   # 火
-		Vector2(320, 1420),   # 水
-		Vector2(540, 1420),   # 草
-		Vector2(760, 1420),   # 光
-		Vector2(320, 1640)    # 暗
-	]
+	# 只創建一個單格戰鬥方塊作為對比
+	var fire_tile = BattleTile.create_from_element("fire")
+	fire_tile.size = Vector2(200, 200)
+	fire_tile.position = Vector2(100, 1420)  # 單格火焰方塊
+	add_child(fire_tile)
+	print("✅ 創建火焰屬性方塊：", fire_tile.tile_data.get("localized_name", "?"))
 	
-	for i in range(elements.size()):
-		var element = elements[i]
-		var tile = BattleTile.create_from_element(element)
-		tile.size = Vector2(200, 200)
-		tile.position = positions[i]
-		add_child(tile)
-		print("✅ 創建", element, "屬性方塊：", tile.tile_data.get("localized_name", "?"))
+	# === 創建多格圖塊測試 ===
+	create_multi_grid_test_tiles()
 	
 	print("✅ 戰鬥方塊已創建")
+
+# 創建多格圖塊測試
+func create_multi_grid_test_tiles():
+	print("--- 創建多格圖塊測試 ---")
+	
+	# 臨時添加多格圖塊到資源管理器
+	add_test_multi_grid_blocks()
+	
+	# 創建多格圖塊測試 (移動到第二排)
+	var multi_block_configs = [
+		{"id": "B101", "position": Vector2(320, 1420), "label": "L型火焰"},
+		{"id": "B102", "position": Vector2(540, 1420), "label": "直線水流"},
+		{"id": "B201", "position": Vector2(760, 1420), "label": "十字聖光"},
+		{"id": "B103", "position": Vector2(100, 1640), "label": "T型草葉"},
+		{"id": "B104", "position": Vector2(320, 1640), "label": "2×2方塊"}
+	]
+	
+	for config in multi_block_configs:
+		var tile = BattleTile.create_from_id(config.id)
+		tile.size = Vector2(200, 200)
+		tile.position = config.position
+		add_child(tile)
+		print("✅ 創建多格圖塊：", config.label, " ID:", config.id)
+
+# 臨時添加多格圖塊測試數據
+func add_test_multi_grid_blocks():
+	if not ResourceManager:
+		return
+	
+	# L型火焰方塊
+	ResourceManager.block_database["B101"] = {
+		"id": "B101",
+		"name": {
+			"zh": "L型火焰",
+			"en": "L-Fire"
+		},
+		"element": "fire",
+		"shape": "L_shape",
+		"shape_pattern": [
+			[1, 0],
+			[1, 0], 
+			[1, 1]
+		],
+		"rotation_allowed": true,
+		"flip_allowed": true,
+		"bonus_value": 6,
+		"rarity": "uncommon",
+		"icon_path": "res://art/blocks/B101_icon.png"
+	}
+	
+	# 直線水流方塊 (修正為3格以符合3×3棋盤)
+	ResourceManager.block_database["B102"] = {
+		"id": "B102",
+		"name": {
+			"zh": "直線水流",
+			"en": "Line-Water"
+		},
+		"element": "water",
+		"shape": "line_3",
+		"shape_pattern": [[1, 1, 1]],
+		"rotation_allowed": true,
+		"flip_allowed": false,
+		"bonus_value": 6,
+		"rarity": "uncommon",
+		"icon_path": "res://art/blocks/B102_icon.png"
+	}
+	
+	# 十字聖光方塊
+	ResourceManager.block_database["B201"] = {
+		"id": "B201",
+		"name": {
+			"zh": "十字聖光",
+			"en": "Cross-Light"
+		},
+		"element": "light",
+		"shape": "cross",
+		"shape_pattern": [
+			[0, 1, 0],
+			[1, 1, 1],
+			[0, 1, 0]
+		],
+		"rotation_allowed": false,
+		"flip_allowed": false,
+		"bonus_value": 10,
+		"rarity": "rare",
+		"icon_path": "res://art/blocks/B201_icon.png"
+	}
+	
+	# T型草葉方塊
+	ResourceManager.block_database["B103"] = {
+		"id": "B103",
+		"name": {
+			"zh": "T型草葉",
+			"en": "T-Grass"
+		},
+		"element": "grass",
+		"shape": "T_shape",
+		"shape_pattern": [
+			[1, 1, 1],
+			[0, 1, 0]
+		],
+		"rotation_allowed": true,
+		"flip_allowed": false,
+		"bonus_value": 7,
+		"rarity": "uncommon",
+		"icon_path": "res://art/blocks/B103_icon.png"
+	}
+	
+	# 2×2方形暗影方塊
+	ResourceManager.block_database["B104"] = {
+		"id": "B104",
+		"name": {
+			"zh": "方形暗影",
+			"en": "Square-Dark"
+		},
+		"element": "dark",
+		"shape": "square",
+		"shape_pattern": [
+			[1, 1],
+			[1, 1]
+		],
+		"rotation_allowed": false,
+		"flip_allowed": false,
+		"bonus_value": 8,
+		"rarity": "uncommon",
+		"icon_path": "res://art/blocks/B104_icon.png"
+	}
+	
+	print("✅ 多格圖塊測試數據已添加 (符合3×3棋盤限制)")
 
 # 創建說明文字
 func create_instructions():
 	# 標題
 	var title = Label.new()
-	title.text = "九重運命 - 拖放系統測試"
+	title.text = "九重運命 - 多格圖塊縮放測試"
 	title.position = Vector2(540, 50)
-	title.size = Vector2(400, 60)
+	title.size = Vector2(500, 60)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_font_size_override("font_size", 22)
 	title.add_theme_color_override("font_color", Color.WHITE)
 	add_child(title)
 	
@@ -185,9 +306,19 @@ func create_instructions():
 	battle_board_label.add_theme_color_override("font_color", Color.CYAN)
 	add_child(battle_board_label)
 	
+	# 多格圖塊說明標籤 (現在在第二排)
+	var multi_grid_label = Label.new()
+	multi_grid_label.text = "戰鬥圖塊測試區 (第二排)\n單格火焰 + 多格圖塊：L型、直線、十字、T型、2×2 (縮放顯示)"
+	multi_grid_label.position = Vector2(240, 1360)
+	multi_grid_label.size = Vector2(600, 50)
+	multi_grid_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	multi_grid_label.add_theme_font_size_override("font_size", 12)
+	multi_grid_label.add_theme_color_override("font_color", Color.LIGHT_GREEN)
+	add_child(multi_grid_label)
+	
 	# 操作說明
 	var instructions = Label.new()
-	instructions.text = "操作說明：\n第一排：導航圖塊 → 主投放區域\n第二排：戰鬥方塊 → 戰鬥棋盤\nR 鍵重置 | ESC 鍵退出"
+	instructions.text = "操作說明：\n第一排：導航圖塊 → 主投放區域\n第二排：戰鬥圖塊 → 戰鬥棋盤 (單格 vs 多格縮放對比)\n所有圖塊符合3×3棋盤限制\nR 鍵重置 | ESC 鍵退出"
 	instructions.position = Vector2(340, 900)
 	instructions.size = Vector2(400, 120)
 	instructions.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

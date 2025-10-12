@@ -162,6 +162,14 @@ func setup_battle_tile_style():
 
 # 創建戰鬥方塊的內容佈局
 func create_battle_content():
+	# 檢查是否是多格圖塊
+	if is_multi_grid_tile():
+		create_multi_grid_content()
+	else:
+		create_single_grid_content()
+
+# 創建單格圖塊內容
+func create_single_grid_content():
 	# 創建垂直容器
 	var vbox = VBoxContainer.new()
 	vbox.name = "ContentContainer"
@@ -195,7 +203,7 @@ func create_battle_content():
 	
 	vbox.add_child(bonus_label)
 	
-	# 方塊ID標籤
+	# 方塊ID標籤（調試用）
 	var id_label = Label.new()
 	id_label.text = block_id
 	id_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -207,6 +215,138 @@ func create_battle_content():
 	id_label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9, 0.7))
 	
 	vbox.add_child(id_label)
+
+# 創建多格圖塊內容（縮放顯示）
+func create_multi_grid_content():
+	# 計算縮放參數
+	var scale_info = calculate_multi_grid_scale()
+	
+	# 創建縮放後的多格圖塊容器
+	var grid_container = Control.new()
+	grid_container.name = "MultiGridContainer"
+	grid_container.size = Vector2(scale_info.display_width, scale_info.display_height)
+	grid_container.position = Vector2(
+		(size.x - scale_info.display_width) / 2,
+		(size.y - scale_info.display_height) / 2
+	)
+	grid_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(grid_container)
+	
+	# 渲染各個格子
+	for row in range(shape_pattern.size()):
+		var row_data = shape_pattern[row]
+		for col in range(row_data.size()):
+			if row_data[col] == 1:  # 有效格子
+				create_grid_cell(grid_container, row, col, scale_info)
+	
+	# 添加形狀標識
+	create_shape_indicator(grid_container, scale_info)
+	
+	# 添加加成值標籤
+	create_bonus_overlay(grid_container, scale_info)
+
+# 計算多格圖塊縮放參數
+func calculate_multi_grid_scale() -> Dictionary:
+	# 計算實際佔用的格子數量
+	var max_width = 0
+	var max_height = shape_pattern.size()
+	
+	for row_data in shape_pattern:
+		max_width = max(max_width, row_data.size())
+	
+	# 標準格子大小 (棋盤中每格66.67px)
+	var standard_cell_size = 66.67
+	var actual_width = max_width * standard_cell_size
+	var actual_height = max_height * standard_cell_size
+	
+	# 可視區域 (容器的80%)
+	var display_area = 160.0  # 200 * 0.8
+	
+	# 計算縮放係數
+	var scale_factor = min(display_area / actual_width, display_area / actual_height)
+	
+	# 縮放後的顯示尺寸
+	var display_width = actual_width * scale_factor
+	var display_height = actual_height * scale_factor
+	var cell_size = standard_cell_size * scale_factor
+	
+	return {
+		"scale_factor": scale_factor,
+		"display_width": display_width,
+		"display_height": display_height,
+		"cell_size": cell_size,
+		"max_width": max_width,
+		"max_height": max_height
+	}
+
+# 創建單個格子
+func create_grid_cell(parent: Control, row: int, col: int, scale_info: Dictionary):
+	var cell = ColorRect.new()
+	cell.size = Vector2(scale_info.cell_size - 2, scale_info.cell_size - 2)  # 2px間距
+	cell.position = Vector2(col * scale_info.cell_size + 1, row * scale_info.cell_size + 1)
+	cell.color = get_element_color()
+	cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	# 添加圓角效果
+	var style_box = StyleBoxFlat.new()
+	style_box.bg_color = get_element_color()
+	style_box.corner_radius_top_left = min(15 * scale_info.scale_factor, 8)
+	style_box.corner_radius_top_right = min(15 * scale_info.scale_factor, 8)
+	style_box.corner_radius_bottom_left = min(15 * scale_info.scale_factor, 8)
+	style_box.corner_radius_bottom_right = min(15 * scale_info.scale_factor, 8)
+	style_box.border_width_left = max(1, 2 * scale_info.scale_factor)
+	style_box.border_width_right = max(1, 2 * scale_info.scale_factor)
+	style_box.border_width_top = max(1, 2 * scale_info.scale_factor)
+	style_box.border_width_bottom = max(1, 2 * scale_info.scale_factor)
+	style_box.border_color = get_element_border_color()
+	
+	# 創建有樣式的面板而不是ColorRect
+	var cell_panel = Panel.new()
+	cell_panel.size = Vector2(scale_info.cell_size - 2, scale_info.cell_size - 2)
+	cell_panel.position = Vector2(col * scale_info.cell_size + 1, row * scale_info.cell_size + 1)
+	cell_panel.add_theme_stylebox_override("panel", style_box)
+	cell_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	parent.add_child(cell_panel)
+
+# 創建形狀標識
+func create_shape_indicator(parent: Control, scale_info: Dictionary):
+	var indicator = Label.new()
+	var indicator_text = get_shape_indicator_text()
+	if indicator_text.is_empty():
+		return
+	
+	indicator.text = indicator_text
+	indicator.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	indicator.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	indicator.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	# 計算位置（根據形狀類型）
+	var indicator_pos = get_shape_indicator_position(scale_info)
+	indicator.position = indicator_pos
+	indicator.size = Vector2(20 * scale_info.scale_factor, 20 * scale_info.scale_factor)
+	
+	# 樣式設置
+	indicator.add_theme_font_size_override("font_size", max(12, 16 * scale_info.scale_factor))
+	indicator.add_theme_color_override("font_color", Color.WHITE)
+	
+	parent.add_child(indicator)
+
+# 創建加成值覆蓋標籤
+func create_bonus_overlay(parent: Control, scale_info: Dictionary):
+	bonus_label = Label.new()
+	bonus_label.text = "+" + str(bonus_value)
+	bonus_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	bonus_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	bonus_label.position = Vector2(scale_info.display_width - 30 * scale_info.scale_factor, -5)
+	bonus_label.size = Vector2(30 * scale_info.scale_factor, 20 * scale_info.scale_factor)
+	bonus_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	# 樣式設置
+	bonus_label.add_theme_font_size_override("font_size", max(14, 18 * scale_info.scale_factor))
+	bonus_label.add_theme_color_override("font_color", Color.YELLOW)
+	
+	parent.add_child(bonus_label)
 
 # === 屬性相關方法 ===
 
@@ -280,6 +420,65 @@ func check_element_advantage(target_element: String) -> float:
 			return 1.25  # 光暗互克
 		_:
 			return 1.0  # 無克制關係
+
+# === 多格圖塊輔助方法 ===
+
+# 檢查是否是多格圖塊
+func is_multi_grid_tile() -> bool:
+	if shape_pattern.is_empty():
+		return false
+	
+	# 單格圖塊：[[1]]
+	if shape_pattern.size() == 1 and shape_pattern[0].size() == 1:
+		return false
+	
+	# 計算有效格子數量
+	var valid_cells = 0
+	for row in shape_pattern:
+		for cell in row:
+			if cell == 1:
+				valid_cells += 1
+	
+	return valid_cells > 1
+
+# 獲取形狀指示器文字
+func get_shape_indicator_text() -> String:
+	match shape:
+		"L_shape":
+			return "L"
+		"T_shape":
+			return "T"
+		"cross":
+			return "+"
+		"line_3", "line_2":
+			# 判斷方向
+			if shape_pattern.size() == 1:
+				return "—"  # 水平線
+			else:
+				return "|"  # 垂直線
+		"square":
+			return "■"
+		_:
+			return ""
+
+# 獲取形狀指示器位置
+func get_shape_indicator_position(scale_info: Dictionary) -> Vector2:
+	match shape:
+		"L_shape":
+			# 左下角
+			return Vector2(5, scale_info.display_height - 25)
+		"T_shape":
+			# 底部中央
+			return Vector2(scale_info.display_width / 2 - 10, scale_info.display_height - 25)
+		"cross":
+			# 中央
+			return Vector2(scale_info.display_width / 2 - 10, scale_info.display_height / 2 - 10)
+		"square":
+			# 右上角
+			return Vector2(scale_info.display_width - 25, 5)
+		_:
+			# 默認左上角
+			return Vector2(5, 5)
 
 # === 擴展性工廠方法 ===
 

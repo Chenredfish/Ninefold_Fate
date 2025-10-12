@@ -140,57 +140,75 @@ func can_accept_tile(tile) -> bool:
 	if not super.can_accept_tile(tile):
 		return false
 	
-	# 檢查是否有可用位置
+	# 獲取圖塊的形狀數據
+	var shape_pattern = tile.tile_data.get("shape_pattern", [[1]])
+	
+	# 檢查是否可以在當前鼠標位置放置多格圖塊
 	var drop_pos = find_drop_position_from_mouse()
-	return drop_pos != Vector2i(-1, -1) and not placed_tiles.has(drop_pos)
+	return can_place_multi_tile_at(drop_pos, shape_pattern)
 
-# 重寫高亮方法，為戰鬥棋盤提供特殊的格子高亮
+# 重寫高亮方法，為戰鬥棋盤提供特殊的格子高亮（支援多格圖塊）
 func set_highlight_valid(enabled: bool):
 	if enabled:
-		# 高亮將要放置的特定格子
 		var hover_pos = find_drop_position_from_mouse()
-		highlight_target_cell(hover_pos, true)
-		current_hover_cell = hover_pos
+		var shape_pattern = get_current_drag_shape_pattern()
+		highlight_multi_tile_cells(hover_pos, shape_pattern, true)
 	else:
 		clear_cell_highlight()
 
-# 設置無效投放高亮
+# 設置無效投放高亮（支援多格圖塊）
 func set_highlight_invalid(enabled: bool):
 	if enabled:
 		var hover_pos = find_drop_position_from_mouse()
-		highlight_target_cell(hover_pos, false)
-		current_hover_cell = hover_pos
+		var shape_pattern = get_current_drag_shape_pattern()
+		highlight_multi_tile_cells(hover_pos, shape_pattern, false)
 	else:
 		clear_cell_highlight()
 
-# 高亮特定格子
-func highlight_target_cell(cell_pos: Vector2i, is_valid: bool):
-	if cell_pos == Vector2i(-1, -1):
+# 獲取當前拖拽圖塊的形狀模式
+func get_current_drag_shape_pattern() -> Array:
+	if DragDropManager.current_dragging_tile and DragDropManager.current_dragging_tile.tile_data:
+		return DragDropManager.current_dragging_tile.tile_data.get("shape_pattern", [[1]])
+	return [[1]]
+
+# 高亮多格圖塊將要佔用的所有格子
+func highlight_multi_tile_cells(base_pos: Vector2i, shape_pattern: Array, is_valid: bool):
+	clear_cell_highlight()  # 先清除之前的高亮
+	
+	if base_pos == Vector2i(-1, -1):
 		return
 	
-	var cell_index = cell_pos.y * board_size + cell_pos.x
-	if cell_index >= 0 and cell_index < grid_cells.size():
-		var cell = grid_cells[cell_index]
-		
-		# 設置高亮樣式
-		var style_box = StyleBoxFlat.new()
-		if is_valid and not placed_tiles.has(cell_pos):
-			style_box.bg_color = Color(0.2, 0.8, 0.2, 0.6)  # 綠色高亮
-			style_box.border_color = Color(0.0, 1.0, 0.0, 1.0)
-		else:
-			style_box.bg_color = Color(0.8, 0.2, 0.2, 0.6)  # 紅色高亮
-			style_box.border_color = Color(1.0, 0.0, 0.0, 1.0)
-		
-		style_box.corner_radius_top_left = 10
-		style_box.corner_radius_top_right = 10  
-		style_box.corner_radius_bottom_left = 10
-		style_box.corner_radius_bottom_right = 10
-		style_box.border_width_left = 3
-		style_box.border_width_right = 3
-		style_box.border_width_top = 3
-		style_box.border_width_bottom = 3
-		
-		cell.add_theme_stylebox_override("panel", style_box)
+	var positions = get_multi_tile_positions(base_pos, shape_pattern)
+	var can_place = can_place_multi_tile_at(base_pos, shape_pattern)
+	
+	# 高亮所有相關格子
+	for pos in positions:
+		var cell_index = pos.y * board_size + pos.x
+		if cell_index >= 0 and cell_index < grid_cells.size():
+			var cell = grid_cells[cell_index]
+			
+			# 設置高亮樣式
+			var style_box = StyleBoxFlat.new()
+			if is_valid and can_place and not placed_tiles.has(pos):
+				style_box.bg_color = Color(0.2, 0.8, 0.2, 0.6)  # 綠色高亮
+				style_box.border_color = Color(0.0, 1.0, 0.0, 1.0)
+			else:
+				style_box.bg_color = Color(0.8, 0.2, 0.2, 0.6)  # 紅色高亮
+				style_box.border_color = Color(1.0, 0.0, 0.0, 1.0)
+			
+			style_box.corner_radius_top_left = 8
+			style_box.corner_radius_top_right = 8
+			style_box.corner_radius_bottom_left = 8
+			style_box.corner_radius_bottom_right = 8
+			style_box.border_width_left = 3
+			style_box.border_width_right = 3
+			style_box.border_width_top = 3
+			style_box.border_width_bottom = 3
+			
+			cell.add_theme_stylebox_override("panel", style_box)
+	
+	# 記錄高亮的位置
+	current_hover_cell = base_pos
 
 # 清除格子高亮
 func clear_cell_highlight():
@@ -208,39 +226,103 @@ func clear_cell_highlight():
 		
 		current_hover_cell = Vector2i(-1, -1)
 
+# === 多格圖塊支援 ===
+
+# 檢查多格圖塊是否可以在指定位置放置
+func can_place_multi_tile_at(base_pos: Vector2i, shape_pattern: Array) -> bool:
+	if base_pos == Vector2i(-1, -1) or shape_pattern.is_empty():
+		return false
+	
+	# 檢查形狀模式中的每個格子
+	for row in range(shape_pattern.size()):
+		var row_data = shape_pattern[row]
+		for col in range(row_data.size()):
+			if row_data[col] == 1:  # 有效格子
+				var target_pos = Vector2i(base_pos.x + col, base_pos.y + row)
+				
+				# 檢查是否超出棋盤邊界
+				if target_pos.x < 0 or target_pos.x >= board_size or target_pos.y < 0 or target_pos.y >= board_size:
+					return false
+				
+				# 檢查位置是否已被佔用
+				if placed_tiles.has(target_pos):
+					return false
+	
+	return true
+
+# 獲取多格圖塊將要佔用的所有位置
+func get_multi_tile_positions(base_pos: Vector2i, shape_pattern: Array) -> Array:
+	var positions = []
+	
+	if base_pos == Vector2i(-1, -1) or shape_pattern.is_empty():
+		return positions
+	
+	for row in range(shape_pattern.size()):
+		var row_data = shape_pattern[row]
+		for col in range(row_data.size()):
+			if row_data[col] == 1:  # 有效格子
+				var target_pos = Vector2i(base_pos.x + col, base_pos.y + row)
+				positions.append(target_pos)
+	
+	return positions
+
 # 重寫投放處理方法
 func handle_tile_drop(tile_data: Dictionary):
 	# 根據拖拽位置找到對應的格子
 	var drop_position = find_drop_position_from_mouse()
+	var shape_pattern = tile_data.get("shape_pattern", [[1]])
 	
-	if drop_position != Vector2i(-1, -1) and not placed_tiles.has(drop_position):
-		place_tile_at_position(tile_data, drop_position)
+	if can_place_multi_tile_at(drop_position, shape_pattern):
+		place_multi_tile_at_position(tile_data, drop_position, shape_pattern)
 		update_board_visual()
 		check_board_completion()
 
 		# 投放成功後記錄到 drop_history
-		drop_history.append({"tile_data": tile_data.duplicate(), "pos": drop_position})
+		drop_history.append({
+			"tile_data": tile_data.duplicate(), 
+			"pos": drop_position,
+			"shape_pattern": shape_pattern
+		})
 
 		# 投放成功後自動移除 BattleTile 實例（如果有）
 		if tile_data.has("__tile_instance") and is_instance_valid(tile_data["__tile_instance"]):
 			tile_data["__tile_instance"].queue_free()
-# 撤銷最後一次投放
+
+# 在指定位置放置多格圖塊
+func place_multi_tile_at_position(tile_data: Dictionary, base_pos: Vector2i, shape_pattern: Array):
+	var positions = get_multi_tile_positions(base_pos, shape_pattern)
+	
+	# 將圖塊數據放置到所有相關位置
+	for pos in positions:
+		placed_tiles[pos] = tile_data.duplicate()
+		
+		# 更新視覺效果
+		var cell_index = pos.y * board_size + pos.x
+		if cell_index >= 0 and cell_index < grid_cells.size():
+			var cell = grid_cells[cell_index]
+			update_cell_visual(cell, tile_data)
+	
+	print("[BattleBoard] 多格圖塊已放置：", tile_data.get("name", {}).get("zh", "未知"), " 佔用位置：", positions)
+# 撤銷最後一次投放（支援多格圖塊）
 func undo_last_tile_drop():
 	if drop_history.size() == 0:
 		print("[BattleBoard] 無投放紀錄可撤銷")
 		return
 
 	var last = drop_history.pop_back()
-	var pos = last["pos"]
+	var base_pos = last["pos"]
 	var tile_data = last["tile_data"]
+	var shape_pattern = last.get("shape_pattern", [[1]])
 
-	# 從棋盤移除
-	if placed_tiles.has(pos):
-		placed_tiles.erase(pos)
-		var cell_index = pos.y * board_size + pos.x
-		if cell_index < grid_cells.size():
-			var cell = grid_cells[cell_index]
-			reset_cell_visual(cell, cell_index)
+	# 獲取所有佔用的位置並移除
+	var positions = get_multi_tile_positions(base_pos, shape_pattern)
+	for pos in positions:
+		if placed_tiles.has(pos):
+			placed_tiles.erase(pos)
+			var cell_index = pos.y * board_size + pos.x
+			if cell_index < grid_cells.size():
+				var cell = grid_cells[cell_index]
+				reset_cell_visual(cell, cell_index)
 
 	# 重新生成 BattleTile 並放回原位
 	if tile_data.has("block_id"):
@@ -249,9 +331,11 @@ func undo_last_tile_drop():
 		# 放回棋盤下方（或自訂位置）
 		new_tile.position = global_position + Vector2(0, board_size * cell_size.y + 40)
 		get_tree().current_scene.add_child(new_tile)
+	
+	print("[BattleBoard] 已撤銷多格圖塊：", tile_data.get("name", {}).get("zh", "未知"))
 		# 可根據需求調整 new_tile 的屬性
 
-	print("[BattleBoard] 撤銷投放，方塊已復原：", tile_data.get("block_id", "?"), " at ", pos)
+	print("[BattleBoard] 撤銷投放，方塊已復原：", tile_data.get("block_id", "?"), " at ", tile_data.get("pos", "?"))
 
 		# 投放成功後自動移除 BattleTile 實例（如果有）
 	if tile_data.has("__tile_instance") and is_instance_valid(tile_data["__tile_instance"]):
