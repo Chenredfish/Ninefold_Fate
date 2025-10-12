@@ -8,7 +8,7 @@ var deck_tile: NavigationTile
 var settings_tile: NavigationTile
 
 var main_drop_zone: DropZone
-var secondary_drop_zone: DropZone
+var secondary_drop_zone: BattleBoard  # 戰鬥棋盤
 
 func _ready():
 	print("===========================================")
@@ -82,46 +82,88 @@ func create_drop_zones():
 	main_drop_zone.size = Vector2(400, 300)
 	main_drop_zone.position = Vector2(340, 200)
 	main_drop_zone.zone_type = "main_navigation"
-	main_drop_zone.set_accepted_types(["navigation"])
+	main_drop_zone.set_accepted_types(["battle", "shop", "deck", "settings"])  # 只接受導航圖塊類型（不包含戰鬥方塊）
 	add_child(main_drop_zone)
 	
-	# 次要投放區域（只接受特定類型）
-	secondary_drop_zone = DropZone.new()
-	secondary_drop_zone.size = Vector2(300, 200)
-	secondary_drop_zone.position = Vector2(390, 550)
-	secondary_drop_zone.zone_type = "secondary"
-	secondary_drop_zone.set_accepted_types(["battle", "shop"])  # 只接受戰鬥和商店
+	# 戰鬥棋盤區域（3x3 拼圖棋盤）
+	secondary_drop_zone = BattleBoard.new()
+	secondary_drop_zone.position = Vector2(240, 550)  # 置中位置
 	add_child(secondary_drop_zone)
 	
 	print("✅ 投放區域已創建")
 
-# 創建導航圖塊
+# 創建測試圖塊
 func create_navigation_tiles():
+	# === 導航圖塊 (第一排) ===
 	# 戰鬥圖塊
 	battle_tile = NavigationTile.create_battle_tile("res://scenes/BattleScene.tscn")
 	battle_tile.size = Vector2(200, 200)
-	battle_tile.position = Vector2(100, 1400)
+	battle_tile.position = Vector2(100, 1200)
 	add_child(battle_tile)
 	
 	# 商店圖塊
 	shop_tile = NavigationTile.create_shop_tile("res://scenes/ShopScene.tscn")
 	shop_tile.size = Vector2(200, 200)
-	shop_tile.position = Vector2(320, 1400)
+	shop_tile.position = Vector2(320, 1200)
 	add_child(shop_tile)
 	
 	# 構築圖塊
 	deck_tile = NavigationTile.create_deck_tile("res://scenes/DeckScene.tscn")
 	deck_tile.size = Vector2(200, 200)
-	deck_tile.position = Vector2(540, 1400)
+	deck_tile.position = Vector2(540, 1200)
 	add_child(deck_tile)
 	
 	# 設定圖塊
 	settings_tile = NavigationTile.create_settings_tile("res://scenes/SettingsScene.tscn")
 	settings_tile.size = Vector2(200, 200)
-	settings_tile.position = Vector2(760, 1400)
+	settings_tile.position = Vector2(760, 1200)
 	add_child(settings_tile)
 	
-	print("✅ 導航圖塊已創建")
+	# === 戰鬥方塊 (第二排) - 使用 ResourceManager 創建 ===
+	create_battle_tiles()
+	
+	print("✅ 測試圖塊已創建")
+
+# 創建戰鬥方塊
+func create_battle_tiles():
+	# 檢查 ResourceManager 是否可用
+	if not ResourceManager:
+		print("❌ ResourceManager 不可用，跳過戰鬥方塊創建")
+		return
+	
+	print("--- 創建戰鬥方塊 ---")
+	
+	# 火屬性方塊
+	var fire_tile = BattleTile.create_fire_tile()
+	fire_tile.size = Vector2(200, 200)
+	fire_tile.position = Vector2(100, 1420)
+	add_child(fire_tile)
+	
+	# 水屬性方塊
+	var water_tile = BattleTile.create_water_tile()
+	water_tile.size = Vector2(200, 200)
+	water_tile.position = Vector2(320, 1420)
+	add_child(water_tile)
+	
+	# 草屬性方塊
+	var grass_tile = BattleTile.create_grass_tile()
+	grass_tile.size = Vector2(200, 200)
+	grass_tile.position = Vector2(540, 1420)
+	add_child(grass_tile)
+	
+	# 光屬性方塊
+	var light_tile = BattleTile.create_light_tile()
+	light_tile.size = Vector2(200, 200)
+	light_tile.position = Vector2(760, 1420)
+	add_child(light_tile)
+	
+	# 暗屬性方塊（第三排）
+	var dark_tile = BattleTile.create_dark_tile()
+	dark_tile.size = Vector2(200, 200)
+	dark_tile.position = Vector2(320, 1640)
+	add_child(dark_tile)
+	
+	print("✅ 戰鬥方塊已創建")
 
 # 創建說明文字
 func create_instructions():
@@ -137,7 +179,7 @@ func create_instructions():
 	
 	# 主投放區標籤
 	var main_label = Label.new()
-	main_label.text = "主投放區域\n(接受所有導航圖塊)"
+	main_label.text = "主投放區域\n(接受導航圖塊：戰鬥、商店、構築、設定)"
 	main_label.position = Vector2(340, 150)
 	main_label.size = Vector2(400, 50)
 	main_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -145,21 +187,21 @@ func create_instructions():
 	main_label.add_theme_color_override("font_color", Color.YELLOW)
 	add_child(main_label)
 	
-	# 次投放區標籤
-	var secondary_label = Label.new()
-	secondary_label.text = "次投放區域\n(只接受戰鬥和商店)"
-	secondary_label.position = Vector2(390, 520)
-	secondary_label.size = Vector2(300, 40)
-	secondary_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	secondary_label.add_theme_font_size_override("font_size", 14)
-	secondary_label.add_theme_color_override("font_color", Color.CYAN)
-	add_child(secondary_label)
+	# 戰鬥棋盤標籤
+	var battle_board_label = Label.new()
+	battle_board_label.text = "戰鬥棋盤 (3×3)\n拖拽戰鬥方塊到此拼裝"
+	battle_board_label.position = Vector2(240, 500)
+	battle_board_label.size = Vector2(600, 40)
+	battle_board_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	battle_board_label.add_theme_font_size_override("font_size", 14)
+	battle_board_label.add_theme_color_override("font_color", Color.CYAN)
+	add_child(battle_board_label)
 	
 	# 操作說明
 	var instructions = Label.new()
-	instructions.text = "操作說明：拖拽下方圖塊到上方投放區域\nR 鍵重置 | ESC 鍵退出"
+	instructions.text = "操作說明：\n第一排：導航圖塊 → 主投放區域\n第二排：戰鬥方塊 → 戰鬥棋盤\nR 鍵重置 | ESC 鍵退出"
 	instructions.position = Vector2(340, 900)
-	instructions.size = Vector2(400, 100)
+	instructions.size = Vector2(400, 120)
 	instructions.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	instructions.add_theme_font_size_override("font_size", 14)
 	instructions.add_theme_color_override("font_color", Color.LIGHT_GRAY)
@@ -176,6 +218,9 @@ func connect_signals():
 	# 連接投放區域的訊號
 	main_drop_zone.tile_dropped.connect(_on_main_zone_dropped)
 	secondary_drop_zone.tile_dropped.connect(_on_secondary_zone_dropped)
+	
+	# 連接戰鬥棋盤專用訊號（如果有的話）
+	# secondary_drop_zone.board_completed.connect(_on_battle_board_completed)
 	
 	print("✅ 訊號已連接")
 
@@ -201,8 +246,8 @@ func _on_main_zone_dropped(tile_data: Dictionary):
 	create_success_message("成功投放到主區域！", main_drop_zone.position)
 
 func _on_secondary_zone_dropped(tile_data: Dictionary):
-	print("[測試] 次區域接收投放：", tile_data)
-	create_success_message("成功投放到次區域！", secondary_drop_zone.position)
+	print("[測試] 戰鬥棋盤接收投放：", tile_data)
+	create_success_message("戰鬥方塊已拼裝！", secondary_drop_zone.position)
 
 # === 輔助方法 ===
 
@@ -245,9 +290,13 @@ func _input(event):
 	if event.is_action_pressed("ui_cancel"):  # ESC
 		print("\n[測試] 退出測試")
 		get_tree().quit()
-	
-	elif event.is_action_pressed("ui_accept") and Input.is_key_pressed(KEY_R):  # R
+
+	elif event is InputEventKey and event.keycode == KEY_R:  # R
 		print("\n[測試] 重置測試場景")
+		# 清空戰鬥棋盤
+		if secondary_drop_zone:
+			secondary_drop_zone.clear_board()
+		# 重載場景
 		get_tree().reload_current_scene()
 
 # === 除錯資訊 ===
