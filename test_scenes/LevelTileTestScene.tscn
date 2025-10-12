@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://dmwgn4r7jxrtx"]
+
+[ext_resource type="Script" path="res://test_scenes/LevelTileTest.gd" id="1_abc123"]
+
+[node name="LevelTileTest" type="Control"]
+script = ExtResource("1_abc123")

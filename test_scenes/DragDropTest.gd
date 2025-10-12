@@ -31,7 +31,9 @@ func _ready():
 	print("1. 拖拽下方的功能圖塊到上方的投放區域")
 	print("2. 綠色高亮表示可以投放，紅色表示不可以")
 	print("3. 成功投放會有動畫效果和粒子")
-	print("4. 按 R 重置測試，ESC 退出")
+	print("4. 第二排：戰鬥圖塊測試（單格+多格）")
+	print("5. 關卡選擇測試請按 F3 鍵")
+	print("6. 按 R 重置測試，ESC 退出")
 	print("===========================================")
 
 # 檢查系統依賴
@@ -167,11 +169,13 @@ func create_multi_grid_test_tiles():
 		print("✅ 創建多格圖塊：", config.label, " ID:", config.id)
 
 
+
+
 # 創建說明文字
 func create_instructions():
 	# 標題
 	var title = Label.new()
-	title.text = "九重運命 - 多格圖塊縮放測試"
+	title.text = "九重運命 - 拖放系統完整測試"
 	title.position = Vector2(540, 50)
 	title.size = Vector2(500, 60)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -211,7 +215,7 @@ func create_instructions():
 	
 	# 操作說明
 	var instructions = Label.new()
-	instructions.text = "操作說明：\n第一排：導航圖塊 → 主投放區域\n第二排：戰鬥圖塊 → 戰鬥棋盤 (單格 vs 多格縮放對比)\n所有圖塊符合3×3棋盤限制\nR 鍵重置 | ESC 鍵退出"
+	instructions.text = "操作說明：\n第一排：導航圖塊 → 主投放區域\n第二排：戰鬥圖塊 → 戰鬥棋盤 (單格 vs 多格縮放對比)\n所有圖塊符合3×3棋盤限制\n\n關卡選擇測試：按 F3 鍵返回主選單後測試\nR 鍵重置 | ESC 鍵退出"
 	instructions.position = Vector2(340, 900)
 	instructions.size = Vector2(400, 120)
 	instructions.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
