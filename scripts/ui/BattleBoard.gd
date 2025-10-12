@@ -14,11 +14,16 @@ var placed_tiles: Dictionary = {}  # 存儲已放置的方塊 {position: tile_da
 var grid_container: GridContainer
 var current_hover_cell: Vector2i = Vector2i(-1, -1)  # 當前懸停的格子
 var drop_history: Array = []  # 投放紀錄 [{tile_data, pos}]
+var current_tween: Tween  # 追蹤當前的動畫
+var original_position: Vector2  # 儲存原始位置
 
 func _ready():
 	# 設置基本屬性
 	zone_type = "battle_board"
 	set_accepted_types(["battle_block"])  # 只接受戰鬥方塊
+	
+	# 儲存原始位置
+	original_position = position
 	
 	# 調用父類初始化
 	super._ready()
@@ -79,18 +84,12 @@ func create_grid_cell(index: int) -> Control:
 	cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
 	# 設置格子樣式
-	var style_box = StyleBoxFlat.new()
-	style_box.bg_color = Color(0.1, 0.1, 0.2, 0.8)  # 深藍色半透明
-	style_box.corner_radius_top_left = 10
-	style_box.corner_radius_top_right = 10
-	style_box.corner_radius_bottom_left = 10
-	style_box.corner_radius_bottom_right = 10
-	style_box.border_width_left = 2
-	style_box.border_width_right = 2
-	style_box.border_width_top = 2
-	style_box.border_width_bottom = 2
-	style_box.border_color = Color(0.3, 0.3, 0.5, 0.6)
-	
+	var style_box = create_cell_style(
+		Color(0.1, 0.1, 0.2, 0.8),  # 深藍色半透明
+		Color(0.3, 0.3, 0.5, 0.6),  # 邊框顏色
+		10,  # 圓角半徑
+		2   # 邊框寬度
+	)
 	cell.add_theme_stylebox_override("panel", style_box)
 	
 	# 添加格子編號標籤（用於除錯）
@@ -109,18 +108,12 @@ func create_grid_cell(index: int) -> Control:
 # 設置棋盤整體樣式
 func setup_board_style():
 	# 重寫父類的基本樣式
-	var style_box = StyleBoxFlat.new()
-	style_box.bg_color = Color(0.05, 0.05, 0.15, 0.9)  # 深色背景
-	style_box.corner_radius_top_left = 20
-	style_box.corner_radius_top_right = 20
-	style_box.corner_radius_bottom_left = 20
-	style_box.corner_radius_bottom_right = 20
-	style_box.border_width_left = 4
-	style_box.border_width_right = 4
-	style_box.border_width_top = 4
-	style_box.border_width_bottom = 4
-	style_box.border_color = Color(0.3, 0.5, 0.8, 0.8)  # 藍色邊框
-	
+	var style_box = create_cell_style(
+		Color(0.05, 0.05, 0.15, 0.9),  # 深色背景
+		Color(0.3, 0.5, 0.8, 0.8),     # 藍色邊框
+		20,  # 圓角半徑
+		4    # 邊框寬度
+	)
 	add_theme_stylebox_override("panel", style_box)
 	
 	# 更新提示標籤
@@ -147,84 +140,76 @@ func can_accept_tile(tile) -> bool:
 	var drop_pos = find_drop_position_from_mouse()
 	return can_place_multi_tile_at(drop_pos, shape_pattern)
 
-# 重寫高亮方法，為戰鬥棋盤提供特殊的格子高亮（支援多格圖塊）
+# 重寫高亮方法，讓拖拽高亮由主程式系統處理
 func set_highlight_valid(enabled: bool):
 	if enabled:
-		var hover_pos = find_drop_position_from_mouse()
-		var shape_pattern = get_current_drag_shape_pattern()
-		highlight_multi_tile_cells(hover_pos, shape_pattern, true)
+		# 設置有效高亮但不改變格子顏色
+		if highlight_overlay:
+			highlight_overlay.color = highlight_color_valid
+		start_pulse_animation()
 	else:
-		clear_cell_highlight()
+		clear_highlight()
 
-# 設置無效投放高亮（支援多格圖塊）
+# 設置無效投放高亮
 func set_highlight_invalid(enabled: bool):
 	if enabled:
-		var hover_pos = find_drop_position_from_mouse()
-		var shape_pattern = get_current_drag_shape_pattern()
-		highlight_multi_tile_cells(hover_pos, shape_pattern, false)
+		# 設置無效高亮但不改變格子顏色
+		if highlight_overlay:
+			highlight_overlay.color = highlight_color_invalid
+		start_shake_animation()
 	else:
-		clear_cell_highlight()
+		clear_highlight()
 
-# 獲取當前拖拽圖塊的形狀模式
-func get_current_drag_shape_pattern() -> Array:
-	if DragDropManager.current_dragging_tile and DragDropManager.current_dragging_tile.tile_data:
-		return DragDropManager.current_dragging_tile.tile_data.get("shape_pattern", [[1]])
-	return [[1]]
+# 重寫震動動畫，讓我們能追蹤和停止它
+func start_shake_animation():
+	# 先停止之前的動畫
+	stop_all_animations()
+	
+	current_tween = create_tween()
+	current_tween.set_loops()
+	current_tween.tween_property(self, "position", original_position + Vector2(2, 0), 0.1)
+	current_tween.tween_property(self, "position", original_position + Vector2(-2, 0), 0.1)
+	current_tween.tween_property(self, "position", original_position, 0.1)
+	
+	print("[BattleBoard] 震動動畫開始")
 
-# 高亮多格圖塊將要佔用的所有格子
-func highlight_multi_tile_cells(base_pos: Vector2i, shape_pattern: Array, is_valid: bool):
-	clear_cell_highlight()  # 先清除之前的高亮
+# 重寫脈動動畫
+func start_pulse_animation():
+	# 先停止之前的動畫
+	if current_tween and current_tween.is_valid():
+		current_tween.kill()
 	
-	if base_pos == Vector2i(-1, -1):
-		return
-	
-	var positions = get_multi_tile_positions(base_pos, shape_pattern)
-	var can_place = can_place_multi_tile_at(base_pos, shape_pattern)
-	
-	# 高亮所有相關格子
-	for pos in positions:
-		var cell_index = pos.y * board_size + pos.x
-		if cell_index >= 0 and cell_index < grid_cells.size():
-			var cell = grid_cells[cell_index]
-			
-			# 設置高亮樣式
-			var style_box = StyleBoxFlat.new()
-			if is_valid and can_place and not placed_tiles.has(pos):
-				style_box.bg_color = Color(0.2, 0.8, 0.2, 0.6)  # 綠色高亮
-				style_box.border_color = Color(0.0, 1.0, 0.0, 1.0)
-			else:
-				style_box.bg_color = Color(0.8, 0.2, 0.2, 0.6)  # 紅色高亮
-				style_box.border_color = Color(1.0, 0.0, 0.0, 1.0)
-			
-			style_box.corner_radius_top_left = 8
-			style_box.corner_radius_top_right = 8
-			style_box.corner_radius_bottom_left = 8
-			style_box.corner_radius_bottom_right = 8
-			style_box.border_width_left = 3
-			style_box.border_width_right = 3
-			style_box.border_width_top = 3
-			style_box.border_width_bottom = 3
-			
-			cell.add_theme_stylebox_override("panel", style_box)
-	
-	# 記錄高亮的位置
-	current_hover_cell = base_pos
+	current_tween = create_tween()
+	current_tween.set_loops()
+	current_tween.tween_property(highlight_overlay, "modulate:a", 0.3, 0.5)
+	current_tween.tween_property(highlight_overlay, "modulate:a", 0.8, 0.5)
 
-# 清除格子高亮
-func clear_cell_highlight():
-	if current_hover_cell != Vector2i(-1, -1):
-		var cell_index = current_hover_cell.y * board_size + current_hover_cell.x
-		if cell_index >= 0 and cell_index < grid_cells.size():
-			var cell = grid_cells[cell_index]
-			
-			# 恢復原始樣式或已放置方塊的樣式
-			if placed_tiles.has(current_hover_cell):
-				var tile_data = placed_tiles[current_hover_cell]
-				update_cell_visual(cell, tile_data)
-			else:
-				reset_cell_visual(cell, cell_index)
-		
-		current_hover_cell = Vector2i(-1, -1)
+
+
+# 重寫動畫停止方法，正確停止震動和恢復位置
+func stop_all_animations():
+	# 停止當前的 Tween 動畫
+	if current_tween and current_tween.is_valid():
+		current_tween.kill()
+		current_tween = null
+	
+	# 恢復原始位置
+	position = original_position
+	
+	# 恢復高亮覆蓋層透明度
+	if highlight_overlay:
+		highlight_overlay.modulate.a = 1.0
+	
+	print("[BattleBoard] 所有動畫已停止，位置已恢復")
+
+# 重寫父類的清除高亮方法，避免覆蓋格子樣式
+func clear_highlight():
+	# 只處理父類的高亮覆蓋層，不影響我們的格子顏色
+	if highlight_overlay:
+		highlight_overlay.color = Color.TRANSPARENT
+	stop_all_animations()
+
+
 
 # === 多格圖塊支援 ===
 
@@ -268,6 +253,9 @@ func get_multi_tile_positions(base_pos: Vector2i, shape_pattern: Array) -> Array
 
 # 重寫投放處理方法
 func handle_tile_drop(tile_data: Dictionary):
+	# 停止任何進行中的動畫
+	stop_all_animations()
+	
 	# 根據拖拽位置找到對應的格子
 	var drop_position = find_drop_position_from_mouse()
 	var shape_pattern = tile_data.get("shape_pattern", [[1]])
@@ -309,6 +297,9 @@ func undo_last_tile_drop():
 		print("[BattleBoard] 無投放紀錄可撤銷")
 		return
 
+	# 停止任何進行中的動畫
+	stop_all_animations()
+
 	var last = drop_history.pop_back()
 	var base_pos = last["pos"]
 	var tile_data = last["tile_data"]
@@ -333,15 +324,6 @@ func undo_last_tile_drop():
 		get_tree().current_scene.add_child(new_tile)
 	
 	print("[BattleBoard] 已撤銷多格圖塊：", tile_data.get("name", {}).get("zh", "未知"))
-		# 可根據需求調整 new_tile 的屬性
-
-	print("[BattleBoard] 撤銷投放，方塊已復原：", tile_data.get("block_id", "?"), " at ", tile_data.get("pos", "?"))
-
-		# 投放成功後自動移除 BattleTile 實例（如果有）
-	if tile_data.has("__tile_instance") and is_instance_valid(tile_data["__tile_instance"]):
-		tile_data["__tile_instance"].queue_free()
-	else:
-		print("[BattleBoard] 無法在此位置放置方塊（已被占用或超出範圍）")
 
 # 根據滑鼠位置找到對應的格子位置
 func find_drop_position_from_mouse() -> Vector2i:
@@ -392,19 +374,14 @@ func update_cell_visual(cell: Control, tile_data: Dictionary):
 
 	# 設置格子顏色
 	var element_color = get_element_color(element)
-	var style_box = StyleBoxFlat.new()
-	style_box.bg_color = element_color
-	style_box.corner_radius_top_left = 10
-	style_box.corner_radius_top_right = 10
-	style_box.corner_radius_bottom_left = 10
-	style_box.corner_radius_bottom_right = 10
-	style_box.border_width_left = 3
-	style_box.border_width_right = 3
-	style_box.border_width_top = 3
-	style_box.border_width_bottom = 3
-	style_box.border_color = get_element_border_color(element)
-
+	var border_color = get_element_border_color(element)
+	var style_box = create_cell_style(element_color, border_color, 10, 3)
 	cell.add_theme_stylebox_override("panel", style_box)
+	
+	# 確保樣式立即應用
+	cell.queue_redraw()
+	
+	print("[BattleBoard] 更新格子視覺：", element, " 顏色：", element_color)
 
 	# 更新格子內的標籤
 	var label = cell.get_child(0) as Label
@@ -412,6 +389,8 @@ func update_cell_visual(cell: Control, tile_data: Dictionary):
 		label.text = get_element_display_name(element) + "\n+" + str(bonus_value)
 		label.add_theme_font_size_override("font_size", 14)
 		label.add_theme_color_override("font_color", Color.WHITE)
+	
+	print("[BattleBoard] 格子顏色已更新 - 屬性:", element, " 顏色:", element_color, " 邊框:", border_color)
 
 # === 棋盤邏輯 ===
 
@@ -513,6 +492,9 @@ func create_completion_particles():
 
 # 清空棋盤
 func clear_board():
+	# 停止任何進行中的動畫
+	stop_all_animations()
+	
 	placed_tiles.clear()
 	
 	# 重置所有格子的視覺效果
@@ -525,18 +507,12 @@ func clear_board():
 # 重置格子視覺效果
 func reset_cell_visual(cell: Control, index: int):
 	# 恢復空格子樣式
-	var style_box = StyleBoxFlat.new()
-	style_box.bg_color = Color(0.1, 0.1, 0.2, 0.8)
-	style_box.corner_radius_top_left = 10
-	style_box.corner_radius_top_right = 10
-	style_box.corner_radius_bottom_left = 10
-	style_box.corner_radius_bottom_right = 10
-	style_box.border_width_left = 2
-	style_box.border_width_right = 2
-	style_box.border_width_top = 2
-	style_box.border_width_bottom = 2
-	style_box.border_color = Color(0.3, 0.3, 0.5, 0.6)
-	
+	var style_box = create_cell_style(
+		Color(0.1, 0.1, 0.2, 0.8),    # 深藍色半透明
+		Color(0.3, 0.3, 0.5, 0.6),    # 邊框顏色
+		10,  # 圓角半徑
+		2    # 邊框寬度
+	)
 	cell.add_theme_stylebox_override("panel", style_box)
 	
 	# 恢復格子編號
@@ -545,6 +521,27 @@ func reset_cell_visual(cell: Control, index: int):
 		label.text = str(index)
 		label.add_theme_font_size_override("font_size", 12)
 		label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6, 0.5))
+	
+	print("[BattleBoard] 格子已重置為空狀態 - 編號:", index)
+
+# === 樣式輔助方法 ===
+
+# 創建基本格子樣式
+func create_cell_style(bg_color: Color, border_color: Color, corner_radius: int = 10, border_width: int = 2) -> StyleBoxFlat:
+	var style_box = StyleBoxFlat.new()
+	style_box.bg_color = bg_color
+	style_box.corner_radius_top_left = corner_radius
+	style_box.corner_radius_top_right = corner_radius
+	style_box.corner_radius_bottom_left = corner_radius
+	style_box.corner_radius_bottom_right = corner_radius
+	style_box.border_width_left = border_width
+	style_box.border_width_right = border_width
+	style_box.border_width_top = border_width
+	style_box.border_width_bottom = border_width
+	style_box.border_color = border_color
+	return style_box
+
+
 
 # === 輔助方法 ===
 
