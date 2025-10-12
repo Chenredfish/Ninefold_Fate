@@ -133,35 +133,23 @@ func create_battle_tiles():
 	
 	print("--- 創建戰鬥方塊 ---")
 	
-	# 火屬性方塊
-	var fire_tile = BattleTile.create_fire_tile()
-	fire_tile.size = Vector2(200, 200)
-	fire_tile.position = Vector2(100, 1420)
-	add_child(fire_tile)
+	# 使用統一工廠方法創建戰鬥方塊
+	var elements = ["fire", "water", "grass", "light", "dark"]
+	var positions = [
+		Vector2(100, 1420),   # 火
+		Vector2(320, 1420),   # 水
+		Vector2(540, 1420),   # 草
+		Vector2(760, 1420),   # 光
+		Vector2(320, 1640)    # 暗
+	]
 	
-	# 水屬性方塊
-	var water_tile = BattleTile.create_water_tile()
-	water_tile.size = Vector2(200, 200)
-	water_tile.position = Vector2(320, 1420)
-	add_child(water_tile)
-	
-	# 草屬性方塊
-	var grass_tile = BattleTile.create_grass_tile()
-	grass_tile.size = Vector2(200, 200)
-	grass_tile.position = Vector2(540, 1420)
-	add_child(grass_tile)
-	
-	# 光屬性方塊
-	var light_tile = BattleTile.create_light_tile()
-	light_tile.size = Vector2(200, 200)
-	light_tile.position = Vector2(760, 1420)
-	add_child(light_tile)
-	
-	# 暗屬性方塊（第三排）
-	var dark_tile = BattleTile.create_dark_tile()
-	dark_tile.size = Vector2(200, 200)
-	dark_tile.position = Vector2(320, 1640)
-	add_child(dark_tile)
+	for i in range(elements.size()):
+		var element = elements[i]
+		var tile = BattleTile.create_from_element(element)
+		tile.size = Vector2(200, 200)
+		tile.position = positions[i]
+		add_child(tile)
+		print("✅ 創建", element, "屬性方塊：", tile.tile_data.get("localized_name", "?"))
 	
 	print("✅ 戰鬥方塊已創建")
 

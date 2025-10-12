@@ -1,77 +1,77 @@
 {
   "B001": {
-    "id": "B001",
-    "name": {
-      "zh": "火焰方塊",
-      "en": "Fire Block"
-    },
-    "element": "fire",
-    "shape": "single",
-    "shape_pattern": [[1]],
-    "rotation_allowed": false,
-    "flip_allowed": false,
-    "bonus_value": 2,
-    "rarity": "common",
-    "icon_path": "res://art/blocks/B001_icon.png"
+	"id": "B001",
+	"name": {
+	  "zh": "火焰方塊",
+	  "en": "Fire Block"
+	},
+	"element": "fire",
+	"shape": "single",
+	"shape_pattern": [[1]],
+	"rotation_allowed": false,
+	"flip_allowed": false,
+	"bonus_value": 2,
+	"rarity": "common",
+	"icon_path": "res://art/blocks/B001_icon.png"
   },
   "B002": {
-    "id": "B002",
-    "name": {
-      "zh": "水滴方塊", 
-      "en": "Water Block"
-    },
-    "element": "water",
-    "shape": "single",
-    "shape_pattern": [[1]],
-    "rotation_allowed": false,
-    "flip_allowed": false,
-    "bonus_value": 2,
-    "rarity": "common",
-    "icon_path": "res://art/blocks/B002_icon.png"
+	"id": "B002",
+	"name": {
+	  "zh": "水滴方塊", 
+	  "en": "Water Block"
+	},
+	"element": "water",
+	"shape": "single",
+	"shape_pattern": [[1]],
+	"rotation_allowed": false,
+	"flip_allowed": false,
+	"bonus_value": 2,
+	"rarity": "common",
+	"icon_path": "res://art/blocks/B002_icon.png"
   },
   "B003": {
-    "id": "B003",
-    "name": {
-      "zh": "草葉方塊",
-      "en": "Grass Block"
-    },
-    "element": "grass", 
-    "shape": "single",
-    "shape_pattern": [[1]],
-    "rotation_allowed": false,
-    "flip_allowed": false,
-    "bonus_value": 2,
-    "rarity": "common",
-    "icon_path": "res://art/blocks/B003_icon.png"
+	"id": "B003",
+	"name": {
+	  "zh": "草葉方塊",
+	  "en": "Grass Block"
+	},
+	"element": "grass", 
+	"shape": "single",
+	"shape_pattern": [[1]],
+	"rotation_allowed": false,
+	"flip_allowed": false,
+	"bonus_value": 2,
+	"rarity": "common",
+	"icon_path": "res://art/blocks/B003_icon.png"
   },
   "B004": {
-    "id": "B004",
-    "name": {
-      "zh": "光明方塊",
-      "en": "Light Block"
-    },
-    "element": "light",
-    "shape": "single", 
-    "shape_pattern": [[1]],
-    "rotation_allowed": false,
-    "flip_allowed": false,
-    "bonus_value": 2,
-    "rarity": "common",
-    "icon_path": "res://art/blocks/B004_icon.png"
+	"id": "B004",
+	"name": {
+	  "zh": "光明方塊",
+	  "en": "Light Block"
+	},
+	"element": "light",
+	"shape": "single", 
+	"shape_pattern": [[1]],
+	"rotation_allowed": false,
+	"flip_allowed": false,
+	"bonus_value": 2,
+	"rarity": "common",
+	"icon_path": "res://art/blocks/B004_icon.png"
   },
   "B005": {
-    "id": "B005",
-    "name": {
-      "zh": "黑暗方塊",
-      "en": "Dark Block"
-    },
-    "element": "dark",
-    "shape": "single",
-    "shape_pattern": [[1]],
-    "rotation_allowed": false,
-    "flip_allowed": false,
-    "bonus_value": 2,
-    "rarity": "common", 
-    "icon_path": "res://art/blocks/B005_icon.png"
+	"id": "B005",
+	"name": {
+	  "zh": "黑暗方塊",
+	  "en": "Dark Block"
+	},
+	"element": "dark",
+	"shape": "single",
+	"shape_pattern": [[1]],
+	"rotation_allowed": false,
+	"flip_allowed": false,
+	"bonus_value": 2,
+	"rarity": "common", 
+	"icon_path": "res://art/blocks/B005_icon.png"
   }
 }
