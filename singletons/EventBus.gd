@@ -33,6 +33,31 @@ signal game_resumed()
 signal level_completed(level_id: String, score: int)
 signal resource_loaded(resource_type: String, resource_id: String)
 
+# 狀態機事件
+signal state_machine_created(state_machine_name: String, state_machine: BaseStateMachine)
+signal state_changed(state_machine_name: String, previous_state: String, current_state: String)
+signal transition_failed(state_machine_name: String, from_state: String, to_state: String, reason: String)
+
+# 場景切換事件
+signal scene_transition_requested(target_scene: String, data: Dictionary)
+signal scene_entered(scene_name: String)
+signal scene_exited(scene_name: String)
+
+# 拖放事件（使用 DragDropManager 的信號系統）
+# DragDropManager 提供: tile_drag_started, tile_drag_ended, navigation_requested
+
+# 戰鬥狀態事件
+signal player_turn_submit()
+signal damage_calculated(damage_info: Dictionary)
+signal enemies_updated(enemies: Array)
+signal player_hp_changed(new_hp: int)
+signal battle_cleanup_requested()
+
+# UI狀態事件
+signal ui_turn_timer_started(duration: float)
+signal ui_turn_timer_updated(time_remaining: float)
+signal level_selected(level_id: String)
+
 func _ready():
 	add_to_group("autoload_eventbus")
 	print("[EventBus] 事件系統已初始化")
