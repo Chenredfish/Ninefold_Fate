@@ -13,6 +13,7 @@ var grid_cells: Array = []  # 存儲棋盤格子
 var placed_tiles: Dictionary = {}  # 存儲已放置的方塊 {position: tile_data}
 var grid_container: GridContainer
 var current_hover_cell: Vector2i = Vector2i(-1, -1)  # 當前懸停的格子
+var drop_history: Array = []  # 投放紀錄 [{tile_data, pos}]
 
 func _ready():
 	# 設置基本屬性
@@ -216,6 +217,45 @@ func handle_tile_drop(tile_data: Dictionary):
 		place_tile_at_position(tile_data, drop_position)
 		update_board_visual()
 		check_board_completion()
+
+		# 投放成功後記錄到 drop_history
+		drop_history.append({"tile_data": tile_data.duplicate(), "pos": drop_position})
+
+		# 投放成功後自動移除 BattleTile 實例（如果有）
+		if tile_data.has("__tile_instance") and is_instance_valid(tile_data["__tile_instance"]):
+			tile_data["__tile_instance"].queue_free()
+# 撤銷最後一次投放
+func undo_last_tile_drop():
+	if drop_history.size() == 0:
+		print("[BattleBoard] 無投放紀錄可撤銷")
+		return
+
+	var last = drop_history.pop_back()
+	var pos = last["pos"]
+	var tile_data = last["tile_data"]
+
+	# 從棋盤移除
+	if placed_tiles.has(pos):
+		placed_tiles.erase(pos)
+		var cell_index = pos.y * board_size + pos.x
+		if cell_index < grid_cells.size():
+			var cell = grid_cells[cell_index]
+			reset_cell_visual(cell, cell_index)
+
+	# 重新生成 BattleTile 並放回原位
+	if tile_data.has("block_id"):
+		var new_tile = BattleTile.create_from_block_data(tile_data["block_id"])
+		new_tile.size = cell_size
+		# 放回棋盤下方（或自訂位置）
+		new_tile.position = global_position + Vector2(0, board_size * cell_size.y + 40)
+		get_tree().current_scene.add_child(new_tile)
+		# 可根據需求調整 new_tile 的屬性
+
+	print("[BattleBoard] 撤銷投放，方塊已復原：", tile_data.get("block_id", "?"), " at ", pos)
+
+		# 投放成功後自動移除 BattleTile 實例（如果有）
+	if tile_data.has("__tile_instance") and is_instance_valid(tile_data["__tile_instance"]):
+		tile_data["__tile_instance"].queue_free()
 	else:
 		print("[BattleBoard] 無法在此位置放置方塊（已被占用或超出範圍）")
 
@@ -262,7 +302,10 @@ func update_cell_visual(cell: Control, tile_data: Dictionary):
 	# 獲取方塊屬性
 	var element = tile_data.get("element", "neutral")
 	var bonus_value = tile_data.get("bonus_value", 1)
-	
+
+	# 重設格子 scale，避免多次投放導致變大
+	cell.scale = Vector2(1, 1)
+
 	# 設置格子顏色
 	var element_color = get_element_color(element)
 	var style_box = StyleBoxFlat.new()
@@ -276,9 +319,9 @@ func update_cell_visual(cell: Control, tile_data: Dictionary):
 	style_box.border_width_top = 3
 	style_box.border_width_bottom = 3
 	style_box.border_color = get_element_border_color(element)
-	
+
 	cell.add_theme_stylebox_override("panel", style_box)
-	
+
 	# 更新格子內的標籤
 	var label = cell.get_child(0) as Label
 	if label:

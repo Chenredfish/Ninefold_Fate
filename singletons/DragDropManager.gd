@@ -147,6 +147,8 @@ func can_drop_on_zone(tile, zone) -> bool:
 
 # 執行投放動作
 func perform_drop_action(tile, zone):
+	# 投放前將 tile 實例參考加到 tile_data
+	tile.tile_data["__tile_instance"] = tile
 	zone.on_tile_dropped(tile.tile_data)
 	
 	# 處理導航圖塊的特殊邏輯
