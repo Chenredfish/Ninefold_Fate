@@ -148,9 +148,7 @@ func create_battle_tiles():
 # 創建多格圖塊測試
 func create_multi_grid_test_tiles():
 	print("--- 創建多格圖塊測試 ---")
-	
-	# 臨時添加多格圖塊到資源管理器
-	add_test_multi_grid_blocks()
+
 	
 	# 創建多格圖塊測試 (移動到第二排)
 	var multi_block_configs = [
@@ -168,111 +166,6 @@ func create_multi_grid_test_tiles():
 		add_child(tile)
 		print("✅ 創建多格圖塊：", config.label, " ID:", config.id)
 
-# 臨時添加多格圖塊測試數據
-func add_test_multi_grid_blocks():
-	if not ResourceManager:
-		return
-	
-	# L型火焰方塊
-	ResourceManager.block_database["B101"] = {
-		"id": "B101",
-		"name": {
-			"zh": "L型火焰",
-			"en": "L-Fire"
-		},
-		"element": "fire",
-		"shape": "L_shape",
-		"shape_pattern": [
-			[1, 0],
-			[1, 0], 
-			[1, 1]
-		],
-		"rotation_allowed": true,
-		"flip_allowed": true,
-		"bonus_value": 6,
-		"rarity": "uncommon",
-		"icon_path": "res://art/blocks/B101_icon.png"
-	}
-	
-	# 直線水流方塊 (修正為3格以符合3×3棋盤)
-	ResourceManager.block_database["B102"] = {
-		"id": "B102",
-		"name": {
-			"zh": "直線水流",
-			"en": "Line-Water"
-		},
-		"element": "water",
-		"shape": "line_3",
-		"shape_pattern": [[1, 1, 1]],
-		"rotation_allowed": true,
-		"flip_allowed": false,
-		"bonus_value": 6,
-		"rarity": "uncommon",
-		"icon_path": "res://art/blocks/B102_icon.png"
-	}
-	
-	# 十字聖光方塊
-	ResourceManager.block_database["B201"] = {
-		"id": "B201",
-		"name": {
-			"zh": "十字聖光",
-			"en": "Cross-Light"
-		},
-		"element": "light",
-		"shape": "cross",
-		"shape_pattern": [
-			[0, 1, 0],
-			[1, 1, 1],
-			[0, 1, 0]
-		],
-		"rotation_allowed": false,
-		"flip_allowed": false,
-		"bonus_value": 10,
-		"rarity": "rare",
-		"icon_path": "res://art/blocks/B201_icon.png"
-	}
-	
-	# T型草葉方塊
-	ResourceManager.block_database["B103"] = {
-		"id": "B103",
-		"name": {
-			"zh": "T型草葉",
-			"en": "T-Grass"
-		},
-		"element": "grass",
-		"shape": "T_shape",
-		"shape_pattern": [
-			[1, 1, 1],
-			[0, 1, 0]
-		],
-		"rotation_allowed": true,
-		"flip_allowed": false,
-		"bonus_value": 7,
-		"rarity": "uncommon",
-		"icon_path": "res://art/blocks/B103_icon.png"
-	}
-	
-	# 2×2方形暗影方塊
-	ResourceManager.block_database["B104"] = {
-		"id": "B104",
-		"name": {
-			"zh": "方形暗影",
-			"en": "Square-Dark"
-		},
-		"element": "dark",
-		"shape": "square",
-		"shape_pattern": [
-			[1, 1],
-			[1, 1]
-		],
-		"rotation_allowed": false,
-		"flip_allowed": false,
-		"bonus_value": 8,
-		"rarity": "uncommon",
-		"icon_path": "res://art/blocks/B104_icon.png"
-	}
-	
-	print("✅ 多格圖塊測試數據已添加 (符合3×3棋盤限制)")
 
 # 創建說明文字
 func create_instructions():
