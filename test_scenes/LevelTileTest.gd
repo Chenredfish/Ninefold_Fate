@@ -158,6 +158,7 @@ func load_chapter_levels():
 			# Connect tile selection signal  
 			level_tile.gui_input.connect(_on_level_tile_input.bind(level_tile))
 
+
 func _on_level_tile_input(event: InputEvent, tile: LevelTile):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		selected_level_id = tile.level_data.get("id", "")

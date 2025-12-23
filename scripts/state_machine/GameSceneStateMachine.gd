@@ -16,12 +16,12 @@ enum SceneType {
 
 # 場景路徑配置
 var scene_paths: Dictionary = {
-	SceneType.MAIN_MENU: "res://scenes/MainMenu.tscn",
-	SceneType.LEVEL_SELECTION: "res://scenes/LevelSelection.tscn",
-	SceneType.BATTLE: "res://scenes/Battle.tscn",
-	SceneType.RESULT: "res://scenes/Result.tscn",
-	SceneType.SETTINGS: "res://scenes/Settings.tscn",
-	SceneType.DECK_BUILD: "res://scenes/DeckBuild.tscn"
+	SceneType.MAIN_MENU: "res://scripts/scenes/main_menu.tscn",
+	SceneType.LEVEL_SELECTION: "res://scripts/scenes/level_selection.tscn",
+	SceneType.BATTLE: "res://scripts/scenes/battle.tscn",
+	SceneType.RESULT: "res://scripts/scenes/result.tscn",
+	SceneType.SETTINGS: "res://scripts/scenes/settings.tscn",
+	SceneType.DECK_BUILD: "res://scripts/scenes/deck_build.tscn"
 }
 
 # 場景狀態映射
@@ -105,7 +105,7 @@ func load_scene(scene_type: SceneType) -> Node:
 		return null
 	
 	var new_scene = packed_scene.instantiate()
-	get_tree().root.add_child(new_scene)
+	get_tree().root.add_child.call_deferred(new_scene)
 	current_scene = new_scene
 	
 	scene_loading = false
