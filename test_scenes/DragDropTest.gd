@@ -10,6 +10,14 @@ var settings_tile: NavigationTile
 var main_drop_zone: DropZone
 var secondary_drop_zone: BattleBoard  # 戰鬥棋盤
 
+var multi_block_configs = [
+	{"id": "B101", "position": Vector2(320, 1420), "label": "L型火焰"},
+	{"id": "B102", "position": Vector2(540, 1420), "label": "直線水流"},
+	{"id": "B201", "position": Vector2(760, 1420), "label": "十字聖光"},
+	{"id": "B103", "position": Vector2(100, 1640), "label": "T型草葉"},
+	{"id": "B104", "position": Vector2(320, 1640), "label": "2×2方塊"}
+]
+
 func _ready():
 	print("===========================================")
 	print("=== 九重運命 - 拖放系統測試 ===")
@@ -60,6 +68,9 @@ func create_test_ui():
 	
 	# 創建說明文字
 	create_instructions()
+
+	#創建送出方塊
+	create_submit()
 
 # 創建背景
 func create_background():
@@ -141,19 +152,12 @@ func create_battle_tiles():
 # 創建多格圖塊測試
 func create_multi_grid_test_tiles():
 	print("--- 創建多格圖塊測試 ---")
-
 	
 	# 創建多格圖塊測試 (移動到第二排)
-	var multi_block_configs = [
-		{"id": "B101", "position": Vector2(320, 1420), "label": "L型火焰"},
-		{"id": "B102", "position": Vector2(540, 1420), "label": "直線水流"},
-		{"id": "B201", "position": Vector2(760, 1420), "label": "十字聖光"},
-		{"id": "B103", "position": Vector2(100, 1640), "label": "T型草葉"},
-		{"id": "B104", "position": Vector2(320, 1640), "label": "2×2方塊"}
-	]
 	
 	for config in multi_block_configs:
 		var tile = BattleTile.create_from_id(config.id)
+		tile.name = "BattleTile_" + config.id
 		tile.size = Vector2(200, 200)
 		tile.position = config.position
 		add_child(tile)
@@ -213,6 +217,16 @@ func create_instructions():
 	instructions.add_theme_font_size_override("font_size", 14)
 	instructions.add_theme_color_override("font_color", Color.LIGHT_GRAY)
 	add_child(instructions)
+
+# 創建送出方塊的按鈕
+func create_submit():
+	var submit_button = Button.new()
+	submit_button.text = "送出方塊"
+	submit_button.position = Vector2(800, 1800)
+	submit_button.size = Vector2(150, 50)
+	submit_button.pressed.connect(_on_submit_button_pressed)
+	add_child(submit_button)
+
 
 # 連接訊號
 func connect_signals():
@@ -281,5 +295,27 @@ func _input(event):
 		# 重載場景
 		get_tree().reload_current_scene()
 
+#處理送出方塊按鈕事件
+func _on_submit_button_pressed():
+	print("\n[測試] 送出方塊按鈕被按下")
+	
+	#計算目前戰鬥棋盤上的方塊數值總和
+	var total_value:int = secondary_drop_zone.calculate_total_damage()
+	print("[測試] 戰鬥棋盤上方塊總傷害值：", total_value)
+
+	secondary_drop_zone.clear_board()
+	print("[測試] 戰鬥棋盤已清空")
+
+
+	for config in multi_block_configs:
+		#如果自己已經有圖塊在畫面上，跳過創建
+		if get_node_or_null("BattleTile_" + config.id):
+			continue
+		var tile = BattleTile.create_from_id(config.id)
+		tile.name = "BattleTile_" + config.id
+		tile.size = Vector2(200, 200)
+		tile.position = config.position
+		add_child(tile)
+		print("✅ 創建多格圖塊：", config.label, " ID:", config.id)
 # === 除錯資訊 ===
 # 已簡化：移除定期調試輸出，保留事件驅動的日誌
