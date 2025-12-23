@@ -49,6 +49,7 @@ func _init():
 	_connect_event_bus()
 
 func _initialize_scene_states():
+	print("[GameSceneStateMachine] Initializing scene states...")
 	# 創建各個場景狀態
 	add_state(MainMenuState.new())
 	add_state(LevelSelectionState.new())
@@ -56,22 +57,33 @@ func _initialize_scene_states():
 	add_state(ResultState.new())
 	add_state(SettingsState.new())
 	add_state(DeckBuildState.new())
+	print("[GameSceneStateMachine] Scene states initialized")
 
 func _connect_event_bus():
+	print("[GameSceneStateMachine] Connecting to EventBus...")
 	# 監聽場景切換事件
 	if EventBus.has_signal("scene_transition_requested"):
-		EventBus.scene_transition_requested.connect(_on_scene_transition_requested)
+		if not EventBus.scene_transition_requested.is_connected(_on_scene_transition_requested):
+			EventBus.scene_transition_requested.connect(_on_scene_transition_requested)
+			print("[GameSceneStateMachine] Connected to scene_transition_requested")
 	
 	# 監聽戰鬥相關事件
 	if EventBus.has_signal("battle_ended"):
-		EventBus.battle_ended.connect(_on_battle_ended)
+		if not EventBus.battle_ended.is_connected(_on_battle_ended):
+			EventBus.battle_ended.connect(_on_battle_ended)
+			print("[GameSceneStateMachine] Connected to battle_ended")
 	
 	# 監聽關卡選擇事件
 	if EventBus.has_signal("level_selected"):
-		EventBus.level_selected.connect(_on_level_selected)
+		if not EventBus.level_selected.is_connected(_on_level_selected):
+			EventBus.level_selected.connect(_on_level_selected)
+			print("[GameSceneStateMachine] Connected to level_selected")
+	
+	print("[GameSceneStateMachine] EventBus connections complete")
 
 # 切換到指定場景
 func change_scene_to(scene_type: SceneType, data: Dictionary = {}):
+	print("[GameSceneStateMachine] Changing scene to: ", scene_type)
 	if scene_loading:
 		print("[GameSceneStateMachine] Scene loading in progress, ignoring request")
 		return
@@ -81,6 +93,7 @@ func change_scene_to(scene_type: SceneType, data: Dictionary = {}):
 		print("[GameSceneStateMachine] Invalid scene type: ", scene_type)
 		return
 	
+	print("[GameSceneStateMachine] Transitioning to state: ", state_id)
 	transition_to(state_id, data)
 
 # 載入場景文件
@@ -90,11 +103,14 @@ func load_scene(scene_type: SceneType) -> Node:
 		print("[GameSceneStateMachine] No scene path for type: ", scene_type)
 		return null
 	
+	print("[GameSceneStateMachine] Loading scene: ", scene_path)
 	scene_loading = true
 	
-	# 卸載當前場景
-	if current_scene:
+	# 先卸載當前場景
+	if current_scene and is_instance_valid(current_scene):
+		print("[GameSceneStateMachine] Unloading current scene: ", current_scene.name)
 		current_scene.queue_free()
+		await current_scene.tree_exited
 		current_scene = null
 	
 	# 載入新場景
@@ -105,12 +121,23 @@ func load_scene(scene_type: SceneType) -> Node:
 		return null
 	
 	var new_scene = packed_scene.instantiate()
-	get_tree().root.add_child.call_deferred(new_scene)
-	current_scene = new_scene
 	
+	# 取得main scene並替換它，而不是添加到根節點
+	var main_scene = get_tree().current_scene
+	if main_scene and main_scene != new_scene:
+		print("[GameSceneStateMachine] Replacing main scene")
+		get_tree().root.add_child(new_scene)
+		get_tree().current_scene = new_scene
+		main_scene.queue_free()
+	else:
+		print("[GameSceneStateMachine] Setting as main scene")
+		get_tree().root.add_child(new_scene)
+		get_tree().current_scene = new_scene
+	
+	current_scene = new_scene
 	scene_loading = false
 	
-	print("[GameSceneStateMachine] Loaded scene: ", scene_path)
+	print("[GameSceneStateMachine] Successfully loaded scene: ", scene_path)
 	return new_scene
 
 # 獲取當前場景
@@ -119,9 +146,11 @@ func get_current_scene() -> Node:
 
 # EventBus 事件處理
 func _on_scene_transition_requested(target_scene: String, data: Dictionary = {}):
+	print("[GameSceneStateMachine] Scene transition requested: ", target_scene)
 	# 根據場景名稱找到對應的枚舉值
 	for scene_type in SceneType.values():
 		if scene_state_mapping[scene_type] == target_scene:
+			print("[GameSceneStateMachine] Changing to scene type: ", scene_type)
 			change_scene_to(scene_type, data)
 			return
 	
@@ -149,7 +178,7 @@ class MainMenuState extends BaseState:
 	
 	func enter(previous_state: BaseState = null, data: Dictionary = {}):
 		super.enter(previous_state, data)
-		var scene = state_machine.load_scene(SceneType.MAIN_MENU)
+		var scene = await state_machine.load_scene(SceneType.MAIN_MENU)
 		
 		# 發送進入主選單事件
 		EventBus.emit_signal("scene_entered", "main_menu")
@@ -164,8 +193,14 @@ class LevelSelectionState extends BaseState:
 		super._init("level_selection")
 	
 	func enter(previous_state: BaseState = null, data: Dictionary = {}):
+		print("[LevelSelectionState] Entering level selection state")
 		super.enter(previous_state, data)
-		var scene = state_machine.load_scene(SceneType.LEVEL_SELECTION)
+		var scene = await state_machine.load_scene(SceneType.LEVEL_SELECTION)
+		
+		# 等待場景完全載入
+		if scene:
+			await scene.ready
+			print("[LevelSelectionState] Level selection scene loaded and ready")
 		
 		EventBus.emit_signal("scene_entered", "level_selection")
 	
@@ -180,7 +215,7 @@ class BattleState extends BaseState:
 	
 	func enter(previous_state: BaseState = null, data: Dictionary = {}):
 		super.enter(previous_state, data)
-		var scene = state_machine.load_scene(SceneType.BATTLE)
+		var scene = await state_machine.load_scene(SceneType.BATTLE)
 		
 		# 初始化戰鬥場景
 		if scene and data.has("level_id"):
@@ -205,7 +240,7 @@ class ResultState extends BaseState:
 	
 	func enter(previous_state: BaseState = null, data: Dictionary = {}):
 		super.enter(previous_state, data)
-		var scene = state_machine.load_scene(SceneType.RESULT)
+		var scene = await state_machine.load_scene(SceneType.RESULT)
 		
 		# 設置結算數據
 		if scene and scene.has_method("set_result_data"):
@@ -224,7 +259,7 @@ class SettingsState extends BaseState:
 	
 	func enter(previous_state: BaseState = null, data: Dictionary = {}):
 		super.enter(previous_state, data)
-		var scene = state_machine.load_scene(SceneType.SETTINGS)
+		var scene = await state_machine.load_scene(SceneType.SETTINGS)
 		
 		EventBus.emit_signal("scene_entered", "settings")
 	

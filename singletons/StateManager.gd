@@ -20,31 +20,45 @@ func _ready():
 	add_to_group("autoload_statemanager")
 	print("[StateManager] 狀態機管理器已初始化")
 	
+	# 等待場景樹完全準備好
+	await get_tree().process_frame
+	
 	# 初始化全域狀態機
-	_initialize_global_state_machines()
+	await _initialize_global_state_machines()
 	
 	# 連接EventBus事件
 	_connect_event_bus()
 
 func _initialize_global_state_machines():
+	print("[StateManager] Initializing global state machines...")
 	# 創建遊戲場景狀態機
 	game_scene_state_machine = GameSceneStateMachine.new()
 	add_child(game_scene_state_machine)
 	register_state_machine("game_scene", game_scene_state_machine)
 	
+	# 等待一幀確保場景樹完全設置好
+	await get_tree().process_frame
+	
 	# 設置初始狀態
+	print("[StateManager] Setting initial state to main_menu")
 	game_scene_state_machine.transition_to("main_menu")
 	
 	print("[StateManager] 全域狀態機初始化完成")
 
 func _connect_event_bus():
 	# 監聽狀態機相關事件
-	EventBus.state_changed.connect(_on_state_changed)
-	EventBus.transition_failed.connect(_on_transition_failed)
+	if not EventBus.state_changed.is_connected(_on_state_changed):
+		EventBus.state_changed.connect(_on_state_changed)
+	if not EventBus.transition_failed.is_connected(_on_transition_failed):
+		EventBus.transition_failed.connect(_on_transition_failed)
 	
 	# 監聽戰鬥事件
-	EventBus.battle_started.connect(_on_battle_started)
-	EventBus.battle_ended.connect(_on_battle_ended)
+	if not EventBus.battle_started.is_connected(_on_battle_started):
+		EventBus.battle_started.connect(_on_battle_started)
+	if not EventBus.battle_ended.is_connected(_on_battle_ended):
+		EventBus.battle_ended.connect(_on_battle_ended)
+	
+	print("[StateManager] EventBus signals connected")
 
 # 註冊狀態機
 func register_state_machine(name: String, state_machine: BaseStateMachine) -> bool:

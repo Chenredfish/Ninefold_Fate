@@ -188,11 +188,14 @@ func on_drag_ended(success: bool):
 func perform_scene_transition():
 	print("[NavigationTile] 切換場景：", target_scene_path)
 	
-	# 可以在這裡添加場景切換的過渡效果
-	if ResourceLoader.exists(target_scene_path):
-		get_tree().change_scene_to_file(target_scene_path)
+	# 使用StateManager進行場景切換，而不是直接替換場景樹
+	var scene_type = _get_scene_type_from_function(function_name)
+	if scene_type != -1:
+		# 通過EventBus發送場景切換請求
+		EventBus.emit_signal("scene_transition_requested", get_state_name_from_function(function_name), navigation_data)
+		print("[NavigationTile] 已發送場景切換請求：", function_name)
 	else:
-		print("[NavigationTile] 錯誤：場景文件不存在 - ", target_scene_path)
+		print("[NavigationTile] 錯誤：未知的功能類型 - ", function_name)
 
 # 執行導航動作（非場景切換）
 func perform_navigation_action():
@@ -266,6 +269,38 @@ func set_icon(texture: Texture2D):
 	icon_texture = texture
 	if icon_node:
 		icon_node.texture = texture
+
+# 將功能名稱轉換為GameSceneStateMachine的場景類型
+func _get_scene_type_from_function(func_name: String) -> int:
+	match func_name:
+		"level_select":
+			return GameSceneStateMachine.SceneType.LEVEL_SELECTION
+		"battle":
+			return GameSceneStateMachine.SceneType.BATTLE
+		"shop":
+			return GameSceneStateMachine.SceneType.MAIN_MENU  # 暫時回到主菜單
+		"deck":
+			return GameSceneStateMachine.SceneType.DECK_BUILD
+		"settings":
+			return GameSceneStateMachine.SceneType.SETTINGS
+		_:
+			return -1
+
+# 將功能名稱轉換為狀態名稱
+func get_state_name_from_function(func_name: String) -> String:
+	match func_name:
+		"level_select":
+			return "level_selection"
+		"battle":
+			return "battle"
+		"shop":
+			return "main_menu"  # 暫時回到主菜單
+		"deck":
+			return "deck_build"
+		"settings":
+			return "settings"
+		_:
+			return "main_menu"
 
 # === 工廠方法 ===
 

@@ -16,12 +16,33 @@ var deck_tile: NavigationTile
 var settings_tile: NavigationTile
 
 func _ready():
-
+	print("[MainMenu] Main menu scene loaded")
+	
 	create_background()
 	
 	create_upper_UI() #在(0,0)~(1080, 1000)
 	create_middle_UI() #在(240,1000)~(840, 1600)
 	create_lower_UI() #在(0,1600)~(1080, 1920)
+	
+	print("[MainMenu] Main menu setup complete")
+
+func _input(event):
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_F9:
+			print_debug_info()
+
+func print_debug_info():
+	print("\n=== MAIN MENU DEBUG INFO ===")
+	print("Current Scene: ", get_tree().current_scene.name if get_tree().current_scene else "None")
+	print("Parent: ", get_parent().name if get_parent() else "None")
+	
+	if StateManager:
+		print("StateManager: Available")
+		if StateManager.game_scene_state_machine:
+			var gsm = StateManager.game_scene_state_machine
+			print("- Current State: ", gsm.get_current_state_id() if gsm.has_method("get_current_state_id") else "Unknown")
+			print("- Current Scene: ", gsm.current_scene.name if gsm.current_scene else "None")
+	print("=== END DEBUG INFO ===\n")
 
 func create_background():
 	var bg = ColorRect.new()
