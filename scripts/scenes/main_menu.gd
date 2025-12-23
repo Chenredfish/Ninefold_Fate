@@ -81,6 +81,13 @@ func create_upper_UI():
 	add_child(version_label)
 
 func create_middle_UI():
+	#創造棋盤的背景
+	var grid_bg = ColorRect.new()
+	grid_bg.position = Vector2(240, 800)
+	grid_bg.size = Vector2(600, 600)
+	grid_bg.color = Color(0.2, 0.2, 0.3, 1.0)
+	add_child(grid_bg) 
+
 	#參考create_confirm_grid
 	unified_confirm_grid = Control.new()
 	unified_confirm_grid.position = Vector2(240, 800)
@@ -92,8 +99,8 @@ func create_middle_UI():
 			var drop_zone = DropZone.new()
 			drop_zone.position = Vector2(j * 200, i * 200)
 			drop_zone.size = Vector2(200, 200)
-			drop_zone.zone_type = "main_navigation"
-			drop_zone.set_accepted_types(["battle", "shop", "deck", "settings"])
+			drop_zone.zone_type = ""
+			drop_zone.set_accepted_types(["level_select", "shop", "deck", "settings"])
 			unified_confirm_grid.add_child(drop_zone)
 
 			if i == 1 and j == 1:
@@ -112,7 +119,7 @@ func create_middle_UI():
 func create_lower_UI():
 	#新增容器去裝tile，總共四個tile，每一個tile200x200
 	scroll_tile_container = ScrollContainer.new()
-	scroll_tile_container.position = Vector2(150, 1600)
+	scroll_tile_container.position = Vector2(100, 1600)
 	scroll_tile_container.size = Vector2(1080, 320)
 	scroll_tile_container.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	scroll_tile_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -122,26 +129,26 @@ func create_lower_UI():
 	tile_container.add_theme_constant_override("separation", 20)
 	scroll_tile_container.add_child(tile_container)
 
-	# 戰鬥圖塊
-	battle_tile = NavigationTile.create_battle_tile("res://scenes/BattleScene.tscn")
+	# 關卡選擇圖塊
+	battle_tile = NavigationTile.create_level_select_tile("res://scripts/scenes/level_selection.tscn")
 	battle_tile.size = Vector2(200, 200)
 	battle_tile.position = Vector2(0, 0)
 	tile_container.add_child(battle_tile)
 	
 	# 商店圖塊
-	shop_tile = NavigationTile.create_shop_tile("res://scenes/ShopScene.tscn")
+	shop_tile = NavigationTile.create_shop_tile("res://scripts/scenes/shop_scene.tscn")
 	shop_tile.size = Vector2(200, 200)
 	shop_tile.position = Vector2(500, 0)
 	tile_container.add_child(shop_tile)
 	
 	# 構築圖塊
-	deck_tile = NavigationTile.create_deck_tile("res://scenes/DeckScene.tscn")
+	deck_tile = NavigationTile.create_deck_tile("res://scripts/scenes/deck_scene.tscn")
 	deck_tile.size = Vector2(200, 200)
 	deck_tile.position = Vector2(700, 0)
 	tile_container.add_child(deck_tile)
 	
 	# 設定圖塊
-	settings_tile = NavigationTile.create_settings_tile("res://scenes/SettingsScene.tscn")
+	settings_tile = NavigationTile.create_settings_tile("res://scripts/scenes/settings_scene.tscn")
 	settings_tile.size = Vector2(200, 200)
 	settings_tile.position = Vector2(900, 0)
 	tile_container.add_child(settings_tile)

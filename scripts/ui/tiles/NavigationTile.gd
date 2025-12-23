@@ -67,54 +67,53 @@ func setup_navigation_style():
 
 # 創建導航圖塊的內容佈局
 func create_navigation_content():
-	# 清除舊的標籤
-	var old_label = get_node_or_null("TypeLabel")
-	if old_label:
-		old_label.queue_free()
-	
-	# 創建垂直容器
+	# 清除舊內容
+	for child in get_children():
+		if child is Label or child.name == "ContentContainer":
+			child.queue_free()
+
 	var vbox = VBoxContainer.new()
 	vbox.name = "ContentContainer"
 	vbox.size = size
 	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(vbox)
-	
-	# 添加圖標
+
+	# icon（可選）
 	if icon_texture:
 		icon_node = TextureRect.new()
 		icon_node.texture = icon_texture
-		icon_node.custom_minimum_size = Vector2(80, 80)
-		icon_node.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		icon_node.custom_minimum_size = Vector2(64, 64)
 		icon_node.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon_node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon_node.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(icon_node)
-	
-	# 添加標題標籤
+
+	# 主標題（功能名）
 	title_label = Label.new()
 	title_label.text = get_function_display_name()
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	
-	# 標題樣式
-	title_label.add_theme_font_size_override("font_size", 18)
+	title_label.add_theme_font_size_override("font_size", 24)
 	title_label.add_theme_color_override("font_color", Color.WHITE)
-	
 	vbox.add_child(title_label)
-	
-	# 添加描述標籤
+
+	# 副標題（描述）
 	description_label = Label.new()
 	description_label.text = get_function_description()
 	description_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	description_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	description_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	
-	# 描述樣式
-	description_label.add_theme_font_size_override("font_size", 12)
+	description_label.add_theme_font_size_override("font_size", 16)
 	description_label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9, 0.8))
-	
 	vbox.add_child(description_label)
+
+	# ID 標籤（可選，調試用）
+	var id_label = Label.new()
+	id_label.text = function_name
+	id_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	id_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	id_label.add_theme_font_size_override("font_size", 12)
+	id_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 0.7))
+	vbox.add_child(id_label)
 
 # === 文字內容 ===
 
@@ -292,4 +291,10 @@ static func create_deck_tile(scene_path: String = "") -> NavigationTile:
 static func create_settings_tile(scene_path: String = "") -> NavigationTile:
 	var tile = NavigationTile.new()
 	tile.set_navigation_data(scene_path, "settings")
+	return tile
+
+# 創建關卡選擇導航圖塊
+static func create_level_select_tile(scene_path: String = "") -> NavigationTile:
+	var tile = NavigationTile.new()
+	tile.set_navigation_data(scene_path, "level_select")
 	return tile
