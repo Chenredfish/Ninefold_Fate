@@ -274,11 +274,10 @@ class DeckBuildState extends BaseState:
 	
 	func enter(previous_state: BaseState = null, data: Dictionary = {}):
 		super.enter(previous_state, data)
-		# MVP階段暫時顯示"敬請期待"
-		print("[GameSceneStateMachine] 構築系統敬請期待")
-		
-		# 直接返回主選單
-		state_machine.call_deferred("transition_to", "main_menu")
-	
+		var scene = await state_machine.load_scene(SceneType.DECK_BUILD)
+
+		EventBus.emit_signal("scene_entered", "deck_build")
+
 	func can_transition_to(next_state_id: String) -> bool:
-		return next_state_id == "main_menu"
+		# 構築可以返回主選單
+		return next_state_id in ["main_menu"]
