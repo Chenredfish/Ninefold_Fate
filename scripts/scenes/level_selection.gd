@@ -69,11 +69,13 @@ func create_main_info_area():
 	main_info_area.add_child(chapter_title)
 
 	#進度條
+	"""
 	progress_bar = ProgressBar.new()
 	progress_bar.position = Vector2(140, 150)
 	progress_bar.size = Vector2(800, 30)
 	progress_bar.value = 30  # 30% complete
 	main_info_area.add_child(progress_bar)
+	"""
 
 	#等級詳情面板
 	level_detail_panel = Panel.new()
@@ -83,8 +85,8 @@ func create_main_info_area():
 
 	var detail_label = Label.new()
 	detail_label.text = "Select a level to see details."
-	detail_label.position = Vector2(450, 250)
-	detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	detail_label.scale = Vector2(2, 2)
 	detail_label.add_theme_font_size_override("font_size", 24)
 	level_detail_panel.add_child(detail_label)
 
@@ -197,10 +199,26 @@ func _on_level_tile_input(event: InputEvent, tile: LevelTile):
 		print("Selected level: ", selected_level_id)
 
 func update_level_details(level_data: Dictionary):
-	# Update the detail panel with level information
-	var detail_text = "Level: " + level_data.get("id", "Unknown") + "\n"
-	detail_text += "Difficulty: " + str(level_data.get("difficulty", 1)) + "\n"
-	detail_text += "Enemies: " + str(level_data.get("enemies", []).size()) + "\n"
+	#如果關卡鎖住(locked)就不顯示細節
+	if level_data.get("unlock_status", "locked") == "locked":
+		level_detail_panel.get_child(0).text = "關卡尚未解鎖。"
+		return
+
+	var detail_text = "關卡ID: " + level_data.get("id", "未知") + "\n"
+	detail_text += "難度: " + str(level_data.get("difficulty", 1)) + "\n"
+	detail_text += "敵人數量: " + str(level_data.get("enemies", []).size()) + "\n"
+	#取得敵人ID列表，把他逐個對應的名字列出來
+	var enemies_data = level_data.get("enemies")
+	for enemy in enemies_data:
+		var enemy_id = enemy.get("enemy_id", "")
+		var enemy_info = ResourceManager.get_enemy_data(enemy_id)
+		var enemy_name = enemy_info.get("name", "缺少名稱").get("zh", "找不到中文名稱")
+		var enemy_element = enemy_info.get("element", "缺少屬性")
+		detail_text += "敵人: " + str(enemy_name) + " (" + str(enemy_element) + ")\n"
+
+	#如果是通過關卡就顯示星級評價
+	if level_data.get("unlock_status", "locked") == "completed":
+		detail_text += "星級評價: " + str(level_data.get("star_rating", 0)) + " 星\n"
 	
 	var label = level_detail_panel.get_child(0)
 	label.text = detail_text

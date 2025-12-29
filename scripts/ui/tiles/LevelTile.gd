@@ -10,6 +10,7 @@ extends DraggableTile
 @export var unlock_status: String = "locked"  # "locked", "available", "completed"
 @export var star_rating: int = 0  # 星級評價 (0-3)
 @export var difficulty: String = "normal"  # "normal", "hard", "hell"
+@export var enemies: Array = []  # 關卡中的敵人列表
 
 # === 內部節點 ===
 var level_icon: TextureRect
@@ -308,7 +309,7 @@ func get_status_color() -> Color:
 
 # 獲取元素文字
 func get_element_text() -> String:
-	var enemies = level_data.get("enemies", [])
+	enemies = level_data.get("enemies", [])
 	if enemies.size() > 0:
 		var enemy_info = enemies[0]
 		var enemy_id = ""
@@ -325,12 +326,12 @@ func get_element_text() -> String:
 			var enemy_data = ResourceManager.get_enemy_data(enemy_id)
 			if enemy_data.size() > 0:
 				var element = enemy_data.get("element", "")
+				print("[LevelTile] 敵人ID：", enemy_id, " 元素：", element)
 				return get_element_display_name(element)
 	return "無"
 
 # 獲取元素顏色
 func get_element_color() -> Color:
-	var enemies = level_data.get("enemies", [])
 	if enemies.size() > 0:
 		var enemy_info = enemies[0]
 		var enemy_id = ""
@@ -405,3 +406,4 @@ func setup_self_data():
 		star_rating = level_data["star_rating"]
 	else:
 		print("[LevelTile] 警告：關卡資料缺少 star_rating 欄位，使用預設值 0")
+	
