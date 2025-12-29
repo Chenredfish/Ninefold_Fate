@@ -9,13 +9,15 @@
       "zh": "與水之史萊姆的第一戰",
       "en": "First battle against Water Slime"
     },
+    "difficulty": "normal",
+    "unlock_status": "available",
+    "star_rating": 0,
     "bgm": "",
     "background": "",
     "rewards": [],
     "objectives": [],
     "turn_limit": null,
     "special_rules": "",
-    "enemy_spawn_pattern": "",
     "events": [],
     "tutorial_steps": [],
     "unlock_conditions": [],
@@ -29,11 +31,11 @@
     "hero_id": "H001",
     "enemies": [
       {
-        "id": "E001",
-        "hp": 800,
-        "element": "water",
-        "atk": 80,
-        "cd": 3
+        "enemy_id": "E001",
+        "wave": 1,
+        "hp_override": null,
+        "atk_override": null,
+        "cd_override": null
       }
     ],
     "win_condition": "all_enemies_defeated"
@@ -48,17 +50,19 @@
       "zh": "挑戰火之哥布林",
       "en": "Challenge the Fire Goblin"
     },
+    "difficulty": "hard",
+    "unlock_status": "locked",
+    "star_rating": 0,
     "bgm": "",
     "background": "",
     "rewards": [],
     "objectives": [],
     "turn_limit": null,
     "special_rules": "",
-    "enemy_spawn_pattern": "",
     "events": [],
     "tutorial_steps": [],
-    "unlock_conditions": [],
-    "recommended_power": null,
+    "unlock_conditions": ["level_001"],
+    "recommended_power": 1500,
     "tags": [],
     "board": {
       "width": 9,
@@ -70,11 +74,11 @@
     "hero_id": "H001",
     "enemies": [
       {
-        "id": "E002",
-        "hp": 1200,
-        "element": "fire",
-        "atk": 100,
-        "cd": 3
+        "enemy_id": "E002",
+        "wave": 1,
+        "hp_override": 1200,
+        "atk_override": 100,
+        "cd_override": null
       }
     ],
     "win_condition": "all_enemies_defeated"

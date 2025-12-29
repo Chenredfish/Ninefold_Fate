@@ -111,13 +111,6 @@ func create_confirm_grid():
 			drop_zone.modulate = Color(1.2, 1.2, 1.0, 1.0)
 			drop_zone.tile_dropped.connect(_on_tile_dropped)
 
-	confirm_label = Label.new()
-	confirm_label.text = "Drag level tile here to choose level"
-	confirm_label.position = Vector2(300, 650)
-	confirm_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	confirm_label.add_theme_font_size_override("font_size", 20)
-	confirm_label.add_theme_color_override("font_color", Color.WHITE)
-	add_child(confirm_label)
 
 func create_level_tile_area():
 	"""
@@ -221,12 +214,10 @@ func _on_tile_dropped(tile_data: Dictionary):
 			_on_main_menu_tile_dropped()
 		"confirm_level":
 			_on_confirm_level_tile_dropped()
-		"level":
+		_: #因為關卡tile沒有特別的function欄位，所以預設就是關卡
 			var level_id = tile_data.get("level_id", "")
 			if level_id != "":
 				start_level(level_id)
-		_:
-			print("[LevelSelection] 未知的導航功能：", tile_data.get("function", ""))
 
 func start_level(level_id: String):
 	print("[LevelSelection] Starting level: ", level_id)

@@ -142,17 +142,17 @@ func create_level_content():
 	main_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(main_container)
 	
-	# 上層：關卡編號和難度指示器
+	# 上層：關卡編號和難度文字
 	var top_row = HBoxContainer.new()
-	top_row.custom_minimum_size = Vector2(0, 40)
+	top_row.custom_minimum_size = Vector2(0, 30)
 	main_container.add_child(top_row)
 	
 	# 關卡編號
 	level_number_label = Label.new()
-	level_number_label.text = level_id.replace("level", "").replace("_", "-")
-	level_number_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	level_number_label.text = "Lv." + level_id.replace("level_", "").replace("_", "-")
+	level_number_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	level_number_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	level_number_label.add_theme_font_size_override("font_size", 16)
+	level_number_label.add_theme_font_size_override("font_size", 14)
 	level_number_label.add_theme_color_override("font_color", Color.WHITE)
 	level_number_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_row.add_child(level_number_label)
@@ -162,39 +162,41 @@ func create_level_content():
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top_row.add_child(spacer)
 	
-	# 難度指示器
-	difficulty_indicator = ColorRect.new()
-	difficulty_indicator.custom_minimum_size = Vector2(20, 20)
-	difficulty_indicator.color = get_difficulty_color()
-	top_row.add_child(difficulty_indicator)
+	# 難度文字標籤
+	var difficulty_label = Label.new()
+	difficulty_label.text = get_difficulty_text()
+	difficulty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	difficulty_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	difficulty_label.add_theme_font_size_override("font_size", 12)
+	difficulty_label.add_theme_color_override("font_color", get_difficulty_color())
+	difficulty_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top_row.add_child(difficulty_label)
 	
-	# 中層：關卡圖示或鎖定圖示
-	var middle_section = CenterContainer.new()
-	middle_section.custom_minimum_size = Vector2(0, 80)
+	# 中層：狀態和元素類型
+	var middle_section = VBoxContainer.new()
+	middle_section.custom_minimum_size = Vector2(0, 90)
 	main_container.add_child(middle_section)
 	
-	if unlock_status == "locked":
-		# 鎖定圖示
-		lock_icon = TextureRect.new()
-		# 這裡可以設定鎖定圖示，目前用文字代替
-		var lock_label = Label.new()
-		lock_label.text = "🔒"
-		lock_label.add_theme_font_size_override("font_size", 32)
-		lock_label.add_theme_color_override("font_color", Color.GRAY)
-		lock_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lock_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		middle_section.add_child(lock_label)
-	else:
-		# 關卡圖示（可以根據敵人類型等設定）
-		level_icon = TextureRect.new()
-		# 這裡可以設定關卡圖示，目前用文字代替
-		var icon_label = Label.new()
-		icon_label.text = get_level_icon()
-		icon_label.add_theme_font_size_override("font_size", 32)
-		icon_label.add_theme_color_override("font_color", Color.WHITE)
-		icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		icon_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		middle_section.add_child(icon_label)
+	# 狀態標籤
+	var status_label = Label.new()
+	status_label.text = get_status_text()
+	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	status_label.add_theme_font_size_override("font_size", 16)
+	status_label.add_theme_color_override("font_color", get_status_color())
+	status_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	middle_section.add_child(status_label)
+	
+	# 元素類型標籤 (如果不是鎖定狀態)
+	if unlock_status != "locked":
+		var element_label = Label.new()
+		element_label.text = get_element_text()
+		element_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		element_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		element_label.add_theme_font_size_override("font_size", 14)
+		element_label.add_theme_color_override("font_color", get_element_color())
+		element_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		middle_section.add_child(element_label)
 	
 	# 下層：關卡標題和星級
 	var bottom_section = VBoxContainer.new()
@@ -210,31 +212,22 @@ func create_level_content():
 		level_title_label.text = str(level_name)
 	level_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	level_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	level_title_label.add_theme_font_size_override("font_size", 12)
+	level_title_label.add_theme_font_size_override("font_size", 14)
 	level_title_label.add_theme_color_override("font_color", Color.WHITE)
 	level_title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	level_title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bottom_section.add_child(level_title_label)
 	
-	# 星級顯示（僅已完成關卡）
+	# 星級顯示（僅已完成關卡）- 使用文字
 	if unlock_status == "completed":
-		star_container = HBoxContainer.new()
-		star_container.alignment = BoxContainer.ALIGNMENT_CENTER
-		star_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		
-		for i in range(3):
-			var star_label = Label.new()
-			if i < star_rating:
-				star_label.text = "⭐"
-				star_label.add_theme_color_override("font_color", Color.GOLD)
-			else:
-				star_label.text = "☆"
-				star_label.add_theme_color_override("font_color", Color.GRAY)
-			star_label.add_theme_font_size_override("font_size", 14)
-			star_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			star_container.add_child(star_label)
-		
-		bottom_section.add_child(star_container)
+		var star_label = Label.new()
+		star_label.text = get_star_text()
+		star_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		star_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		star_label.add_theme_font_size_override("font_size", 12)
+		star_label.add_theme_color_override("font_color", Color.GOLD)
+		star_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bottom_section.add_child(star_label)
 
 # === 輔助方法 ===
 
@@ -249,23 +242,6 @@ func get_difficulty_color() -> Color:
 			return Color.RED
 		_:
 			return Color.WHITE
-
-# 獲取關卡圖示
-func get_level_icon() -> String:
-	# 根據敵人類型或關卡特性返回對應圖示
-	var enemies = level_data.get("enemies", [])
-	if enemies.size() > 0:
-		match enemies[0]:
-			"goblin":
-				return "👹"
-			"orc":
-				return "👺"
-			"dragon":
-				return "🐲"
-			_:
-				return "⚔️"
-	return "⚔️"
-
 # === 拖拽數據覆寫 ===
 
 # 覆寫獲取圖塊資料
@@ -299,3 +275,125 @@ func get_debug_info() -> Dictionary:
 	base_data["star_rating"] = star_rating
 	base_data["difficulty"] = difficulty
 	return base_data
+
+# === 文字顯示輔助方法 ===
+
+# 獲取難度文字
+func get_difficulty_text() -> String:
+	match difficulty:
+		"normal":
+			return "普通"
+		"hard":
+			return "困難"
+		"hell":
+			return "地獄"
+		_:
+			return "?"
+
+# 獲取狀態文字
+func get_status_text() -> String:
+	match unlock_status:
+		"locked":
+			return "[鎖定]"
+		"available":
+			return "[可挑戰]"
+		"completed":
+			return "[已完成]"
+		_:
+			return ""
+
+# 獲取狀態顏色
+func get_status_color() -> Color:
+	match unlock_status:
+		"locked":
+			return Color.GRAY
+		"available":
+			return Color.CYAN
+		"completed":
+			return Color.LIME_GREEN
+		_:
+			return Color.WHITE
+
+# 獲取元素文字
+func get_element_text() -> String:
+	var enemies = level_data.get("enemies", [])
+	if enemies.size() > 0:
+		var enemy_info = enemies[0]
+		var enemy_id = ""
+		
+		# 處理兩種格式:純字串或字典
+		if enemy_info is String:
+			enemy_id = enemy_info
+		elif enemy_info is Dictionary:
+			enemy_id = enemy_info.get("id", "")
+			if enemy_id == "":
+				enemy_id = enemy_info.get("enemy_id", "")
+		
+		if enemy_id != "" and ResourceManager:
+			var enemy_data = ResourceManager.get_enemy_data(enemy_id)
+			if enemy_data.size() > 0:
+				var element = enemy_data.get("element", "")
+				return get_element_display_name(element)
+	return "無"
+
+# 獲取元素顏色
+func get_element_color() -> Color:
+	var enemies = level_data.get("enemies", [])
+	if enemies.size() > 0:
+		var enemy_info = enemies[0]
+		var enemy_id = ""
+		
+		# 處理兩種格式:純字串或字典
+		if enemy_info is String:
+			enemy_id = enemy_info
+		elif enemy_info is Dictionary:
+			enemy_id = enemy_info.get("id", "")
+			if enemy_id == "":
+				enemy_id = enemy_info.get("enemy_id", "")
+		
+		if enemy_id != "" and ResourceManager:
+			var enemy_data = ResourceManager.get_enemy_data(enemy_id)
+			if enemy_data.size() > 0:
+				var element = enemy_data.get("element", "")
+				return get_element_display_color(element)
+	return Color.WHITE
+
+# 獲取元素顯示名稱
+func get_element_display_name(element: String) -> String:
+	match element:
+		"water":
+			return "水"
+		"fire":
+			return "火"
+		"earth":
+			return "地"
+		"wind":
+			return "風"
+		"light":
+			return "光"
+		"dark":
+			return "闇"
+		_:
+			return "無"
+
+# 獲取元素顯示顏色
+func get_element_display_color(element: String) -> Color:
+	match element:
+		"water":
+			return Color.DODGER_BLUE
+		"fire":
+			return Color.ORANGE_RED
+		"earth":
+			return Color.SANDY_BROWN
+		"wind":
+			return Color.LIGHT_GREEN
+		"light":
+			return Color.GOLD
+		"dark":
+			return Color.PURPLE
+		_:
+			return Color.WHITE
+
+# 獲取星級文字
+func get_star_text() -> String:
+	return "★ " + str(star_rating) + " / 3"
