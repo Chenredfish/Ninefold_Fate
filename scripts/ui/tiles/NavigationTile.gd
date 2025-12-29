@@ -275,8 +275,13 @@ func _get_scene_type_from_function(func_name: String) -> int:
 	match func_name:
 		"level_select":
 			return GameSceneStateMachine.SceneType.LEVEL_SELECTION
-		"battle":
-			return GameSceneStateMachine.SceneType.BATTLE
+		"confirm_level":
+			#需要特別小心，因為有可能沒有出現導航資料讓戰鬥場景知道要進入哪個關卡
+			if navigation_data.has("level_id"):
+				return GameSceneStateMachine.SceneType.BATTLE
+			else :
+				print("[NavigationTile] 錯誤：缺少 level_id 導航資料，無法進入戰鬥場景")
+				return -1
 		"shop":
 			return GameSceneStateMachine.SceneType.MAIN_MENU  # 暫時回到主菜單
 		"deck":
@@ -293,7 +298,7 @@ func get_state_name_from_function(func_name: String) -> String:
 	match func_name:
 		"level_select":
 			return "level_selection"
-		"battle":
+		"confirm_level":	#取名有點奇怪，但是確定關卡就等於戰鬥
 			return "battle"
 		"shop":
 			return "main_menu"  # 暫時回到主菜單
@@ -348,8 +353,8 @@ static func create_main_menu_tile(scene_path: String = "") -> NavigationTile:
 	tile.set_navigation_data(scene_path, "main_menu")
 	return tile
 
-#確認關卡沒什麼需要放入的資料，純粹區分label用
+#確認關卡會進入戰鬥狀態，然後戰鬥狀態會根據導航資料來決定要進入哪個關卡
 static func create_confirm_tile() -> NavigationTile:
 	var tile = NavigationTile.new()
-	tile.set_navigation_data("", "confirm_level")
+	tile.set_navigation_data("res://scripts/scenes/battle.tscn", "confirm_level")
 	return tile

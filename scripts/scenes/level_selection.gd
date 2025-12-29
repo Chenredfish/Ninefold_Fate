@@ -225,7 +225,7 @@ func update_level_details(level_data: Dictionary):
 
 func _on_tile_dropped(tile_data: Dictionary):
 	print("Level tile dropped in center: ", tile_data)
-	#因為目前沒有有深度的關卡，所以只實作接收到關卡，剩下的功能留待未來擴展
+	#因為目前沒有d有深度的關卡，所以只實作接收到關卡，剩下的功能留待未來擴展
 	match  tile_data.get("function", ""):
 		"back_level":
 			_on_back_tile_dropped()
@@ -234,14 +234,20 @@ func _on_tile_dropped(tile_data: Dictionary):
 		"confirm_level":
 			_on_confirm_level_tile_dropped()
 		_: #因為關卡tile沒有特別的function欄位，所以預設就是關卡
-			var level_id = tile_data.get("level_id", "")
+			#這裡因為tile_data裡面只有tile這個物件，所以需要從tile物件裡面取得level_id
+			var level_id = tile_data.get("__tile_instance").level_data.get("id", "")
 			if level_id != "":
 				start_level(level_id)
+			else:
+				print("[LevelSelection] 錯誤：投放的tile缺少 level_id 資料")
 
 func start_level(level_id: String):
 	print("[LevelSelection] Starting level: ", level_id)
-	# 通過EventBus發送開始戰鬥請求
-	EventBus.emit_signal("level_selected", level_id)
+	# 需要修改導航資料讓確認關卡tile知道要進入哪個關卡
+	# 第一個資料是戰鬥要載入的場景路徑，第二個是功能名稱(改動狀態需要)，第三個是導航資料
+	confirm_level_control_tile.set_navigation_data("res://scripts/scenes/battle.tscn", "confirm_level", {"level_id": level_id})
+	print("[LevelSelection] 已更新確認關卡tile的導航資料：", confirm_level_control_tile.navigation_data)
+	#EventBus.emit_signal("level_selected", level_id)
 
 #因為目前沒有多層關卡選擇，所以這個功能先留著未來擴展
 func _on_back_tile_dropped():
@@ -256,4 +262,6 @@ func _on_main_menu_tile_dropped():
 
 func _on_confirm_level_tile_dropped():
 	print("[LevelSelection] 偵測到確認關卡的tile被投放")
-	#等等回來
+	#因為NavigtionTile的確認關卡tile會進入戰鬥狀態，所以這邊不需要特別處理a
+	#但是需要在關卡放入後，修改導航資料讓它知道要進入哪個關卡
+	pass
