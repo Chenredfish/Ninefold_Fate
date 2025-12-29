@@ -7,6 +7,7 @@ var progress_bar: ProgressBar
 var level_detail_panel: Panel
 var unified_confirm_grid: Control
 var level_tile_container: ScrollContainer
+var level_control_tile_container: ScrollContainer
 var level_tile_scrolll: HScrollBar
 var back_button: Button
 var confirm_label: Label
@@ -15,6 +16,16 @@ var confirm_label: Label
 var current_chapter: String = "chapter1"
 var available_levels: Array = []
 var selected_level_id: String = ""
+#備註:最上層的上一頁就是回到主選單，所以deep0是主選單
+var chapter_tree: Dictionary = {
+	"deep0": "main_menu",
+} #紀錄目前的分枝處在哪裡，其中紀錄所有歷史選擇的關卡ID
+#每一次進入到下一層關卡選擇時，都會加入一個新的deepX節點，紀錄上一層的關卡ID
+
+#三個關卡操控的tile
+var back_level_tile: NavigationTile
+var main_menu_tile: NavigationTile
+var confirm_level_control_tile: NavigationTile
 
 func _ready():
 	print("[LevelSelection] 載入關卡選擇場景，主節點：", self, " parent：", get_parent())
@@ -40,7 +51,7 @@ func setup_ui():
 func create_background_area():
 	#背景
 	var bg = ColorRect.new()
-	bg.size = Vector2(1080, 1000)
+	bg.size = Vector2(1080, 1920)
 	bg.color = Color(0.1, 0.1, 0.2, 1.0)
 	main_info_area.add_child(bg)
 
@@ -79,7 +90,7 @@ func create_main_info_area():
 
 func create_confirm_grid():
 	unified_confirm_grid = Control.new()
-	unified_confirm_grid.position = Vector2(240, 1000)
+	unified_confirm_grid.position = Vector2(240, 800)
 	unified_confirm_grid.size = Vector2(600, 600)
 	add_child(unified_confirm_grid)
 
@@ -94,12 +105,11 @@ func create_confirm_grid():
 			var drop_zone = DropZone.new()
 			drop_zone.position = Vector2(i * 200, j * 200)
 			drop_zone.size = Vector2(200, 200)
-			drop_zone.set_accepted_types(["level"])
+			drop_zone.set_accepted_types(["level", "back_level", "main_menu", "confirm_level"])
 			unified_confirm_grid.add_child(drop_zone)
 
-			if i==1 and j==1:
-				drop_zone.modulate = Color(1.2, 1.2, 1.0, 1.0)
-				drop_zone.tile_dropped.connect(_on_level_tile_dropped)
+			drop_zone.modulate = Color(1.2, 1.2, 1.0, 1.0)
+			drop_zone.tile_dropped.connect(_on_tile_dropped)
 
 	confirm_label = Label.new()
 	confirm_label.text = "Drag level tile here to choose level"
@@ -110,14 +120,16 @@ func create_confirm_grid():
 	add_child(confirm_label)
 
 func create_level_tile_area():
+	"""
 	var bottom_bg = ColorRect.new()
 	bottom_bg.position = Vector2(0, 1600)
 	bottom_bg.size = Vector2(1080, 320)
 	bottom_bg.color = Color(0.15, 0.15, 0.25, 1.0)
 	add_child(bottom_bg)
+	"""
 
 	level_tile_container = ScrollContainer.new()
-	level_tile_container.position = Vector2(40, 1620)
+	level_tile_container.position = Vector2(40, 1420)
 	level_tile_container.size = Vector2(1000, 240)
 	level_tile_container.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	level_tile_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -127,12 +139,45 @@ func create_level_tile_area():
 	tile_container.add_theme_constant_override("separation", 20)
 	level_tile_container.add_child(tile_container)
 
+	# 關卡操作的選項的容器
+	level_control_tile_container = ScrollContainer.new()
+	level_control_tile_container.position = Vector2(40, 1660)
+	level_control_tile_container.size = Vector2(1000, 240)
+	level_control_tile_container.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	level_control_tile_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	add_child(level_control_tile_container)
+
+	var control_tile_container = HBoxContainer.new()
+	control_tile_container.add_theme_constant_override("separation", 20)
+	level_control_tile_container.add_child(control_tile_container)
+
+	#目前三個功能，上一頁(關卡選擇可能有多層)，主選單，確認
+	#按下確認才會進入選擇的關卡或是下一層
+
+	back_level_tile = NavigationTile.create_back_tile(chapter_tree)
+	back_level_tile.size = Vector2(200, 200)
+	back_level_tile.position = Vector2(0, 0)
+	control_tile_container.add_child(back_level_tile)
+
+	main_menu_tile = NavigationTile.create_main_menu_tile("res://scripts/scenes/main_menu.tscn")
+	main_menu_tile.size = Vector2(200, 200)
+	main_menu_tile.position = Vector2(500, 0)
+	control_tile_container.add_child(main_menu_tile)
+
+	confirm_level_control_tile = NavigationTile.create_confirm_tile()
+	confirm_level_control_tile.size = Vector2(200, 200)
+	confirm_level_control_tile.position = Vector2(700, 0)
+	control_tile_container.add_child(confirm_level_control_tile)
+
+
+	"""
 	back_button = Button.new()
 	back_button.text = "Back"
 	back_button.position = Vector2(80, 1860)
 	back_button.size = Vector2(150, 60)
 	back_button.pressed.connect(_on_back_pressed)
 	add_child(back_button)
+	"""
 
 func load_chapter_levels():
 	if not ResourceManager:
@@ -166,18 +211,39 @@ func update_level_details(level_data: Dictionary):
 	var label = level_detail_panel.get_child(0)
 	label.text = detail_text
 
-func _on_level_tile_dropped(tile_data: Dictionary):
+func _on_tile_dropped(tile_data: Dictionary):
 	print("Level tile dropped in center: ", tile_data)
-	var level_id = tile_data.get("level_id", "")
-	if level_id != "":
-		start_level(level_id)
+	#因為目前沒有有深度的關卡，所以只實作接收到關卡，剩下的功能留待未來擴展
+	match  tile_data.get("function", ""):
+		"back_level":
+			_on_back_tile_dropped()
+		"main_menu":
+			_on_main_menu_tile_dropped()
+		"confirm_level":
+			_on_confirm_level_tile_dropped()
+		"level":
+			var level_id = tile_data.get("level_id", "")
+			if level_id != "":
+				start_level(level_id)
+		_:
+			print("[LevelSelection] 未知的導航功能：", tile_data.get("function", ""))
 
 func start_level(level_id: String):
 	print("[LevelSelection] Starting level: ", level_id)
 	# 通過EventBus發送開始戰鬥請求
 	EventBus.emit_signal("level_selected", level_id)
 
-func _on_back_pressed():
-	print("[LevelSelection] Back button pressed")
+#因為目前沒有多層關卡選擇，所以這個功能先留著未來擴展
+func _on_back_tile_dropped():
+	print("[LevelSelection] 偵測到上一頁的tile被投放")
+	pass
+
+func _on_main_menu_tile_dropped():
+	print("[LevelSelection] 偵測到主選單的tile被投放")
 	# 返回主菜單
-	EventBus.emit_signal("scene_transition_requested", "main_menu", {})
+	#await main_menu_tile.drag_ended
+	#EventBus.emit_signal("scene_transition_requested", "main_menu", {})
+
+func _on_confirm_level_tile_dropped():
+	print("[LevelSelection] 偵測到確認關卡的tile被投放")
+	#等等回來

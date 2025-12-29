@@ -283,6 +283,8 @@ func _get_scene_type_from_function(func_name: String) -> int:
 			return GameSceneStateMachine.SceneType.DECK_BUILD
 		"settings":
 			return GameSceneStateMachine.SceneType.SETTINGS
+		"main_menu":
+			return GameSceneStateMachine.SceneType.MAIN_MENU
 		_:
 			return -1
 
@@ -332,4 +334,22 @@ static func create_settings_tile(scene_path: String = "") -> NavigationTile:
 static func create_level_select_tile(scene_path: String = "") -> NavigationTile:
 	var tile = NavigationTile.new()
 	tile.set_navigation_data(scene_path, "level_select")
+	return tile
+
+# 創建返回上一頁導航圖塊
+#他不是由提供場景路徑來決定，而是由關卡選擇的歷史紀錄來決定
+static func create_back_tile(chapter_tree: Dictionary) -> NavigationTile:
+	var tile = NavigationTile.new()
+	tile.set_navigation_data("", "back_level", chapter_tree)
+	return tile
+	
+static func create_main_menu_tile(scene_path: String = "") -> NavigationTile:
+	var tile = NavigationTile.new()
+	tile.set_navigation_data(scene_path, "main_menu")
+	return tile
+
+#確認關卡沒什麼需要放入的資料，純粹區分label用
+static func create_confirm_tile() -> NavigationTile:
+	var tile = NavigationTile.new()
+	tile.set_navigation_data("", "confirm_level")
 	return tile
