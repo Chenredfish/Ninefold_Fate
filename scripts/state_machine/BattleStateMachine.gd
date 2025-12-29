@@ -123,6 +123,11 @@ func _on_block_placed(block_instance: Node, position: Vector2):
 func _on_damage_dealt(source: Node, target: Node, amount: int, type: String):
 	print("[BattleStateMachine] Damage dealt: ", amount, " (", type, ")")
 
+func handle_input(event: InputEvent):
+	# 轉發給當前狀態
+	if current_state:
+		current_state.handle_input(event)
+
 # 戰鬥狀態類定義
 
 # 準備狀態
