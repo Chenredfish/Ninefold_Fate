@@ -472,6 +472,9 @@ func get_level_data(level_id: String) -> Dictionary:
 func get_all_level_ids() -> Array:
 	return level_database.keys()
 
+func get_enemy_data(enemy_id: String) -> Dictionary:
+	return enemy_database.get(enemy_id, {})
+
 # 工具方法：創建關卡中的敵人
 func create_level_enemies(level_id: String) -> Array:
 	var level_data = get_level_data(level_id)

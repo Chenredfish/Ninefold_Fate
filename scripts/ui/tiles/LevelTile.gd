@@ -29,6 +29,7 @@ static func create_from_level_id(chapter: String, level_id: String) -> LevelTile
 	tile.tile_type = "level"
 	tile.size = Vector2(200, 200)
 	
+	
 	# 從 ResourceManager 載入關卡資料（如果可用）
 	if ResourceManager:
 		tile.level_data = ResourceManager.get_level_data(level_id)
@@ -41,13 +42,12 @@ static func create_from_level_id(chapter: String, level_id: String) -> LevelTile
 			"enemies": [{"id": "E001"}],
 			"rewards": []
 		}
-	
 	return tile
 
 # 創建可用關卡
 static func create_available_level(chapter: String, level_id: String, title: String = "") -> LevelTile:
 	var tile = create_from_level_id(chapter, level_id)
-	tile.unlock_status = "available"
+
 	if title != "":
 		# 如果提供了標題，覆蓋原有標題
 		if tile.level_data.has("name") and tile.level_data["name"] is Dictionary:
@@ -56,18 +56,6 @@ static func create_available_level(chapter: String, level_id: String, title: Str
 			tile.level_data["name"] = {"zh": title}
 	return tile
 
-# 創建已完成關卡
-static func create_completed_level(chapter: String, level_id: String, stars: int = 3) -> LevelTile:
-	var tile = create_from_level_id(chapter, level_id)
-	tile.unlock_status = "completed"
-	tile.star_rating = stars
-	return tile
-
-# 創建鎖定關卡
-static func create_locked_level(chapter: String, level_id: String) -> LevelTile:
-	var tile = create_from_level_id(chapter, level_id)
-	tile.unlock_status = "locked"
-	return tile
 
 func _ready():
 	# 設置基本屬性
@@ -76,6 +64,9 @@ func _ready():
 	# 調用父類初始化
 	super._ready()
 	
+	#資料取出
+	setup_self_data()
+
 	# 設置關卡圖塊的特殊樣式
 	setup_level_tile_style()
 
@@ -85,8 +76,9 @@ func _ready():
 func setup_level_tile_style():
 	var style_box = StyleBoxFlat.new()
 	
+	print("[LevelTile] 設置樣式，關卡ID：", level_id, " 解鎖狀態：", unlock_status, " 難度：", difficulty)
 	# 根據解鎖狀態設定顏色
-	match unlock_status:
+	match self.level_data.get("unlock_status", "locked"):
 		"locked":
 			style_box.bg_color = Color(0.3, 0.3, 0.3, 0.8)      # 灰色 - 鎖定
 		"available":
@@ -99,7 +91,7 @@ func setup_level_tile_style():
 	# 根據難度調整邊框
 	var border_width = 2
 	var border_color = Color.WHITE
-	match difficulty:
+	match self.level_data.get("difficulty", "normal"):
 		"normal":
 			border_width = 2
 			border_color = Color.WHITE
@@ -397,3 +389,19 @@ func get_element_display_color(element: String) -> Color:
 # 獲取星級文字
 func get_star_text() -> String:
 	return "★ " + str(star_rating) + " / 3"
+
+func setup_self_data():
+	if level_data.has("unlock_status"):
+		unlock_status = level_data["unlock_status"]
+	else:
+		print("[LevelTile] 警告：關卡資料缺少 unlock_status 欄位，使用預設值 'locked'")
+	
+	if level_data.has("difficulty"):
+		difficulty = level_data["difficulty"]
+	else:
+		print("[LevelTile] 警告：關卡資料缺少 difficulty 欄位，使用預設值 'normal'")
+
+	if level_data.has("star_rating"):
+		star_rating = level_data["star_rating"]
+	else:
+		print("[LevelTile] 警告：關卡資料缺少 star_rating 欄位，使用預設值 0")

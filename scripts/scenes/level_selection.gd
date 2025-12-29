@@ -121,6 +121,7 @@ func create_level_tile_area():
 	add_child(bottom_bg)
 	"""
 
+	# 關卡選擇的容器
 	level_tile_container = ScrollContainer.new()
 	level_tile_container.position = Vector2(40, 1420)
 	level_tile_container.size = Vector2(1000, 240)
