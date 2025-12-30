@@ -1,5 +1,12 @@
 extends Control
 
+var bottom_right_container:HBoxContainer
+var tile_container:ScrollContainer
+
+var current_hands:Array = []
+
+var drop_board:BattleBoard
+
 func _ready():
 	print("[BattleScene] 載入戰鬥場景，主節點：", self, " parent：", get_parent())
 	EventBus.setup_battle_ui.connect(setup_battle_ui)
@@ -25,7 +32,7 @@ func create_background_area():
 
 func create_control_buttons():
 	# 右下角：結束回合、技能
-	var bottom_right_container = HBoxContainer.new()
+	bottom_right_container = HBoxContainer.new()
 	bottom_right_container.add_theme_constant_override("separation", 20)
 	# Anchor to bottom right
 	bottom_right_container.anchor_left = 1.0
@@ -93,8 +100,19 @@ func setup_battle_ui(level_data: Dictionary):
 	EventBus.emit_signal("battle_ui_update_complete")
 
 func _setup_board_ui(board_size: Vector2, board_blocked: Array):
-	print("[BattleScene] 設置戰鬥棋盤UI，大小：", board_size)
-	#等等再實作
+	# 先加底色區塊
+	var board_bg = ColorRect.new()
+	board_bg.position = Vector2(240, 550)
+	board_bg.size = Vector2(600, 600)
+	board_bg.color = Color(0.2, 0.2, 0.3, 1.0)
+	add_child(board_bg)
+
+	#再加棋盤
+	drop_board = BattleBoard.new()
+	drop_board.position = Vector2(240, 550)
+	add_child(drop_board)
+
+	drop_board.tile_dropped.connect(_on_tile_dropped)
 
 func setup_deck_ui(deck_data: Dictionary):
 	#隨機抽出四張卡當作起手，每一個代表一個tile
@@ -110,7 +128,40 @@ func setup_deck_ui(deck_data: Dictionary):
 
 
 	print("[BattleScene] 設置牌組UI，起手牌：", random_block_id)
-	
+
+	current_hands = random_block_id
+	update_tile_container()
+
+func update_tile_container():
+	#有可能沒有tile_container
+	if not tile_container:
+		tile_container = ScrollContainer.new()
+		tile_container.position = Vector2(40, 1420)
+		tile_container.size = Vector2(1000, 240)
+		tile_container.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+		tile_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		add_child(tile_container)
+
+	# 清空內容容器
+	var hand_hbox:HBoxContainer = null
+	if tile_container.get_child_count() > 0:
+		hand_hbox = tile_container.get_child(0)
+		hand_hbox.queue_free()
+
+	hand_hbox = HBoxContainer.new()
+	hand_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hand_hbox.size_flags_vertical = Control.SIZE_FILL
+	hand_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	hand_hbox.add_theme_constant_override("separation", 20)
+	tile_container.add_child(hand_hbox)
+
+	print("更新手牌區域，當前手牌：", current_hands)
+	for i in range(current_hands.size()):
+		var tile_id = current_hands[i]
+		var tile = BattleTile.create_from_id(tile_id)
+		tile.size = Vector2(200, 200)
+		tile.name = "BattleTile_" + tile_id
+		hand_hbox.add_child(tile)
 
 func _setup_enemies(enemies: Array):
 	#這裡有兩個部分：一個是建立敵人的物件(必須，因為需要存放current_hp等資料)
@@ -124,3 +175,6 @@ func _on_end_turn_pressed():
 func _on_skill_pressed():
 	#施放技能，需要看能量是否足夠，反正也是之後再說
 	pass
+
+func _on_tile_dropped(tile_data: Dictionary):
+	print("[BattleScene] 收到方塊放置事件，方塊資料：", tile_data)
