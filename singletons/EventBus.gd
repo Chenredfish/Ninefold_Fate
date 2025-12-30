@@ -6,6 +6,8 @@ signal battle_started(level_data: Dictionary)
 signal battle_ended(result: String, rewards: Array)
 signal turn_started(turn_number: int)
 signal turn_ended()
+signal update_battle_ui(level_data: Dictionary)
+signal battle_ui_update_complete()
 
 # 物件生命週期事件  
 signal hero_created(hero_instance: Node)

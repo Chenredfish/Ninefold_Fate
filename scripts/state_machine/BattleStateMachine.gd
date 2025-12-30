@@ -149,13 +149,23 @@ class PreparingState extends BaseState:
 		print("[BattleStateMachine] Preparing battle for level: ", level_id)
 		
 		# 模擬載入時間（實際中可能需要載入資源）
-		await state_machine.get_tree().create_timer(0.5).timeout
+		await _get_level_data(level_id)
+		await EventBus.battle_ui_update_complete
 		
 		# 開始第一回合
 		state_machine.next_turn()
 	
 	func can_transition_to(next_state_id: String) -> bool:
 		return next_state_id in ["player_turn", "defeat"]
+
+	#先把資料取出，之後把取出的資料用EventBus傳給UI去更新顯示
+	func _get_level_data(level_id: String) -> Dictionary:
+		var level_data = ResourceManager.get_level_data(level_id)
+		print("[BattleStateMachine] Retrieved level data: ", level_data)
+		return level_data
+
+	func _update_ui(level_data: Dictionary):
+		EventBus.emit_signal("battle_ui_update_level", level_data)
 
 # 玩家回合狀態
 class PlayerTurnState extends BaseState:
