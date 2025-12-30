@@ -2,7 +2,8 @@ extends Control
 
 func _ready():
 	print("[BattleScene] 載入戰鬥場景，主節點：", self, " parent：", get_parent())
-	EventBus.update_battle_ui.connect(update_battle_ui)
+	EventBus.setup_battle_ui.connect(setup_battle_ui)
+	EventBus.setup_deck_ui.connect(setup_deck_ui)
 	setup_ui()
 
 func setup_ui():
@@ -13,7 +14,7 @@ func setup_ui():
 	create_background_area()
 	#不用創造上半部分的資訊區域，因為有_setup_enemies會處理
 	#也不用創建棋盤區域，因為有_setup_board_ui會處理
-    #還要創造tile，他應該會根據deck_data動態生成，類似敵人和棋盤的處理方式
+	#還要創造tile，他應該會根據deck_data動態生成，類似敵人和棋盤的處理方式
 	create_control_buttons()
 
 func create_background_area():
@@ -65,7 +66,7 @@ func create_control_buttons():
 	pause_button.offset_bottom = 120
 	add_child(pause_button)
 
-func update_battle_ui(level_data: Dictionary):
+func setup_battle_ui(level_data: Dictionary):
 	print("[BattleScene] 收到更新戰鬥UI的請求，關卡資料ID：", level_data.get("level_id", ""))
 
 	if level_data.size() == 0:
@@ -94,6 +95,22 @@ func update_battle_ui(level_data: Dictionary):
 func _setup_board_ui(board_size: Vector2, board_blocked: Array):
 	print("[BattleScene] 設置戰鬥棋盤UI，大小：", board_size)
 	#等等再實作
+
+func setup_deck_ui(deck_data: Dictionary):
+	#隨機抽出四張卡當作起手，每一個代表一個tile
+	#先取出size，然後取亂數索引
+	var deck_size:int = int(deck_data.get("size", 0))
+	var random_block_id:Array = []
+	while random_block_id.size() < 4 and deck_size > 0:
+		var rand_index:int = randi() % deck_size
+		var random_block:String = deck_data.get("blocks")[rand_index]
+		#避免重複
+		if not random_block in random_block_id:
+			random_block_id.append(random_block)
+
+
+	print("[BattleScene] 設置牌組UI，起手牌：", random_block_id)
+	
 
 func _setup_enemies(enemies: Array):
 	#這裡有兩個部分：一個是建立敵人的物件(必須，因為需要存放current_hp等資料)

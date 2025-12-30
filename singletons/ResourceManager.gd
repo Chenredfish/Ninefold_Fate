@@ -12,6 +12,7 @@ var hero_database: Dictionary = {}
 var enemy_database: Dictionary = {}
 var block_database: Dictionary = {}
 var level_database: Dictionary = {}
+var deck_database: Dictionary = {}
 
 # 預載入的場景
 var preloaded_scenes: Dictionary = {}
@@ -37,6 +38,7 @@ func _load_databases():
 	enemy_database = _load_json_database("res://data/enemies.json")
 	block_database = _load_json_database("res://data/blocks.json")
 	level_database = _load_json_database("res://data/levels.json")
+	deck_database = _load_json_database("res://data/decks.json")
 	
 	print("[ResourceManager] 數據庫載入完成")
 	print("  - Balance: ", "已載入" if balance_data.size() > 0 else "空")
@@ -44,6 +46,7 @@ func _load_databases():
 	print("  - Enemies: ", enemy_database.size(), " 個")
 	print("  - Blocks: ", block_database.size(), " 個")
 	print("  - Levels: ", level_database.size(), " 個")
+	print("  - Decks: ", deck_database.size(), " 個")
 
 func _load_json_database(file_path: String) -> Dictionary:
 	if not FileAccess.file_exists(file_path):
@@ -468,6 +471,10 @@ func get_combo_multiplier(combo_count: int) -> float:
 # 工具方法：載入關卡數據
 func get_level_data(level_id: String) -> Dictionary:
 	return level_database.get(level_id, {})
+
+func get_deck_data(deck_id: String) -> Dictionary:
+	return deck_database.get(deck_id, {})
+
 
 func get_all_level_ids() -> Array:
 	return level_database.keys()

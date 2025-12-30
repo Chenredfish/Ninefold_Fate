@@ -145,12 +145,19 @@ class PreparingState extends BaseState:
 			state_machine.transition_to("defeat")
 			return
 		
+		var deck_id = data.get("deck_id", "")
+		if deck_id.is_empty():
+			#先用預設deck
+			deck_id = "deck00"
+		
 		# 初始化戰場
-		print("[BattleStateMachine] Preparing battle for level: ", level_id)
+		print("[BattleStateMachine] 準備關卡的UI, ID: ", level_id)
+		print("[BattleStateMachine] 使用的牌組UI, ID: ", deck_id)
 		
 		# 模擬載入時間（實際中可能需要載入資源）
-		await _get_level_data(level_id)
+		await _setup_ui(level_id, deck_id)
 		await EventBus.battle_ui_update_complete
+		await EventBus
 		
 		# 開始第一回合
 		state_machine.next_turn()
@@ -161,11 +168,19 @@ class PreparingState extends BaseState:
 	#先把資料取出，之後把取出的資料用EventBus傳給UI去更新顯示
 	func _get_level_data(level_id: String) -> Dictionary:
 		var level_data = ResourceManager.get_level_data(level_id)
-		print("[BattleStateMachine] Retrieved level data: ", level_data)
+		#print("[BattleStateMachine] Retrieved level data: ", level_data)
 		return level_data
 
-	func _update_ui(level_data: Dictionary):
-		EventBus.emit_signal("battle_ui_update_level", level_data)
+	func _get_deck_data(deck_id: String) -> Dictionary:
+		var deck_data = ResourceManager.get_deck_data(deck_id)
+		print("[BattleStateMachine] Retrieved deck data: ", deck_data)
+		return deck_data
+
+	func _setup_ui(level_id: String, deck_id: String) -> void:
+		var level_data: Dictionary = _get_level_data(level_id)
+		var deck_data: Dictionary = _get_deck_data(deck_id)
+		EventBus.emit_signal("setup_battle_ui", level_data)
+		EventBus.emit_signal("setup_deck_ui", deck_data)
 
 # 玩家回合狀態
 class PlayerTurnState extends BaseState:
