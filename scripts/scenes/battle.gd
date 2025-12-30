@@ -13,6 +13,7 @@ func setup_ui():
 	create_background_area()
 	#不用創造上半部分的資訊區域，因為有_setup_enemies會處理
 	#也不用創建棋盤區域，因為有_setup_board_ui會處理
+    #還要創造tile，他應該會根據deck_data動態生成，類似敵人和棋盤的處理方式
 	create_control_buttons()
 
 func create_background_area():
