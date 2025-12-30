@@ -33,32 +33,35 @@ func create_control_buttons():
 	# Offset from bottom right
 	bottom_right_container.offset_right = -40
 	bottom_right_container.offset_bottom = -40
-	bottom_right_container.offset_left = -240 # 寬度預留
-	bottom_right_container.offset_top = -80
+	bottom_right_container.offset_left = -520 # 兩個按鈕+間距寬度預留
+	bottom_right_container.offset_top = -100
 	add_child(bottom_right_container)
 
 	var end_turn_button = Button.new()
 	end_turn_button.text = "結束回合"
+	end_turn_button.custom_minimum_size = Vector2(240, 80) # 放大兩倍
 	end_turn_button.connect("pressed", _on_end_turn_pressed)
 	bottom_right_container.add_child(end_turn_button)
 
 	var skill_button = Button.new()
 	skill_button.text = "技能"
+	skill_button.custom_minimum_size = Vector2(240, 80) # 放大兩倍
 	skill_button.connect("pressed", _on_skill_pressed)
 	bottom_right_container.add_child(skill_button)
 
 	# 右上角：暫停
 	var pause_button = Button.new()
 	pause_button.text = "暫停"
+	pause_button.custom_minimum_size = Vector2(240, 80) # 放大兩倍
 	# Anchor to top right
 	pause_button.anchor_left = 1.0
 	pause_button.anchor_top = 0.0
 	pause_button.anchor_right = 1.0
 	pause_button.anchor_bottom = 0.0
-	pause_button.offset_right = -40
+	pause_button.offset_right = -40 # 右側預留空間，與下方一致
 	pause_button.offset_top = 40
-	pause_button.offset_left = -120 # 按鈕寬度預留
-	pause_button.offset_bottom = 100
+	pause_button.offset_left = -280 # 按鈕寬度+右側預留空間
+	pause_button.offset_bottom = 120
 	add_child(pause_button)
 
 func update_battle_ui(level_data: Dictionary):
