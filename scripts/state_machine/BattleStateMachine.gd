@@ -21,7 +21,7 @@ var max_turns: int = 100  # 防止無限戰鬥
 
 # 戰鬥狀態
 var player_tiles_placed: int = 0
-var max_tiles_per_turn: int = 4
+var max_tiles_per_turn: int = 100
 var enemies_remaining: int = 0
 
 func _init():
@@ -156,8 +156,8 @@ class PreparingState extends BaseState:
 		
 		# 模擬載入時間（實際中可能需要載入資源）
 		await _setup_ui(level_id, deck_id)
-		await EventBus.battle_ui_update_complete
-		await EventBus
+		# 等待 UI 更新完成
+		await EventBus.battle_ui_update_complete.connect(func(): pass, Object.CONNECT_ONE_SHOT)
 		
 		# 開始第一回合
 		state_machine.next_turn()
@@ -181,6 +181,8 @@ class PreparingState extends BaseState:
 		var deck_data: Dictionary = _get_deck_data(deck_id)
 		EventBus.emit_signal("setup_battle_ui", level_data)
 		EventBus.emit_signal("setup_deck_ui", deck_data)
+		# 加一點延遲確保UI有時間處理
+		await state_machine.get_tree().process_frame
 
 # 玩家回合狀態
 class PlayerTurnState extends BaseState:

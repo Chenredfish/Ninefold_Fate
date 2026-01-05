@@ -6,6 +6,7 @@ var hand_hbox:HBoxContainer
 
 var current_hands:Array = []
 var deck_data:Array = []	#這不代表現在牌堆，而是整個牌組資料，新增手牌的時候會自動檢查是否已經在手牌裡
+var enemies_scenes:Array = []
 
 
 var drop_board:BattleBoard
@@ -187,6 +188,7 @@ func _setup_enemies(enemies: Array):
 				add_child(enemy)
 				enemy.position = Vector2(540 + number_of_enemies * 220 - ((enemies.size() - 1) * 110), 300)
 				number_of_enemies += 1
+				enemies_scenes.append(enemy)
 		else:
 			print("[BattleScene] 警告：敵人資料中缺少wave資訊，無法判斷是否創建敵人")
 
@@ -243,6 +245,8 @@ func _on_end_turn_pressed():
 	print("[BattleScene] 補充後手牌：", current_hands)
 	update_tile_container()
 
+	#要鎖住送出結束回合事件，等狀態回到玩家回合再解鎖
+	EventBus.emit_signal("turn_ended")
 
 
 func _on_skill_pressed():
