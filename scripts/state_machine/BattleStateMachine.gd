@@ -308,14 +308,15 @@ class PlayerTurnState extends BaseState:
 	func update(delta: float):
 		super.update(delta)
 		
-		time_remaining -= delta
-		
-		# 更新UI倒數
-		EventBus.emit_signal("ui_turn_timer_updated", time_remaining)
-		
-		# 時間到了自動結束回合
-		if time_remaining <= 0:
-			end_player_turn()
+		# 暫時移除倒數計時功能以便測試
+		# time_remaining -= delta
+		# 
+		# # 更新UI倒數
+		# EventBus.emit_signal("ui_turn_timer_updated", time_remaining)
+		# 
+		# # 時間到了自動結束回合
+		# if time_remaining <= 0:
+		# 	end_player_turn()
 	
 	func handle_input(event: InputEvent):
 		super.handle_input(event)
