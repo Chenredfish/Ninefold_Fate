@@ -2,8 +2,11 @@ extends Control
 
 var bottom_right_container:HBoxContainer
 var tile_container:ScrollContainer
+var hand_hbox:HBoxContainer
 
 var current_hands:Array = []
+var deck_data:Array = []	#這不代表現在牌堆，而是整個牌組資料，新增手牌的時候會自動檢查是否已經在手牌裡
+
 
 var drop_board:BattleBoard
 
@@ -21,7 +24,7 @@ func setup_ui():
 	create_background_area()
 	#不用創造上半部分的資訊區域，因為有_setup_enemies會處理
 	#也不用創建棋盤區域，因為有_setup_board_ui會處理
-	#還要創造tile，他應該會根據deck_data動態生成，類似敵人和棋盤的處理方式
+	#還要創造tile，他應該會根據deck動態生成，類似敵人和棋盤的處理方式
 	create_control_buttons()
 
 func create_background_area():
@@ -114,14 +117,16 @@ func _setup_board_ui(board_size: Vector2, board_blocked: Array):
 
 	drop_board.tile_dropped.connect(_on_tile_dropped)
 
-func setup_deck_ui(deck_data: Dictionary):
+func setup_deck_ui(deck: Dictionary):
 	#隨機抽出四張卡當作起手，每一個代表一個tile
 	#先取出size，然後取亂數索引
-	var deck_size:int = int(deck_data.get("size", 0))
+	print("[BattleScene] 收到設置牌組UI的請求，牌組資料：", deck)
+	deck_data = deck.get("blocks") #把牌組資料存起來，之後抽排從裡面挑
+	var deck_size:int = int(deck.get("size", 0))
 	var random_block_id:Array = []
 	while random_block_id.size() < 4 and deck_size > 0:
 		var rand_index:int = randi() % deck_size
-		var random_block:String = deck_data.get("blocks")[rand_index]
+		var random_block:String = deck.get("blocks")[rand_index]
 		#避免重複
 		if not random_block in random_block_id:
 			random_block_id.append(random_block)
@@ -148,12 +153,13 @@ func update_tile_container():
 		hand_hbox = tile_container.get_child(0)
 		hand_hbox.queue_free()
 
-	hand_hbox = HBoxContainer.new()
-	hand_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hand_hbox.size_flags_vertical = Control.SIZE_FILL
-	hand_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	hand_hbox.add_theme_constant_override("separation", 20)
-	tile_container.add_child(hand_hbox)
+	self.hand_hbox = HBoxContainer.new()
+	self.hand_hbox.name = "hand_hbox"
+	self.hand_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	self.hand_hbox.size_flags_vertical = Control.SIZE_FILL
+	self.hand_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	self.hand_hbox.add_theme_constant_override("separation", 20)
+	tile_container.add_child(self.hand_hbox)
 
 	print("更新手牌區域，當前手牌：", current_hands)
 	for i in range(current_hands.size()):
@@ -161,7 +167,7 @@ func update_tile_container():
 		var tile = BattleTile.create_from_id(tile_id)
 		tile.size = Vector2(200, 200)
 		tile.name = "BattleTile_" + tile_id
-		hand_hbox.add_child(tile)
+		self.hand_hbox.add_child(tile)
 
 func _setup_enemies(enemies: Array):
 	#最後決定把敵人也做成場景，場景較包含自己的畫面
@@ -186,8 +192,58 @@ func _setup_enemies(enemies: Array):
 
 
 func _on_end_turn_pressed():
-	#可以新增一個確認視窗，之後再說
-	pass
+	"""結束回合按鈕被按下"""
+	var total_value: int = drop_board.calculate_total_damage()
+	print("[BattleScene] 結束回合按鈕被按下,計算棋盤總價值：", total_value)
+
+	if not self.hand_hbox:
+		return 
+	
+	# 先記錄UI中實際還有哪些卡
+	var cards_in_ui = []
+	for tile in self.hand_hbox.get_children():
+		if tile.block_id:
+			cards_in_ui.append(tile.block_id)
+	
+	print("[BattleScene] UI中的卡片：", cards_in_ui)
+	print("[BattleScene] 手牌列表：", current_hands)
+	
+	# 找出被使用的卡片(在手牌中但不在UI中)
+	var used_cards = []
+	for card_id in current_hands:
+		if card_id not in cards_in_ui:
+			used_cards.append(card_id)
+	
+	# 從current_hands移除被使用的卡片
+	for card_id in used_cards:
+		current_hands.erase(card_id)
+		print("[BattleScene] 移除已使用的卡片：", card_id)
+
+	drop_board.clear_board()
+
+	# 補充卡片到4張
+	while current_hands.size() < 4:
+		# 從deck_data裡找不在手牌中的卡
+		var available_cards = []
+		for card_id in deck_data:
+			if card_id not in current_hands:
+				available_cards.append(card_id)
+		
+		# 如果沒有可用卡片就停止
+		if available_cards.is_empty():
+			print("[BattleScene] 牌組已空,無法補充更多卡片")
+			break
+		
+		# 隨機抽一張
+		var rand_index: int = randi() % available_cards.size()
+		var drawn_card = available_cards[rand_index]
+		current_hands.append(drawn_card)
+		print("[BattleScene] 抽到卡片：", drawn_card)
+
+	print("[BattleScene] 補充後手牌：", current_hands)
+	update_tile_container()
+
+
 
 func _on_skill_pressed():
 	#施放技能，需要看能量是否足夠，反正也是之後再說
