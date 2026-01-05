@@ -1,112 +1,42 @@
-# Hero.gd - 英雄基礎類別
+# Hero.gd - 英雄類別（繼承 BaseCharacter）
 class_name Hero
-extends Node2D
+extends BaseCharacter
 
-# 英雄基礎屬性
-@export var hero_id: String = ""
-@export var hero_name: String = ""
-@export var element: String = "neutral"
+# === 英雄特有屬性 ===
 @export var base_attack: int = 100
-@export var current_hp: int = 1000
-@export var max_hp: int = 1000
-@export var level: int = 1
 
-# 技能系統
-@onready var skill_component: Node = $SkillComponent
+# === 技能系統 ===
+@onready var skill_component: Node = null
 
-# 視覺組件引用
-@onready var health_bar: ColorRect = null  # 改為 ColorRect 類型，動態創建
-@onready var sprite: Sprite2D = $Visual/Sprite2D
-@onready var animation_player: AnimationPlayer = $Visual/AnimationPlayer
-
-# 狀態
-var is_alive: bool = true
-var status_effects: Array = []
-var tags: Array = []
-
-# 信號
+# === 英雄特有信號 ===
 signal hero_died(hero: Hero)
 signal hero_healed(hero: Hero, amount: int)
 signal skill_used(hero: Hero, skill_id: String)
 
+# === 向後兼容的屬性別名 ===
+var hero_name: String:
+	get: return character_name
+	set(value): character_name = value
+
+var hero_id: String:
+	get: return character_id
+	set(value): character_id = value
+
 func _ready():
-	# 連接到 EventBus
-	_connect_events()
+	super._ready()  # 調用父類的 _ready
 	
-	# 初始化UI
-	_update_ui()
+	# 英雄特有的初始化
+	_try_connect_skill_component()
 
-func _connect_events():
-	if EventBus:
-		# 連接戰鬥相關事件
-		if not EventBus.damage_dealt.is_connected(_on_damage_received):
-			EventBus.damage_dealt.connect(_on_damage_received)
-		if not EventBus.healing_applied.is_connected(_on_healing_received):
-			EventBus.healing_applied.connect(_on_healing_received)
+# === 重寫父類方法 ===
+func get_character_type() -> String:
+	return "Hero"
 
-func load_from_data(hero_data: Dictionary):
-	"""從JSON數據載入英雄資訊"""
-	hero_id = hero_data.get("id", "")
-	hero_name = _get_localized_name(hero_data.get("name", {}))
-	element = hero_data.get("element", "neutral")
-	base_attack = hero_data.get("base_attack", 100)
-	max_hp = hero_data.get("hp", 1000)
-	current_hp = max_hp
-	level = hero_data.get("level", 1)
-	tags = hero_data.get("tags", [])
-	
-	# 載入技能
-	_load_skills(hero_data.get("skills", []))
-	
-	# 載入視覺資源
-	_load_visual_resources(hero_data)
-	
-	# 更新UI顯示
-	_update_ui()
-
-func _get_localized_name(name_data: Dictionary) -> String:
-	# 直接使用 ResourceManager 全局變數，避免 get_node 錯誤
-	var language = "zh"  # 預設語言
-	if ResourceManager:
-		language = ResourceManager.current_language
-	return name_data.get(language, name_data.get("zh", hero_id))
-
-func _load_skills(skills_data: Array):
-	"""載入技能數據"""
-	if skill_component and skill_component.has_method("load_skills"):
-		skill_component.load_skills(skills_data)
-
-func _load_visual_resources(hero_data: Dictionary):
-	"""載入視覺資源"""
-	var sprite_path = hero_data.get("sprite_path", "")
-	if sprite_path != "" and ResourceLoader.exists(sprite_path):
-		sprite.texture = load(sprite_path)
-	else:
-		# 使用預設外觀
-		_create_default_appearance()
-
-func _create_default_appearance():
-	"""創建預設外觀"""
-	if sprite:
-		# 創建簡單的顏色方塊作為預設外觀
-		var element_colors = {
-			"fire": Color.ORANGE_RED,
-			"water": Color.CYAN,
-			"grass": Color.GREEN,
-			"light": Color.YELLOW,
-			"dark": Color.PURPLE,
-			"neutral": Color.GOLD
-		}
-		
-		# 創建簡單的ColorRect作為預設外觀
-		var color_rect = ColorRect.new()
-		color_rect.size = Vector2(80, 80)
-		color_rect.position = Vector2(-40, -40)
-		color_rect.color = element_colors.get(element, Color.GOLD)
-		add_child(color_rect)
+func _get_health_bar_color() -> Color:
+	return Color.GREEN
 
 func take_damage(damage: int, damage_type: String = "normal", source: Node = null, emit_event: bool = true):
-	"""受到傷害"""
+	"""英雄受到傷害（包含技能系統介入）"""
 	if not is_alive:
 		return
 	
@@ -122,9 +52,12 @@ func take_damage(damage: int, damage_type: String = "normal", source: Node = nul
 		damage_info = skill_component.modify_incoming_damage(damage_info)
 	
 	var actual_damage = damage_info.get("base_damage", damage)
+	
+	# 調用父類的傷害處理（但跳過重複計算）
+	var old_hp = current_hp
 	current_hp = max(0, current_hp - actual_damage)
 	
-	print("[Hero] ", hero_name, " 受到 ", actual_damage, " 點傷害，剩餘HP: ", current_hp)
+	print("[Hero] ", character_name, " 受到 ", actual_damage, " 點傷害，剩餘HP: ", current_hp)
 	
 	# 更新UI
 	_update_ui()
@@ -132,7 +65,8 @@ func take_damage(damage: int, damage_type: String = "normal", source: Node = nul
 	# 觸發動畫
 	_play_damage_animation()
 	
-	# 只在 emit_event 為 true 時發送事件，避免遞迴
+	# 發送信號和事件
+	health_changed.emit(self, old_hp, current_hp)
 	if emit_event and EventBus:
 		EventBus.damage_dealt.emit(source, self, actual_damage, damage_type)
 	
@@ -140,48 +74,31 @@ func take_damage(damage: int, damage_type: String = "normal", source: Node = nul
 	if current_hp <= 0:
 		die()
 
-func heal(amount: int, source: Node = null):
-	"""治療"""
-	if not is_alive:
-		return
-	
-	var old_hp = current_hp
-	current_hp = min(max_hp, current_hp + amount)
-	var actual_heal = current_hp - old_hp
-	
-	print("[Hero] ", hero_name, " 恢復 ", actual_heal, " 點生命值")
-	
-	# 更新UI
-	_update_ui()
-	
-	# 觸發動畫
-	_play_heal_animation()
-	
-	# 發送事件
-	if EventBus:
-		EventBus.healing_applied.emit(source, self, actual_heal)
-	
-	# 發送信號
-	hero_healed.emit(self, actual_heal)
+func get_character_info() -> Dictionary:
+	"""獲取英雄資訊"""
+	var base_info = super.get_character_info()
+	base_info.merge({
+		"base_attack": base_attack
+	})
+	return base_info
 
-func die():
-	"""英雄死亡"""
-	if not is_alive:
-		return
-	
-	is_alive = false
-	print("[Hero] ", hero_name, " 已死亡")
-	
-	# 播放死亡動畫
-	_play_death_animation()
-	
-	# 發送事件
-	if EventBus:
-		EventBus.emit_object_event("destroyed", "hero", self, {"id": hero_id})
-	
-	# 發送信號
-	hero_died.emit(self)
+# 為了向後相容，保留舊的方法名
+func get_hero_info() -> Dictionary:
+	return get_character_info()
 
+func load_from_data(hero_data: Dictionary):
+	"""從JSON數據載入英雄資訊"""
+	super.load_from_data(hero_data)  # 調用父類方法
+	
+	# 英雄特有的數據載入
+	base_attack = hero_data.get("base_attack", 100)
+	max_hp = hero_data.get("hp", 1000)
+	current_hp = max_hp
+	
+	# 載入技能
+	_load_skills(hero_data.get("skills", []))
+
+# === 英雄特有功能 ===
 func use_skill(skill_id: String, target: Node = null, position: Vector2 = Vector2.ZERO) -> bool:
 	"""使用技能"""
 	if not is_alive or not skill_component:
@@ -190,70 +107,23 @@ func use_skill(skill_id: String, target: Node = null, position: Vector2 = Vector
 	if skill_component.has_method("use_skill"):
 		var success = skill_component.use_skill(skill_id, target, position)
 		if success:
-			print("[Hero] ", hero_name, " 使用技能: ", skill_id)
+			print("[Hero] ", character_name, " 使用技能: ", skill_id)
 			skill_used.emit(self, skill_id)
 			_play_skill_animation(skill_id)
 		return success
 	
 	return false
 
-func _update_ui():
-	"""更新UI顯示"""
-	# 確保血條節點存在，如果不存在則創建
-	if not health_bar:
-		_create_health_bar()
-		
-	# 更新血條顯示（ColorRect版本）
-	if health_bar:
-		var health_ratio = float(current_hp) / float(max_hp)
-		health_bar.size.x = 60 * health_ratio  # 根據血量比例調整寬度
+func _try_connect_skill_component():
+	"""嘗試連接技能組件"""
+	skill_component = get_node_or_null("SkillComponent")
+	if not skill_component:
+		print("[Hero] Warning: SkillComponent not found for ", character_name)
 
-func _create_health_bar():
-	"""創建血條UI（如果不存在）"""
-	if health_bar:
-		return
-		
-	# 簡單的血條顯示（使用 ColorRect）
-	var health_bg = ColorRect.new()
-	health_bg.size = Vector2(60, 6)
-	health_bg.position = Vector2(-30, -60)
-	health_bg.color = Color.DARK_GRAY
-	add_child(health_bg)
-	
-	health_bar = ColorRect.new()
-	health_bar.size = Vector2(60, 6)
-	health_bar.position = Vector2(-30, -60)
-	health_bar.color = Color.GREEN
-	add_child(health_bar)
-
-func _play_damage_animation():
-	"""播放受傷動畫"""
-	if animation_player and animation_player.has_animation("damage"):
-		animation_player.play("damage")
-	else:
-		# 簡單的閃爍效果
-		var tween = create_tween()
-		tween.tween_property(self, "modulate", Color.RED, 0.1)
-		tween.tween_property(self, "modulate", Color.WHITE, 0.1)
-
-func _play_heal_animation():
-	"""播放治療動畫"""
-	if animation_player and animation_player.has_animation("heal"):
-		animation_player.play("heal")
-	else:
-		# 簡單的綠光效果
-		var tween = create_tween()
-		tween.tween_property(self, "modulate", Color.GREEN, 0.2)
-		tween.tween_property(self, "modulate", Color.WHITE, 0.2)
-
-func _play_death_animation():
-	"""播放死亡動畫"""
-	if animation_player and animation_player.has_animation("death"):
-		animation_player.play("death")
-	else:
-		# 簡單的淡出效果
-		var tween = create_tween()
-		tween.tween_property(self, "modulate:a", 0.3, 1.0)
+func _load_skills(skills_data: Array):
+	"""載入技能數據"""
+	if skill_component and skill_component.has_method("load_skills"):
+		skill_component.load_skills(skills_data)
 
 func _play_skill_animation(skill_id: String):
 	"""播放技能動畫"""
@@ -266,29 +136,30 @@ func _play_skill_animation(skill_id: String):
 		tween.tween_property(self, "scale", Vector2(1.3, 1.3), 0.2)
 		tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.2)
 
-# 事件處理
-func _on_damage_received(source: Node, target: Node, amount: int, damage_type: String):
-	"""接收傷害事件"""
-	if target == self:
-		# 通過事件系統造成傷害時，設置 emit_event=false 避免遞迴
-		take_damage(amount, damage_type, source, false)
+# === 重寫信號連接 ===
+func _connect_events():
+	"""連接EventBus事件"""
+	super._connect_events()  # 調用父類方法
+	
+	if EventBus:
+		# 英雄特有的事件連接
+		if EventBus.has_signal("healing_applied"):
+			if not EventBus.healing_applied.is_connected(_on_healing_received):
+				EventBus.healing_applied.connect(_on_healing_received)
 
 func _on_healing_received(source: Node, target: Node, amount: int):
 	"""接收治療事件"""
 	if target == self:
 		heal(amount, source)
 
-# 獲取英雄資訊（供UI或系統使用）
-func get_hero_info() -> Dictionary:
-	return {
-		"id": hero_id,
-		"name": hero_name,
-		"element": element,
-		"current_hp": current_hp,
-		"max_hp": max_hp,
-		"attack": base_attack,
-		"level": level,
-		"is_alive": is_alive,
-		"status_effects": status_effects,
-		"tags": tags
-	}
+# === 重寫父類的 die 方法以發送英雄特有信號 ===
+func die():
+	"""英雄死亡"""
+	super.die()  # 調用父類方法
+	hero_died.emit(self)  # 發送英雄特有信號
+
+# === 重寫父類的 heal 方法以發送英雄特有信號 ===
+func heal(amount: int, source: Node = null):
+	"""治療"""
+	super.heal(amount, source)  # 調用父類方法
+	hero_healed.emit(self, amount)  # 發送英雄特有信號

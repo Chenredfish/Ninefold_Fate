@@ -281,7 +281,7 @@ func _create_fallback_hero():
 	print("[EnemyTest] 創建備用測試英雄")
 	
 	# 手動創建一個 Hero 節點
-	hero_instance = preload("res://scripts/components/scenes/Hero.tscn").instantiate()
+	hero_instance = Hero.new()
 	
 	# 嘗試從JSON載入資料（模擬 ResourceManager.create_hero 的過程）
 	var hero_data = _load_hero_data_fallback("H001")

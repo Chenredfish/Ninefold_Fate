@@ -1,135 +1,47 @@
-# Enemy.gd - 敵人基礎類別
+# Enemy.gd - 敵人類別（繼承 BaseCharacter）
 class_name Enemy
-extends Node2D
+extends BaseCharacter
 
-# 敵人基礎屬性
-@export var enemy_id: String = ""
-@export var enemy_name: String = ""
-@export var element: String = "neutral"
-@export var base_hp: int = 100
-@export var current_hp: int = 100
+# === 敵人特有屬性 ===
 @export var base_attack: int = 10
 @export var max_countdown: int = 3
-@export var current_countdown: int = 3
+var current_countdown: int = 3
 
-# 狀態
-var is_alive: bool = true
-var status_effects: Array = []
-var tags: Array = []
+# === 敵人特有組件 ===
+@onready var countdown_label: Label = null  # 動態創建
 
-# 視覺組件引用
-@onready var health_bar: ColorRect = null  # 改為 ColorRect 類型，動態創建
-@onready var countdown_label: Label = $UI/CountdownLabel
-@onready var sprite: Sprite2D = $Visual/Sprite2D
-@onready var animation_player: AnimationPlayer = $Visual/AnimationPlayer
-
-# 信號
-signal enemy_died(enemy: Enemy)
+# === 敵人特有信號 ===
 signal enemy_attacked(enemy: Enemy, damage: int)
 signal countdown_changed(enemy: Enemy, new_countdown: int)
 
+# === 向後兼容的屬性別名 ===
+var enemy_name: String:
+	get: return character_name
+	set(value): character_name = value
+
+var enemy_id: String:
+	get: return character_id
+	set(value): character_id = value
+
+var base_hp: int:
+	get: return max_hp
+	set(value): max_hp = value
+
 func _ready():
-	# 初始化UI
-	_update_ui()
+	super._ready()  # 調用父類的 _ready
 	
-	# 設置初始狀態
-	current_hp = base_hp
+	# 敵人特有的初始化
 	current_countdown = max_countdown
-	
-	# 連接到 EventBus（只在 _ready 時執行）
-	_connect_events()
+	_create_countdown_label()
 
-func _connect_events():
-	if EventBus:
-		# 連接戰鬥相關事件
-		if not EventBus.turn_started.is_connected(_on_turn_started):
-			EventBus.turn_started.connect(_on_turn_started)
-		if not EventBus.damage_dealt.is_connected(_on_damage_received):
-			EventBus.damage_dealt.connect(_on_damage_received)
+# === 重寫父類方法 ===
+func get_character_type() -> String:
+	return "Enemy"
 
-func load_from_data(enemy_data: Dictionary):
-	"""從JSON數據載入敵人資訊"""
-	enemy_id = enemy_data.get("id", "")
-	enemy_name = _get_localized_name(enemy_data.get("name", {}))
-	element = enemy_data.get("element", "neutral")
-	base_hp = enemy_data.get("base_hp", 100)
-	base_attack = enemy_data.get("base_attack", 10)
-	max_countdown = enemy_data.get("countdown", 3)
-	tags = enemy_data.get("tags", [])
-	
-	# 設置當前值
-	current_hp = base_hp
-	current_countdown = max_countdown
-	
-	# 載入視覺資源
-	_load_visual_resources(enemy_data)
-	
-	# 更新UI顯示
-	_update_ui()
+func _get_health_bar_color() -> Color:
+	return Color.RED
 
-func _get_localized_name(name_data: Dictionary) -> String:
-	# 直接使用 ResourceManager 全局變數，避免 get_node 錯誤
-	var language = "zh"  # 預設語言
-	if ResourceManager:
-		language = ResourceManager.current_language
-	return name_data.get(language, name_data.get("zh", enemy_id))
-
-func _load_visual_resources(enemy_data: Dictionary):
-	"""載入視覺資源"""
-	var sprite_path = enemy_data.get("sprite_path", "")
-	if sprite_path != "" and ResourceLoader.exists(sprite_path):
-		sprite.texture = load(sprite_path)
-	else:
-		# 使用預設外觀
-		_create_default_appearance()
-
-func _create_default_appearance():
-	"""創建預設外觀"""
-	if sprite:
-		# 創建簡單的顏色方塊作為預設外觀
-		var element_colors = {
-			"fire": Color.RED,
-			"water": Color.BLUE,
-			"grass": Color.GREEN,
-			"light": Color.YELLOW,
-			"dark": Color.PURPLE,
-			"neutral": Color.GRAY
-		}
-		
-		# 創建簡單的ColorRect作為預設外觀
-		var color_rect = ColorRect.new()
-		color_rect.size = Vector2(64, 64)
-		color_rect.position = Vector2(-32, -32)
-		color_rect.color = element_colors.get(element, Color.GRAY)
-		add_child(color_rect)
-
-func take_damage(damage: int, damage_type: String = "normal", source: Node = null, emit_event: bool = true):
-	"""受到傷害"""
-	if not is_alive:
-		return
-	
-	# 應用屬性剋制
-	var actual_damage = _apply_element_resistance(damage, damage_type)
-	
-	current_hp = max(0, current_hp - actual_damage)
-	
-	print("[Enemy] ", enemy_name, " 受到 ", actual_damage, " 點傷害，剩餘HP: ", current_hp)
-	
-	# 更新UI
-	_update_ui()
-	
-	# 觸發動畫
-	_play_damage_animation()
-	
-	# 只在 emit_event 為 true 時發送事件，避免遞迴
-	if emit_event and EventBus:
-		EventBus.damage_dealt.emit(source, self, actual_damage, damage_type)
-	
-	# 檢查是否死亡
-	if current_hp <= 0:
-		die()
-
-func _apply_element_resistance(damage: int, damage_type: String) -> int:
+func _calculate_damage(damage: int, damage_type: String, source: Node) -> int:
 	"""應用屬性剋制計算"""
 	# 簡化版屬性剋制
 	var resistance_table = {
@@ -146,45 +58,38 @@ func _apply_element_resistance(damage: int, damage_type: String) -> int:
 	
 	return int(damage * multiplier)
 
-func die():
-	"""敵人死亡"""
-	if not is_alive:
-		return
-	
-	is_alive = false
-	print("[Enemy] ", enemy_name, " 已死亡")
-	
-	# 播放死亡動畫
-	_play_death_animation()
-	
-	# 計算獎勵
-	var rewards = _calculate_death_rewards()
-	
-	# 發送事件
-	if EventBus:
-		EventBus.enemy_defeated.emit(enemy_id, rewards)
-	
-	# 發送信號
-	enemy_died.emit(self)
-	
-	# 延遲移除（等動畫播完）
-	await get_tree().create_timer(1.0).timeout
-	queue_free()
+func get_character_info() -> Dictionary:
+	"""獲取敵人資訊"""
+	var base_info = super.get_character_info()
+	base_info.merge({
+		"base_attack": base_attack,
+		"countdown": current_countdown,
+		"max_countdown": max_countdown
+	})
+	return base_info
 
-func _calculate_death_rewards() -> Dictionary:
-	"""計算死亡獎勵"""
-	return {
-		"gold": base_hp / 10,
-		"exp": base_attack,
-		"items": []
-	}
+# 為了向後相容，保留舊的方法名
+func get_enemy_info() -> Dictionary:
+	return get_character_info()
 
+func load_from_data(enemy_data: Dictionary):
+	"""從JSON數據載入敵人資訊"""
+	super.load_from_data(enemy_data)  # 調用父類方法
+	
+	# 敵人特有的數據載入
+	base_attack = enemy_data.get("base_attack", 10)
+	max_hp = enemy_data.get("base_hp", 100)
+	current_hp = max_hp
+	max_countdown = enemy_data.get("max_countdown", 3)
+	current_countdown = max_countdown
+
+# === 敵人特有功能 ===
 func attack():
 	"""敵人攻擊"""
 	if not is_alive:
 		return
 	
-	print("[Enemy] ", enemy_name, " 發動攻擊，造成 ", base_attack, " 點傷害")
+	print("[Enemy] ", character_name, " 發動攻擊，造成 ", base_attack, " 點傷害")
 	
 	# 播放攻擊動畫
 	_play_attack_animation()
@@ -198,37 +103,42 @@ func attack():
 	
 	# 重置倒數
 	current_countdown = max_countdown
-	_update_ui()
+	_update_countdown_ui()
 
 func tick_countdown():
-	"""倒數減1"""
+	"""倒數機制"""
 	if not is_alive:
 		return
 	
 	current_countdown = max(0, current_countdown - 1)
-	print("[Enemy] ", enemy_name, " 倒數: ", current_countdown)
+	_update_countdown_ui()
 	
-	# 更新UI
-	_update_ui()
-	
-	# 發送信號
+	# 發送倒數變化信號
 	countdown_changed.emit(self, current_countdown)
 	
-	# 倒數到0時攻擊
+	print("[Enemy] ", character_name, " 倒數: ", current_countdown)
+	
+	# 倒數結束時攻擊
 	if current_countdown <= 0:
 		attack()
 
-func _update_ui():
-	"""更新UI顯示"""
-	# 確保血條節點存在，如果不存在則創建
-	if not health_bar:
-		_create_health_bar()
+func _create_countdown_label():
+	"""創建倒數標籤"""
+	if countdown_label:
+		return
 	
-	# 更新血條顯示（ColorRect版本）
-	if health_bar:
-		var health_ratio = float(current_hp) / float(base_hp)
-		health_bar.size.x = 60 * health_ratio  # 根據血量比例調整寬度
+	countdown_label = Label.new()
+	countdown_label.text = str(current_countdown)
+	countdown_label.position = Vector2(-10, -80)
+	countdown_label.size = Vector2(20, 20)
+	countdown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	countdown_label.add_theme_font_size_override("font_size", 16)
+	add_child(countdown_label)
 	
+	_update_countdown_ui()
+
+func _update_countdown_ui():
+	"""更新倒數UI"""
 	if countdown_label:
 		countdown_label.text = str(current_countdown)
 		
@@ -240,100 +150,18 @@ func _update_ui():
 		else:
 			countdown_label.add_theme_color_override("font_color", Color.WHITE)
 
-func _create_health_bar():
-	"""創建血條UI（如果不存在）"""
-	if health_bar:
-		return
-		
-	# 簡單的血條顯示（使用 ColorRect）
-	var health_bg = ColorRect.new()
-	health_bg.size = Vector2(60, 6)
-	health_bg.position = Vector2(-30, -60)
-	health_bg.color = Color.DARK_GRAY
-	add_child(health_bg)
-	
-	health_bar = ColorRect.new()
-	health_bar.size = Vector2(60, 6)
-	health_bar.position = Vector2(-30, -60)
-	health_bar.color = Color.RED
-	add_child(health_bar)
-
-func _play_damage_animation():
-	"""播放受傷動畫"""
-	if animation_player and animation_player.has_animation("damage"):
-		animation_player.play("damage")
-	else:
-		# 簡單的閃爍效果
-		var tween = create_tween()
-		tween.tween_property(self, "modulate", Color.RED, 0.1)
-		tween.tween_property(self, "modulate", Color.WHITE, 0.1)
-
 func _play_attack_animation():
 	"""播放攻擊動畫"""
 	if animation_player and animation_player.has_animation("attack"):
 		animation_player.play("attack")
 	else:
-		# 簡單的放大縮小效果
+		# 簡單的攻擊效果
 		var tween = create_tween()
-		tween.tween_property(self, "scale", Vector2(1.2, 1.2), 0.15)
-		tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.15)
+		tween.tween_property(self, "scale", Vector2(1.2, 1.2), 0.1)
+		tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.1)
 
-func _play_death_animation():
-	"""播放死亡動畫"""
-	if animation_player and animation_player.has_animation("death"):
-		animation_player.play("death")
-	else:
-		# 簡單的淡出效果
-		var tween = create_tween()
-		tween.tween_property(self, "modulate:a", 0.0, 0.5)
-
-# 事件處理
-func _on_turn_started(turn_number: int):
-	"""回合開始時處理"""
-	if is_alive:
+# === 事件處理 ===
+func _on_turn_started(turn_type: String):
+	"""回合開始事件"""
+	if turn_type == "enemy" and is_alive:
 		tick_countdown()
-
-func _on_damage_received(source: Node, target: Node, amount: int, damage_type: String):
-	"""接收傷害事件"""
-	if target == self:
-		# 通過事件系統造成傷害時，設置 emit_event=false 避免遞迴
-		take_damage(amount, damage_type, source, false)
-
-# 狀態效果系統
-func add_status_effect(effect_id: String, duration: float = -1):
-	"""添加狀態效果"""
-	var effect = {
-		"id": effect_id,
-		"duration": duration,
-		"start_time": Time.get_ticks_msec() / 1000.0
-	}
-	status_effects.append(effect)
-
-func remove_status_effect(effect_id: String):
-	"""移除狀態效果"""
-	for i in range(status_effects.size() - 1, -1, -1):
-		if status_effects[i].id == effect_id:
-			status_effects.remove_at(i)
-
-func has_status_effect(effect_id: String) -> bool:
-	"""檢查是否有特定狀態效果"""
-	for effect in status_effects:
-		if effect.id == effect_id:
-			return true
-	return false
-
-# 獲取敵人資訊（供UI或系統使用）
-func get_enemy_info() -> Dictionary:
-	return {
-		"id": enemy_id,
-		"name": enemy_name,
-		"element": element,
-		"current_hp": current_hp,
-		"max_hp": base_hp,
-		"attack": base_attack,
-		"countdown": current_countdown,
-		"max_countdown": max_countdown,
-		"is_alive": is_alive,
-		"status_effects": status_effects,
-		"tags": tags
-	}
