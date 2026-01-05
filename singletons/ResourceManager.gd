@@ -136,6 +136,54 @@ func create_enemy(enemy_id: String) -> Node2D:
 			eb.emit_object_event("spawned", "enemy", enemy_instance, {"id": enemy_id})
 		return enemy_instance
 
+# 創建帶有覆蓋數值的敵人
+func create_enemy_with_overrides(enemy_data: Dictionary) -> Node2D:
+	print("[ResourceManager] 創建帶覆蓋數值的敵人: ", enemy_data.get("enemy_id", enemy_data.get("id", "unknown")))
+	
+	var enemy_id = enemy_data.get("enemy_id", enemy_data.get("id", ""))
+	if enemy_id == "":
+		push_warning("Enemy data missing ID: " + str(enemy_data))
+		return _create_placeholder_enemy("unknown")
+	
+	# 獲取基礎敵人數據
+	var base_enemy_data = enemy_database.get(enemy_id)
+	if not base_enemy_data:
+		push_warning("Enemy database missing ID: " + enemy_id)
+		return _create_placeholder_enemy(enemy_id)
+	
+	# 合併基礎數據和覆蓋數據
+	var final_data = base_enemy_data.duplicate(true)
+	
+	# 應用覆蓋數值
+	if enemy_data.has("hp_override") and enemy_data["hp_override"] != null:
+		final_data["base_hp"] = enemy_data["hp_override"]
+	if enemy_data.has("atk_override") and enemy_data["atk_override"] != null:
+		final_data["base_attack"] = enemy_data["atk_override"]
+	if enemy_data.has("cd_override") and enemy_data["cd_override"] != null:
+		final_data["countdown"] = enemy_data["cd_override"]
+	
+	# 保存覆蓋狀態資訊
+	final_data["_has_hp_override"] = enemy_data.has("hp_override")
+	final_data["_has_atk_override"] = enemy_data.has("atk_override")
+	final_data["_has_cd_override"] = enemy_data.has("cd_override")
+	final_data["_wave"] = enemy_data.get("wave", 1)
+	
+	var enemy_scene = preloaded_scenes.get("enemy")
+	if enemy_scene:
+		var enemy_instance = enemy_scene.instantiate()
+		_setup_enemy_from_data(enemy_instance, final_data)
+		var eb = get_node_or_null("/root/EventBus")
+		if eb:
+			eb.resource_loaded.emit("enemy", enemy_id)
+			eb.emit_object_event("spawned", "enemy", enemy_instance, {"id": enemy_id, "has_overrides": true})
+		return enemy_instance
+	else:
+		var enemy_instance = _create_enemy_from_data(final_data)
+		var eb = get_node_or_null("/root/EventBus")
+		if eb:
+			eb.emit_object_event("spawned", "enemy", enemy_instance, {"id": enemy_id, "has_overrides": true})
+		return enemy_instance
+
 # 簡化版 create_block 方法 - 主要用於測試和兼容性
 # 實際遊戲中建議使用 BattleTile.create_from_block_data()
 func create_block(block_id: String) -> Node2D:

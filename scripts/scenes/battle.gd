@@ -177,7 +177,7 @@ func _setup_enemies(enemies: Array):
 				if enemy_id == "":
 					print("[BattleScene] 警告：敵人資料中缺少id，無法創建敵人")
 					continue
-				var enemy:Enemy = ResourceManager.create_enemy(enemy_id)
+				var enemy:Enemy = ResourceManager.create_enemy_with_overrides(enemy_data)
 				add_child(enemy)
 				enemy.position = Vector2(540 + number_of_enemies * 220 - ((enemies.size() - 1) * 110), 300)
 				number_of_enemies += 1
