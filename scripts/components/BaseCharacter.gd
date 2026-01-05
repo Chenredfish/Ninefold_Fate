@@ -143,12 +143,6 @@ func _create_health_bar():
 	if health_bar:
 		return
 		
-	# 簡單的血條顯示（使用 ColorRect）
-	var health_bg = ColorRect.new()
-	health_bg.size = Vector2(60, 6)
-	health_bg.position = Vector2(-30, -60)
-	health_bg.color = Color.DARK_GRAY
-	add_child(health_bg)
 	
 	health_bar = ColorRect.new()
 	health_bar.size = Vector2(60, 6)
