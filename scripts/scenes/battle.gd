@@ -102,14 +102,14 @@ func setup_battle_ui(level_data: Dictionary):
 func _setup_board_ui(board_size: Vector2, board_blocked: Array):
 	# 先加底色區塊
 	var board_bg = ColorRect.new()
-	board_bg.position = Vector2(240, 550)
+	board_bg.position = Vector2(240, 750)
 	board_bg.size = Vector2(600, 600)
 	board_bg.color = Color(0.2, 0.2, 0.3, 1.0)
 	add_child(board_bg)
 
 	#再加棋盤
 	drop_board = BattleBoard.new()
-	drop_board.position = Vector2(240, 550)
+	drop_board.position = Vector2(240, 750)
 	add_child(drop_board)
 
 	drop_board.tile_dropped.connect(_on_tile_dropped)

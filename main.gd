@@ -18,21 +18,3 @@ func _ready():
 	#print("Press F2 to start SimpleTest")  
 	#print("Press F3 to start LevelTile test")
 	#print("Press F4 to start Enemy test (獨立測試)")
-
-func _input(event):
-	if event is InputEventKey and event.pressed:
-		match event.keycode:
-			KEY_F1:
-				print("Starting drag-drop test scene...")
-				get_tree().change_scene_to_file("res://test_scenes/DragDropTestScene.tscn")
-			KEY_F2:
-				print("Starting SimpleTest scene...")
-				get_tree().change_scene_to_file("res://test_scenes/SimpleTestScene.tscn")
-			KEY_F3:
-				print("Starting LevelTile test scene...")
-				get_tree().change_scene_to_file("res://test_scenes/LevelTileTestScene.tscn")
-			KEY_F4:
-				print("Starting Enemy test scene...")
-				get_tree().change_scene_to_file("res://test_scenes/EnemyTestScene.tscn")
-			_:
-				pass

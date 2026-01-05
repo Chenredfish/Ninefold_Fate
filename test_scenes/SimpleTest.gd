@@ -121,15 +121,6 @@ func create_test_objects():
 		print("   - 生命值: ", enemy.get_meta("base_hp"))
 		print("   - 攻擊力: ", enemy.get_meta("base_attack"))
 		print("   - 倒數: ", enemy.get_meta("countdown"))
-	
-	if block:
-		add_child(block)
-		block.position = Vector2(300, 450)
-		print("✅ 凸塊創建成功")
-		print("   - 屬性: ", block.get_meta("element"))
-		print("   - 加成: ", block.get_meta("bonus_value"))
-		print("   - 稀有度: ", block.get_meta("rarity"))
-
 func _input(event):
 	if event.is_action_pressed("ui_accept"):  # Enter
 		# 清理現有物件
