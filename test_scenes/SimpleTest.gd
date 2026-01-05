@@ -82,7 +82,8 @@ func create_test_objects():
 	print("\n🎮 物件創建測試:")
 	var hero = resource_manager.create_hero("H001")
 	var enemy = resource_manager.create_enemy("E001")
-	var block = resource_manager.create_block("B001")
+	# 方塊現在使用 BattleTile 系統
+	var battle_tile = BattleTile.create_from_block_data("B001")
 	
 	# 測試帶技能的英雄創建
 	print("\n⚔️ 技能系統測試:")

@@ -1,0 +1,58 @@
+[gd_scene load_steps=4 format=3 uid="uid://bhvx7r63qj12b"]
+
+[ext_resource type="Script" path="res://scripts/components/Hero.gd" id="1_qj5vx"]
+[ext_resource type="Script" path="res://scripts/components/SkillComponent.gd" id="2_wh3kj"]
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_1k9x2"]
+
+[node name="Hero" type="Node2D"]
+script = ExtResource("1_qj5vx")
+
+[node name="Visual" type="Node2D" parent="."]
+
+[node name="Sprite2D" type="Sprite2D" parent="Visual"]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Visual"]
+libraries = {
+"": SubResource("AnimationLibrary_1k9x2")
+}
+
+[node name="UI" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_left = -60.0
+offset_top = -100.0
+offset_right = 60.0
+offset_bottom = 100.0
+
+[node name="HealthBar" type="ProgressBar" parent="UI"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -50.0
+offset_top = 65.0
+offset_right = 50.0
+offset_bottom = 80.0
+grow_horizontal = 2
+max_value = 1000.0
+value = 1000.0
+show_percentage = false
+
+[node name="NameLabel" type="Label" parent="UI"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -60.0
+offset_top = -25.0
+offset_right = 60.0
+offset_bottom = -5.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 14
+text = "英雄"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SkillComponent" type="Node" parent="."]
+script = ExtResource("2_wh3kj")

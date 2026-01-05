@@ -4,13 +4,12 @@ extends Node
 # 資源池
 var hero_pool: Dictionary = {}
 var enemy_pool: Dictionary = {}
-var block_pool: Dictionary = {}
 
 # JSON 數據庫
 var balance_data: Dictionary = {}
 var hero_database: Dictionary = {}
 var enemy_database: Dictionary = {}
-var block_database: Dictionary = {}
+var block_database: Dictionary = {}  # 為 BattleTile 系統保留
 var level_database: Dictionary = {}
 var deck_database: Dictionary = {}
 
@@ -36,7 +35,7 @@ func _load_databases():
 	# 載入各種資源的數據庫
 	hero_database = _load_json_database("res://data/heroes.json")
 	enemy_database = _load_json_database("res://data/enemies.json")
-	block_database = _load_json_database("res://data/blocks.json")
+	block_database = _load_json_database("res://data/blocks.json")  # 為 BattleTile 系統保留
 	level_database = _load_json_database("res://data/levels.json")
 	deck_database = _load_json_database("res://data/decks.json")
 	
@@ -44,7 +43,7 @@ func _load_databases():
 	print("  - Balance: ", "已載入" if balance_data.size() > 0 else "空")
 	print("  - Heroes: ", hero_database.size(), " 個")
 	print("  - Enemies: ", enemy_database.size(), " 個")
-	print("  - Blocks: ", block_database.size(), " 個")
+	print("  - Blocks: ", block_database.size(), " 個 (為 BattleTile 使用)")
 	print("  - Levels: ", level_database.size(), " 個")
 	print("  - Decks: ", deck_database.size(), " 個")
 
@@ -75,9 +74,8 @@ func _preload_common_scenes():
 	
 	# 檢查場景文件是否存在，不存在則跳過
 	var scene_paths = {
-		"hero": "res://scenes/Hero.tscn",
-		"enemy": "res://scenes/Enemy.tscn",
-		"block": "res://scenes/Block.tscn"
+		"hero": "res://scripts/components/scenes/Hero.tscn",
+		"enemy": "res://scripts/components/scenes/Enemy.tscn"
 	}
 	
 	for scene_type in scene_paths:
@@ -105,9 +103,14 @@ func create_hero(hero_id: String) -> Node2D:
 		var eb = get_node_or_null("/root/EventBus")
 		if eb:
 			eb.resource_loaded.emit("hero", hero_id)
+			eb.emit_object_event("created", "hero", hero_instance, {"id": hero_id})
 		return hero_instance
 	else:
-		return _create_hero_from_data(hero_data)
+		var hero_instance = _create_hero_from_data(hero_data)
+		var eb = get_node_or_null("/root/EventBus")
+		if eb:
+			eb.emit_object_event("created", "hero", hero_instance, {"id": hero_id})
+		return hero_instance
 
 func create_enemy(enemy_id: String) -> Node2D:
 	print("[ResourceManager] 創建敵人: ", enemy_id)
@@ -124,28 +127,27 @@ func create_enemy(enemy_id: String) -> Node2D:
 		var eb = get_node_or_null("/root/EventBus")
 		if eb:
 			eb.resource_loaded.emit("enemy", enemy_id)
+			eb.emit_object_event("spawned", "enemy", enemy_instance, {"id": enemy_id})
 		return enemy_instance
 	else:
-		return _create_enemy_from_data(enemy_data)
+		var enemy_instance = _create_enemy_from_data(enemy_data)
+		var eb = get_node_or_null("/root/EventBus")
+		if eb:
+			eb.emit_object_event("spawned", "enemy", enemy_instance, {"id": enemy_id})
+		return enemy_instance
 
+# 簡化版 create_block 方法 - 主要用於測試和兼容性
+# 實際遊戲中建議使用 BattleTile.create_from_block_data()
 func create_block(block_id: String) -> Node2D:
-	print("[ResourceManager] 創建凸塊: ", block_id)
+	print("[ResourceManager] 創建方塊: ", block_id)
 	
 	var block_data = block_database.get(block_id)
 	if not block_data:
 		push_warning("Block data not found: " + block_id)
 		return _create_placeholder_block(block_id)
 	
-	var block_scene = preloaded_scenes.get("block")
-	if block_scene:
-		var block_instance = block_scene.instantiate()
-		_setup_block_from_data(block_instance, block_data)
-		var eb = get_node_or_null("/root/EventBus")
-		if eb:
-			eb.resource_loaded.emit("block", block_id)
-		return block_instance
-	else:
-		return _create_block_from_data(block_data)
+	# 創建簡化的方塊節點
+	return _create_simple_block_from_data(block_data)
 
 # 從 JSON 數據創建物件的方法
 func _create_hero_from_data(hero_data: Dictionary) -> Node2D:
@@ -181,29 +183,6 @@ func _create_enemy_from_data(enemy_data: Dictionary) -> Node2D:
 	enemy.add_child(visual)
 	
 	return enemy
-
-func _create_block_from_data(block_data: Dictionary) -> Node2D:
-	var block = Node2D.new()
-	block.name = "Block_" + block_data.get("id", "unknown")
-	
-	# 基本屬性
-	block.set_meta("id", block_data.get("id"))
-	block.set_meta("element", block_data.get("element", "neutral"))
-	block.set_meta("shape", block_data.get("shape", "single"))
-	block.set_meta("bonus_value", block_data.get("bonus_value", 1))
-	block.set_meta("rarity", block_data.get("rarity", "common"))
-	
-	# 形狀相關屬性
-	block.set_meta("shape_pattern", get_block_shape_pattern(block_data))
-	block.set_meta("dimensions", get_block_dimensions(block_data))
-	block.set_meta("rotation_allowed", is_block_rotation_allowed(block_data))
-	block.set_meta("flip_allowed", is_block_flip_allowed(block_data))
-	
-	# 創建視覺元素
-	var visual = _create_block_visual(block_data)
-	block.add_child(visual)
-	
-	return block
 
 # 為場景創建的物件設定數據
 func _setup_hero_from_data(hero_instance: Node, hero_data: Dictionary):
@@ -290,32 +269,6 @@ func _create_enemy_visual(enemy_data: Dictionary) -> Control:
 	
 	return container
 
-func _create_block_visual(block_data: Dictionary) -> Control:
-	var container = Control.new()
-	container.custom_minimum_size = Vector2(48, 48)
-	
-	# 根據屬性設定顏色
-	var element_colors = {
-		"fire": Color.ORANGE_RED,
-		"water": Color.DODGER_BLUE, 
-		"grass": Color.LIME_GREEN,
-		"light": Color.LIGHT_YELLOW,
-		"dark": Color.DIM_GRAY
-	}
-	
-	var bg = ColorRect.new()
-	bg.color = element_colors.get(block_data.get("element", "neutral"), Color.LIGHT_GRAY)
-	bg.size = Vector2(48, 48)
-	container.add_child(bg)
-	
-	var label = Label.new()
-	label.text = _get_localized_name(block_data)
-	label.position = Vector2(0, 55)
-	label.add_theme_font_size_override("font_size", 10)
-	container.add_child(label)
-	
-	return container
-
 # 獲取本地化名稱
 func _get_localized_name(data: Dictionary) -> String:
 	var name_data = data.get("name", {})
@@ -375,6 +328,41 @@ func _create_placeholder_block(block_id: String) -> Node2D:
 	label.text = "凸塊"
 	label.position = Vector2(-15, 30)
 	label.add_theme_font_size_override("font_size", 12)
+	block.add_child(label)
+	
+	return block
+
+func _create_simple_block_from_data(block_data: Dictionary) -> Node2D:
+	var block = Node2D.new()
+	block.name = "Block_" + block_data.get("id", "unknown")
+	
+	# 設定屬性
+	block.set_meta("id", block_data.get("id"))
+	block.set_meta("element", block_data.get("element", "neutral"))
+	block.set_meta("bonus_value", block_data.get("bonus_value", 1))
+	block.set_meta("rarity", block_data.get("rarity", "common"))
+	block.set_meta("shape", block_data.get("shape", "single"))
+	
+	# 創建簡單視覺元素
+	var element_colors = {
+		"fire": Color.RED,
+		"water": Color.BLUE,
+		"grass": Color.GREEN,
+		"light": Color.YELLOW,
+		"dark": Color.PURPLE,
+		"neutral": Color.GRAY
+	}
+	
+	var visual = ColorRect.new()
+	visual.color = element_colors.get(block_data.get("element", "neutral"), Color.GRAY)
+	visual.size = Vector2(48, 48)
+	visual.position = Vector2(-24, -24)
+	block.add_child(visual)
+	
+	var label = Label.new()
+	label.text = _get_localized_name(block_data)
+	label.position = Vector2(-20, 30)
+	label.add_theme_font_size_override("font_size", 10)
 	block.add_child(label)
 	
 	return block

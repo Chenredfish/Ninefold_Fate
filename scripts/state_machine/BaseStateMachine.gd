@@ -28,6 +28,7 @@ func _init():
 func _ready():
 	if debug_enabled:
 		print("[StateMachine] ", name, " initialized with ", states.size(), " states")
+		print("[Global Shortcuts] F1:SimpleTest F2:StateMachine F3:DragDrop F4:Enemy")
 
 func _process(delta):
 	if current_state and auto_process:
@@ -38,6 +39,27 @@ func _physics_process(delta):
 		current_state.physics_update(delta)
 
 func _input(event):
+	# 全局快捷鍵處理（測試用）
+	if event is InputEventKey and event.pressed:
+		match event.keycode:
+			KEY_F1:
+				print("[BaseStateMachine] F1: Loading DragDrop test...")
+				get_tree().change_scene_to_file("res://test_scenes/DragDropTestScene.tscn")
+				return
+			KEY_F2:
+				print("[BaseStateMachine] F2: Loading Simple test...")
+				get_tree().change_scene_to_file("res://test_scenes/SimpleTestScene.tscn")
+				return
+			KEY_F3:
+				print("[BaseStateMachine] F3: Loading LevelTile test...")
+				get_tree().change_scene_to_file("res://test_scenes/LevelTileTestScene.tscn")
+				return
+			KEY_F4:
+				print("[BaseStateMachine] F4: Loading Enemy test...")
+				get_tree().change_scene_to_file("res://test_scenes/EnemyTestScene.tscn")
+				return
+	
+	# 轉發給當前狀態處理
 	if current_state:
 		current_state.handle_input(event)
 
