@@ -105,7 +105,7 @@ func _create_default_appearance():
 		color_rect.color = element_colors.get(element, Color.GOLD)
 		add_child(color_rect)
 
-func take_damage(damage: int, damage_type: String = "normal", source: Node = null):
+func take_damage(damage: int, damage_type: String = "normal", source: Node = null, emit_event: bool = true):
 	"""受到傷害"""
 	if not is_alive:
 		return
@@ -131,6 +131,10 @@ func take_damage(damage: int, damage_type: String = "normal", source: Node = nul
 	
 	# 觸發動畫
 	_play_damage_animation()
+	
+	# 只在 emit_event 為 true 時發送事件，避免遞迴
+	if emit_event and EventBus:
+		EventBus.damage_dealt.emit(source, self, actual_damage, damage_type)
 	
 	# 檢查是否死亡
 	if current_hp <= 0:
@@ -243,7 +247,8 @@ func _play_skill_animation(skill_id: String):
 func _on_damage_received(source: Node, target: Node, amount: int, damage_type: String):
 	"""接收傷害事件"""
 	if target == self:
-		take_damage(amount, damage_type, source)
+		# 通過事件系統造成傷害時，設置 emit_event=false 避免遞迴
+		take_damage(amount, damage_type, source, false)
 
 func _on_healing_received(source: Node, target: Node, amount: int):
 	"""接收治療事件"""
