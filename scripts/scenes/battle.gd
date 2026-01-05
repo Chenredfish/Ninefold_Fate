@@ -164,9 +164,26 @@ func update_tile_container():
 		hand_hbox.add_child(tile)
 
 func _setup_enemies(enemies: Array):
-	#這裡有兩個部分：一個是建立敵人的物件(必須，因為需要存放current_hp等資料)
-	#另一個是顯示在UI上，對於邏輯比較不需要，可以用一個方塊代表就好了
-	pass
+	#最後決定把敵人也做成場景，場景較包含自己的畫面
+	#只顯示第一波的敵人
+	var number_of_enemies:int = 0
+	for enemy_data in enemies:
+		#enemy應該是Dictionary
+		if enemy_data.has("wave"):
+			var wave:float = float(enemy_data.get("wave"))
+			if wave == 1.0:
+				#有可能出現覆蓋式創建敵人，所以要檢查是否只有wave有資料
+				var enemy_id:String = enemy_data.get("enemy_id", "")
+				if enemy_id == "":
+					print("[BattleScene] 警告：敵人資料中缺少id，無法創建敵人")
+					continue
+				var enemy:Enemy = ResourceManager.create_enemy(enemy_id)
+				add_child(enemy)
+				enemy.position = Vector2(540 + number_of_enemies * 220 - ((enemies.size() - 1) * 110), 300)
+				number_of_enemies += 1
+		else:
+			print("[BattleScene] 警告：敵人資料中缺少wave資訊，無法判斷是否創建敵人")
+
 
 func _on_end_turn_pressed():
 	#可以新增一個確認視窗，之後再說

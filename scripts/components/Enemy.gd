@@ -132,7 +132,7 @@ func _create_countdown_label():
 	countdown_label.position = Vector2(-10, -80)
 	countdown_label.size = Vector2(20, 20)
 	countdown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	countdown_label.add_theme_font_size_override("font_size", 16)
+	countdown_label.add_theme_font_size_override("font_size", 16)  # 保持原大小，讓scene的scale處理放大
 	add_child(countdown_label)
 	
 	_update_countdown_ui()

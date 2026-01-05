@@ -140,14 +140,20 @@ func _update_ui():
 
 func _create_health_bar():
 	"""創建血條UI"""
-	if health_bar:
+	if health_bar and is_instance_valid(health_bar):
 		return
-		
 	
+	# 額外檢查：是否已經有名為 HealthBar 的子節點
+	var existing_health_bar = get_node_or_null("HealthBar")
+	if existing_health_bar:
+		health_bar = existing_health_bar
+		return
+
 	health_bar = ColorRect.new()
 	health_bar.size = Vector2(60, 6)
 	health_bar.position = Vector2(-30, -60)
 	health_bar.color = _get_health_bar_color()
+	health_bar.name = "HealthBar"
 	add_child(health_bar)
 
 func _get_health_bar_color() -> Color:
