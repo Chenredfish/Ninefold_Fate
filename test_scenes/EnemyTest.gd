@@ -72,7 +72,8 @@ func _test_enemy_creation():
 			var enemy = rm.create_enemy(enemy_ids[i])
 			if enemy:
 				add_child(enemy)
-				enemy.position = Vector2(150 + i * 100, 300)
+				# 增加敵人間距，避免重疊
+				enemy.position = Vector2(200 + i * 150, 250)
 				enemy_instances.append(enemy)
 				print("[EnemyTest] 敵人", i+1, "創建成功:", enemy.enemy_name)
 	else:
@@ -92,7 +93,7 @@ func _test_hero_creation():
 		hero_instance = rm.create_hero("H001")
 		if hero_instance:
 			add_child(hero_instance)
-			hero_instance.position = Vector2(50, 300)
+			hero_instance.position = Vector2(100, 250)
 			print("[EnemyTest] 英雄創建成功:", hero_instance.hero_name)
 		else:
 			print("[EnemyTest] 英雄創建失敗")
@@ -141,11 +142,11 @@ func _setup_test_ui():
 	countdown_button.pressed.connect(_on_countdown_button_pressed)
 	ui_container.add_child(countdown_button)
 	
-	# 狀態顯示標籤
+	# 狀態顯示標籤（調整位置到底部）
 	var info_label = Label.new()
 	info_label.name = "InfoLabel"
 	info_label.text = "等待角色創建..."
-	info_label.position = Vector2(50, 150)
+	info_label.position = Vector2(50, 400)  # 移到底部，避免與角色重疊
 	info_label.size = Vector2(700, 200)
 	ui_container.add_child(info_label)
 	

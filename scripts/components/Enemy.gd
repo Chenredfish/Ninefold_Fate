@@ -18,7 +18,7 @@ var status_effects: Array = []
 var tags: Array = []
 
 # 視覺組件引用
-@onready var health_bar: ProgressBar = $UI/HealthBar
+@onready var health_bar: ColorRect = null  # 改為 ColorRect 類型，動態創建
 @onready var countdown_label: Label = $UI/CountdownLabel
 @onready var sprite: Sprite2D = $Visual/Sprite2D
 @onready var animation_player: AnimationPlayer = $Visual/AnimationPlayer
@@ -220,9 +220,14 @@ func tick_countdown():
 
 func _update_ui():
 	"""更新UI顯示"""
+	# 確保血條節點存在，如果不存在則創建
+	if not health_bar:
+		_create_health_bar()
+	
+	# 更新血條顯示（ColorRect版本）
 	if health_bar:
-		health_bar.max_value = base_hp
-		health_bar.value = current_hp
+		var health_ratio = float(current_hp) / float(base_hp)
+		health_bar.size.x = 60 * health_ratio  # 根據血量比例調整寬度
 	
 	if countdown_label:
 		countdown_label.text = str(current_countdown)
@@ -234,6 +239,24 @@ func _update_ui():
 			countdown_label.add_theme_color_override("font_color", Color.ORANGE)
 		else:
 			countdown_label.add_theme_color_override("font_color", Color.WHITE)
+
+func _create_health_bar():
+	"""創建血條UI（如果不存在）"""
+	if health_bar:
+		return
+		
+	# 簡單的血條顯示（使用 ColorRect）
+	var health_bg = ColorRect.new()
+	health_bg.size = Vector2(60, 6)
+	health_bg.position = Vector2(-30, -60)
+	health_bg.color = Color.DARK_GRAY
+	add_child(health_bg)
+	
+	health_bar = ColorRect.new()
+	health_bar.size = Vector2(60, 6)
+	health_bar.position = Vector2(-30, -60)
+	health_bar.color = Color.RED
+	add_child(health_bar)
 
 func _play_damage_animation():
 	"""播放受傷動畫"""
