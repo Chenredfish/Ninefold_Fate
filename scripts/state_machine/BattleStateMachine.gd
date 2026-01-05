@@ -23,6 +23,9 @@ var max_turns: int = 100  # 防止無限戰鬥
 var player_tiles_placed: int = 0
 var max_tiles_per_turn: int = 100
 var enemies_remaining: int = 0
+var enemies_scenes: Array = []  # 敵人場景實例
+var current_hands: Array = []   # 當前手牌
+var deck_data: Array = []       # 牌組數據
 
 func _init():
 	super._init()
@@ -56,7 +59,12 @@ func start_battle(level_data: Dictionary):
 	battle_data = level_data
 	turn_number = 0
 	player_tiles_placed = 0
-	enemies_remaining = level_data.get("enemies", []).size()
+	enemies_scenes.clear()
+	current_hands.clear()
+	deck_data.clear()
+	
+	# enemies_remaining 將在敵人創建後設定，不在這裡計算
+	enemies_remaining = 0
 	
 	transition_to("preparing", battle_data)
 
@@ -64,11 +72,19 @@ func start_battle(level_data: Dictionary):
 func end_battle(result: String, rewards: Array = []):
 	EventBus.emit_signal("battle_ended", result, rewards)
 	
+	# 清理敵人場景
+	for enemy in enemies_scenes:
+		if is_instance_valid(enemy):
+			enemy.queue_free()
+	enemies_scenes.clear()
+	
 	# 重置戰鬥數據
 	battle_data.clear()
 	turn_number = 0
 	player_tiles_placed = 0
 	enemies_remaining = 0
+	current_hands.clear()
+	deck_data.clear()
 
 # 下一回合
 func next_turn():
@@ -103,8 +119,21 @@ func _on_battle_started(level_data: Dictionary):
 func _on_turn_started(turn_num: int):
 	print("[BattleStateMachine] Turn ", turn_num, " started")
 
-func _on_turn_ended():
-	print("[BattleStateMachine] Turn ended, transitioning to calculation")
+func _on_turn_ended(total_damage: int = 0, cards_in_ui: Array = []):
+	print("[BattleStateMachine] Turn ended, damage dealt: ", total_damage, ", cards remaining: ", cards_in_ui)
+	
+	# 處理已使用的卡片
+	var used_cards = []
+	for card_id in current_hands:
+		if card_id not in cards_in_ui:
+			used_cards.append(card_id)
+	
+	remove_used_cards(used_cards)
+	refill_hand()
+	
+	# 儲存UI傷害數據供計算狀態使用
+	battle_data["ui_damage"] = total_damage
+	
 	transition_to("calculating")
 
 func _on_enemy_defeated(enemy_id: String, rewards: Dictionary):
@@ -127,6 +156,65 @@ func handle_input(event: InputEvent):
 	# 轉發給當前狀態
 	if current_state:
 		current_state.handle_input(event)
+
+# 創建敵人場景
+func create_enemies_from_data(enemies_data: Array) -> Array:
+	var created_enemies = []
+	var number_of_enemies = 0
+	
+	for enemy_data in enemies_data:
+		if enemy_data.has("wave") and enemy_data.get("wave") == 1:
+			var enemy_id = enemy_data.get("enemy_id", "")
+			if enemy_id != "":
+				var enemy = ResourceManager.create_enemy_with_overrides(enemy_data)
+				# 設置敵人位置
+				enemy.position = Vector2(540 + number_of_enemies * 220 - ((enemies_data.size() - 1) * 110), 300)
+				created_enemies.append(enemy)
+				number_of_enemies += 1
+				print("[BattleStateMachine] 創建敵人: ", enemy_id)
+	
+	return created_enemies
+
+# 初始化手牌
+func setup_initial_hand(deck: Dictionary):
+	deck_data = deck.get("blocks", [])
+	var deck_size = deck_data.size()
+	current_hands.clear()
+	
+	# 隨機抽4張卡
+	while current_hands.size() < 4 and deck_size > 0:
+		var rand_index = randi() % deck_size
+		var random_block = deck_data[rand_index]
+		if not random_block in current_hands:
+			current_hands.append(random_block)
+	
+	print("[BattleStateMachine] 初始手牌: ", current_hands)
+	EventBus.emit_signal("hand_updated", current_hands)
+
+# 補充手牌到4張
+func refill_hand():
+	while current_hands.size() < 4:
+		var available_cards = []
+		for card_id in deck_data:
+			if card_id not in current_hands:
+				available_cards.append(card_id)
+		
+		if available_cards.is_empty():
+			print("[BattleStateMachine] 牌組已空，無法補充更多卡片")
+			break
+		
+		var rand_index = randi() % available_cards.size()
+		var drawn_card = available_cards[rand_index]
+		current_hands.append(drawn_card)
+		print("[BattleStateMachine] 抽到卡片: ", drawn_card)
+	
+	EventBus.emit_signal("hand_updated", current_hands)
+
+# 移除使用過的卡片
+func remove_used_cards(used_cards: Array):
+	for card_id in used_cards:
+		current_hands.erase(card_id)
+		print("[BattleStateMachine] 移除已使用的卡片: ", card_id)
 
 # 戰鬥狀態類定義
 
@@ -179,8 +267,21 @@ class PreparingState extends BaseState:
 	func _setup_ui(level_id: String, deck_id: String) -> void:
 		var level_data: Dictionary = _get_level_data(level_id)
 		var deck_data: Dictionary = _get_deck_data(deck_id)
-		EventBus.emit_signal("setup_battle_ui", level_data)
-		EventBus.emit_signal("setup_deck_ui", deck_data)
+		
+		# 先創建敵人場景實例
+		var enemies_data = level_data.get("enemies", [])
+		state_machine.enemies_scenes = state_machine.create_enemies_from_data(enemies_data)
+		
+		# 根據實際創建的敵人數量設定 enemies_remaining
+		state_machine.enemies_remaining = state_machine.enemies_scenes.size()
+		
+		# 設置初始手牌
+		state_machine.setup_initial_hand(deck_data)
+		
+		# 發送UI設置信號
+		EventBus.emit_signal("setup_battle_ui", level_data, state_machine.enemies_scenes)
+		EventBus.emit_signal("setup_deck_ui", state_machine.current_hands)
+		
 		# 加一點延遲確保UI有時間處理
 		await state_machine.get_tree().process_frame
 
@@ -240,6 +341,7 @@ class PlayerTurnState extends BaseState:
 	
 	func end_player_turn():
 		print("[BattleStateMachine] Player turn ended")
+		# 直接發送回合結束事件，由UI處理具體數據
 		EventBus.emit_signal("turn_ended")
 	
 	func can_transition_to(next_state_id: String) -> bool:
@@ -267,23 +369,41 @@ class CalculatingState extends BaseState:
 			state_machine.transition_to("enemy_turn")
 	
 	func _calculate_damage():
-		# TODO: 實際的傷害計算邏輯
-		# 這裡應該：
-		# 1. 分析玩家放置的圖塊
-		# 2. 計算連擊和屬性加成
-		# 3. 對敵人造成傷害
-		# 4. 觸發技能效果
-		
-		# 模擬傷害計算
+		# 使用從UI傳來的傷害數據
+		var ui_damage = state_machine.battle_data.get("ui_damage", 0)
 		var damage_info = {
-			"total_damage": 100,
-			"combo_multiplier": 1.5,
-			"element_bonus": 1.2,
-			"targets": ["enemy_1"]
+			"total_damage": ui_damage,
+			"combo_multiplier": 1.0,
+			"element_bonus": 1.0,
+			"targets": []
 		}
 		
+		# 如果沒有傷害，直接跳過
+		if ui_damage <= 0:
+			print("[BattleStateMachine] No damage dealt this turn")
+			EventBus.emit_signal("damage_calculated", damage_info)
+			return
+		
+		# 對敵人造成傷害並檢查死亡
+		var enemies_defeated = 0
+		for enemy in state_machine.enemies_scenes:
+			if enemy and enemy.has_method("take_damage") and enemy.has_method("is_dead"):
+				var was_alive = not enemy.is_dead()
+				enemy.take_damage(ui_damage)
+				# 檢查敵人是否在這次攻擊後死亡
+				if was_alive and enemy.is_dead():
+					enemies_defeated += 1
+					print("[BattleStateMachine] Enemy defeated: ", enemy.name)
+					# 發送敵人被擊敗事件
+					EventBus.emit_signal("enemy_defeated", enemy.name, {})
+					damage_info.targets.append(enemy.name)
+		
+		# 更新剩餘敵人數量
+		state_machine.enemies_remaining -= enemies_defeated
+		print("[BattleStateMachine] Enemies remaining after damage: ", state_machine.enemies_remaining)
+		
 		EventBus.emit_signal("damage_calculated", damage_info)
-		print("[BattleStateMachine] Calculated damage: ", damage_info.total_damage)
+		print("[BattleStateMachine] Calculated damage: ", ui_damage, " to ", enemies_defeated, " enemies")
 	
 	func can_transition_to(next_state_id: String) -> bool:
 		return next_state_id in ["enemy_turn", "victory", "defeat"]

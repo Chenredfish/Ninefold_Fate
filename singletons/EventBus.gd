@@ -5,7 +5,7 @@ extends Node
 signal battle_started(level_data: Dictionary)
 signal battle_ended(result: String, rewards: Array)
 signal turn_started(turn_number: int)
-signal turn_ended()
+signal turn_ended(total_damage: int, cards_in_ui: Array)
 signal setup_battle_ui(level_data: Dictionary)
 signal setup_deck_ui(deck_id: Dictionary)
 signal battle_ui_update_complete()
@@ -29,6 +29,9 @@ signal healing_applied(source: Node, target: Node, amount: int)
 signal ui_tile_selected(tile_data: Dictionary)
 signal ui_grid_updated(grid_state: Array)
 signal ui_popup_requested(popup_type: String, data: Dictionary)
+signal hand_updated(current_hands: Array)
+signal request_used_cards()
+signal used_cards_response(used_cards: Array)
 
 # 系統事件
 signal game_paused()

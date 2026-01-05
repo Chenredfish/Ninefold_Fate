@@ -1,27 +1,28 @@
-# battle.gd - 重構版本，只負責UI顯示，不處理遊戲邏輯
 extends Control
 
-var bottom_right_container: HBoxContainer
-var tile_container: ScrollContainer
-var hand_hbox: HBoxContainer
-var drop_board: BattleBoard
+var bottom_right_container:HBoxContainer
+var tile_container:ScrollContainer
+var hand_hbox:HBoxContainer
+var drop_board:BattleBoard
 
 func _ready():
 	print("[BattleScene] 載入戰鬥場景，主節點：", self, " parent：", get_parent())
-	
 	# 連接狀態機發送的UI更新信號
 	EventBus.setup_battle_ui.connect(setup_battle_ui)
-	EventBus.setup_deck_ui.connect(setup_deck_ui) 
+	EventBus.setup_deck_ui.connect(setup_deck_ui)
 	EventBus.hand_updated.connect(update_hand_display)
-	
 	# 初始化UI
 	setup_ui()
 
 func setup_ui():
-	# 設置為全屏控制
+	#設置為全屏控制
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	
+
+
 	create_background_area()
+	#不用創造上半部分的資訊區域，因為有_setup_enemies會處理
+	#也不用創建棋盤區域，因為有_setup_board_ui會處理
+	#還要創造tile，他應該會根據deck動態生成，類似敵人和棋盤的處理方式
 	create_control_buttons()
 
 func create_background_area():
@@ -73,22 +74,29 @@ func create_control_buttons():
 	pause_button.offset_bottom = 120
 	add_child(pause_button)
 
-# 狀態機調用的UI設置函數
-func setup_battle_ui(level_data: Dictionary, enemies_scenes: Array = []):
+func setup_battle_ui(level_data: Dictionary):
 	print("[BattleScene] 收到更新戰鬥UI的請求，關卡資料ID：", level_data.get("level_id", ""))
 
-	# 設置棋盤UI
+	if level_data.size() == 0:
+		print("[BattleScene] 錯誤：關卡資料為空，無法更新UI")
+		return
+	
 	if level_data.has("board"):
-		var board_data: Dictionary = level_data["board"]
-		var board_size: Vector2 = Vector2(board_data.get("width", 3), board_data.get("height", 3))
-		var board_blocked: Array = board_data.get("blocked_positions", [])
+		var board_data:Dictionary = level_data["board"]
+		#預設是3x3的棋盤
+		var board_size:Vector2 = Vector2(board_data.get("width", 3), board_data.get("height", 3))
+		#不過目前還沒用到blocked_positions
+		var board_blocked:Array = board_data.get("blocked_positions", [])
 		_setup_board_ui(board_size, board_blocked)
+	else:
+		print("[BattleScene] 警告：關卡資料中缺少board資訊，無法設置棋盤UI")
 
-	# 顯示敵人（敵人場景已由狀態機創建）
-	for enemy in enemies_scenes:
-		if enemy and not enemy.get_parent():
-			add_child(enemy)
-			print("[BattleScene] 添加敵人場景到UI: ", enemy.name)
+	if level_data.has("enemies"):
+		var enemies:Array = level_data.get("enemies")
+		_setup_enemies(enemies)
+	else:
+		var enemies:Array = []
+		print("[BattleScene] 警告：關卡資料中缺少enemies資訊，無法設置敵人UI")
 
 	EventBus.emit_signal("battle_ui_update_complete")
 
@@ -100,21 +108,19 @@ func _setup_board_ui(board_size: Vector2, board_blocked: Array):
 	board_bg.color = Color(0.2, 0.2, 0.3, 1.0)
 	add_child(board_bg)
 
-	# 再加棋盤
+	#再加棋盤
 	drop_board = BattleBoard.new()
 	drop_board.position = Vector2(240, 750)
 	add_child(drop_board)
 
 	drop_board.tile_dropped.connect(_on_tile_dropped)
 
-# 狀態機調用的手牌設置函數
 func setup_deck_ui(current_hands: Array):
 	print("[BattleScene] 收到設置手牌 UI 的請求，起手牌：", current_hands)
 	update_hand_display(current_hands)
 
-# 更新手牌顯示（純UI功能）
 func update_hand_display(current_hands: Array):
-	# 有可能沒有tile_container
+	#有可能沒有tile_container
 	if not tile_container:
 		tile_container = ScrollContainer.new()
 		tile_container.position = Vector2(40, 1420)
@@ -136,38 +142,72 @@ func update_hand_display(current_hands: Array):
 	hand_hbox.add_theme_constant_override("separation", 20)
 	tile_container.add_child(hand_hbox)
 
-	print("[BattleScene] 更新手牌顯示，當前手牌：", current_hands)
+	print("[更新手牌區域] 當前手牌：", current_hands)
 	for tile_id in current_hands:
 		var tile = BattleTile.create_from_id(tile_id)
 		tile.size = Vector2(200, 200)
 		tile.name = "BattleTile_" + tile_id
 		hand_hbox.add_child(tile)
 
-# UI事件處理（只負責UI，不處理遊戲邏輯）
+
 func _on_end_turn_pressed():
-	"""結束回合按鈕被按下 - 只處理UI相關邏輯"""
-	# 計算棋盤總傷害（這是UI功能）
-	var total_damage: int = 0
-	if drop_board:
-		total_damage = drop_board.calculate_total_damage()
-		print("[BattleScene] 棋盤計算出的總傷害：", total_damage)
-		# 清空棋盤顯示
-		drop_board.clear_board()
+	"""結束回合按鈕被按下"""
+	var total_value: int = drop_board.calculate_total_damage()
+	print("[BattleScene] 結束回合按鈕被按下,計算棋盤總價值：", total_value)
+
+	if not self.hand_hbox:
+		return 
 	
-	# 獲取UI中剩餘的卡片信息
+	# 先記錄UI中實際還有哪些卡
 	var cards_in_ui = []
-	if hand_hbox:
-		for tile in hand_hbox.get_children():
-			if tile.has_method("get_block_id") and tile.get_block_id():
-				cards_in_ui.append(tile.get_block_id())
-			elif tile.block_id:
-				cards_in_ui.append(tile.block_id)
+	for tile in self.hand_hbox.get_children():
+		if tile.block_id:
+			cards_in_ui.append(tile.block_id)
 	
-	# 通知狀態機回合結束（傳遞UI數據）
-	EventBus.emit_signal("turn_ended", total_damage, cards_in_ui)
+	print("[BattleScene] UI中的卡片：", cards_in_ui)
+	print("[BattleScene] 手牌列表：", current_hands)
+	
+	# 找出被使用的卡片(在手牌中但不在UI中)
+	var used_cards = []
+	for card_id in current_hands:
+		if card_id not in cards_in_ui:
+			used_cards.append(card_id)
+	
+	# 從current_hands移除被使用的卡片
+	for card_id in used_cards:
+		current_hands.erase(card_id)
+		print("[BattleScene] 移除已使用的卡片：", card_id)
+
+	drop_board.clear_board()
+
+	# 補充卡片到4張
+	while current_hands.size() < 4:
+		# 從deck_data裡找不在手牌中的卡
+		var available_cards = []
+		for card_id in deck_data:
+			if card_id not in current_hands:
+				available_cards.append(card_id)
+		
+		# 如果沒有可用卡片就停止
+		if available_cards.is_empty():
+			print("[BattleScene] 牌組已空,無法補充更多卡片")
+			break
+		
+		# 隨機抽一張
+		var rand_index: int = randi() % available_cards.size()
+		var drawn_card = available_cards[rand_index]
+		current_hands.append(drawn_card)
+		print("[BattleScene] 抽到卡片：", drawn_card)
+
+	print("[BattleScene] 補充後手牌：", current_hands)
+	update_tile_container()
+
+	#要鎖住送出結束回合事件，等狀態回到玩家回合再解鎖
+	EventBus.emit_signal("turn_ended")
+
 
 func _on_skill_pressed():
-	# 施放技能，需要看能量是否足夠，反正也是之後再說
+	#施放技能，需要看能量是否足夠，反正也是之後再說
 	pass
 
 func _on_tile_dropped(tile_data: Dictionary):
