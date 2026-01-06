@@ -680,3 +680,50 @@ func test_block_shapes():
 	print("  - 原始 Pattern: ", original_pattern)
 	print("  - 旋轉90度: ", get_rotated_pattern(original_pattern, 1))
 	print("  - 旋轉180度: ", get_rotated_pattern(original_pattern, 2))
+
+# 創建帶有覆蓋數值的英雄
+func create_hero_with_overrides(hero_data: Dictionary) -> Node2D:
+	print("[ResourceManager] 創建帶覆蓋數值的英雄: ", hero_data.get("hero_id", hero_data.get("id", "unknown")))
+
+	var hero_id = hero_data.get("hero_id", hero_data.get("id", ""))
+	if hero_id == "":
+		push_warning("Hero data missing ID: " + str(hero_data))
+		return _create_placeholder_hero("unknown")
+
+	# 獲取基礎英雄數據
+	var base_hero_data = hero_database.get(hero_id)
+	if not base_hero_data:
+		push_warning("Hero database missing ID: " + hero_id)
+		return _create_placeholder_hero(hero_id)
+
+	# 合併基礎數據和覆蓋數據
+	var final_data = base_hero_data.duplicate(true)
+
+	# 應用覆蓋數值
+	if hero_data.has("hp_override") and hero_data["hp_override"] != null:
+		final_data["hp"] = hero_data["hp_override"]
+	if hero_data.has("atk_override") and hero_data["atk_override"] != null:
+		final_data["base_attack"] = hero_data["atk_override"]
+	if hero_data.has("level_override") and hero_data["level_override"] != null:
+		final_data["level"] = hero_data["level_override"]
+
+	# 保存覆蓋狀態資訊
+	final_data["_has_hp_override"] = hero_data.has("hp_override")
+	final_data["_has_atk_override"] = hero_data.has("atk_override")
+	final_data["_has_level_override"] = hero_data.has("level_override")
+
+	var hero_scene = preloaded_scenes.get("hero")
+	if hero_scene:
+		var hero_instance = hero_scene.instantiate()
+		_setup_hero_from_data(hero_instance, final_data)
+		var eb = get_node_or_null("/root/EventBus")
+		if eb:
+			eb.resource_loaded.emit("hero", hero_id)
+			eb.emit_object_event("created", "hero", hero_instance, {"id": hero_id, "has_overrides": true})
+		return hero_instance
+	else:
+		var hero_instance = _create_hero_from_data(final_data)
+		var eb = get_node_or_null("/root/EventBus")
+		if eb:
+			eb.emit_object_event("created", "hero", hero_instance, {"id": hero_id, "has_overrides": true})
+		return hero_instance

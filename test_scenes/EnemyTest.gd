@@ -19,6 +19,7 @@ func _ready():
 	if EventBus:
 		EventBus.enemy_spawned.connect(_on_enemy_spawned)
 		EventBus.enemy_defeated.connect(_on_enemy_defeated)
+		EventBus.damage_dealt_to_hero.connect(_on_damage_dealt_to_hero)
 		# 監聽 damage_dealt 事件來驗證事件發送
 		if not EventBus.damage_dealt.is_connected(_on_damage_event_received):
 			EventBus.damage_dealt.connect(_on_damage_event_received)
@@ -218,6 +219,7 @@ func _on_countdown_button_pressed():
 		print("[EnemyTest] 手動觸發", alive_enemies.size(), "個敵人的倍數")
 		for enemy in alive_enemies:
 			enemy.tick_countdown()
+			
 	else:
 		print("[EnemyTest] 沒有活著的敵人")
 
@@ -372,6 +374,19 @@ func _input(event):
 				print("[EnemyTest] 顯示幫助")
 				_show_help()
 
+func _on_damage_dealt_to_hero(source: Node, amount: int, damage_type: String):
+	hero_instance.take_damage(amount, damage_type, source)
+	"""監聽對英雄的傷害事件"""
+	var source_name = "環境傷害"
+	if source and source.has_method("get_hero_info"):
+		source_name = source.hero_name
+	elif source and source.has_method("get_enemy_info"):
+		source_name = source.enemy_name
+	elif source:
+		source_name = source.name
+
+	print("[EnemyTest] 💥 英雄受到傷害事件: ", source_name, " → ", hero_instance.hero_name, " (", amount, " ", damage_type, "傷害)")
+
 func _on_damage_event_received(source: Node, target: Node, amount: int, damage_type: String):
 	"""監聽傷害事件，驗證事件系統運作"""
 	var source_name = "環境傷害"
@@ -381,14 +396,15 @@ func _on_damage_event_received(source: Node, target: Node, amount: int, damage_t
 		source_name = source.enemy_name
 	elif source:
 		source_name = source.name
-	
-	var target_name = "unknown"
+
+	var target_name = "未知目標"
 	if target and target.has_method("get_hero_info"):
 		target_name = target.hero_name
 	elif target and target.has_method("get_enemy_info"):
 		target_name = target.enemy_name
 	elif target:
 		target_name = target.name
+
 	
 	print("[EnemyTest] 🔥 收到傷害事件: ", source_name, " → ", target_name, " (", amount, " ", damage_type, "傷害)")
 

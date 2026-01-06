@@ -23,6 +23,7 @@ signal ability_triggered(ability_id: String, caster: Node, target: Node)
 signal effect_applied(effect_id: String, target: Node, duration: float)
 signal effect_expired(effect_id: String, target: Node)
 signal damage_dealt(source: Node, target: Node, amount: int, type: String)
+signal damage_dealt_to_hero(source: Node, amount: int, type: String)
 signal healing_applied(source: Node, target: Node, amount: int)
 
 # UI 事件

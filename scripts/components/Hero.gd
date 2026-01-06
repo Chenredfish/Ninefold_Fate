@@ -163,3 +163,47 @@ func heal(amount: int, source: Node = null):
 	"""治療"""
 	super.heal(amount, source)  # 調用父類方法
 	hero_healed.emit(self, amount)  # 發送英雄特有信號
+
+# === 完全自訂英雄外觀與UI ===
+func _create_health_bar():
+	if health_bar and is_instance_valid(health_bar):
+		return
+	var existing_health_bar = get_node_or_null("HealthBar")
+	if existing_health_bar:
+		health_bar = existing_health_bar
+		return
+	health_bar = ColorRect.new()
+	health_bar.size = Vector2(800, 24)
+	health_bar.position = Vector2(-400, -100)
+	health_bar.color = _get_health_bar_color()
+	health_bar.name = "HealthBar"
+	add_child(health_bar)
+
+func _create_default_appearance():
+	pass
+
+func _update_ui():
+	if not health_bar:
+		_create_health_bar()
+	if health_bar:
+		var health_ratio = float(current_hp) / float(max_hp) if max_hp > 0 else 0.0
+		health_bar.size.x = 800 * health_ratio
+
+func _load_visual_resources(data: Dictionary):
+	# 只載入 sprite，不呼叫父類，不產生預設外觀
+	var sprite_path = data.get("sprite_path", "")
+	if sprite_path != "" and ResourceLoader.exists(sprite_path):
+		if sprite:
+			sprite.texture = load(sprite_path)
+
+func _play_damage_animation():
+	# 可自訂英雄受傷動畫，預設不做任何事
+	pass
+
+func _play_heal_animation():
+	# 可自訂英雄治療動畫，預設不做任何事
+	pass
+
+func _play_death_animation():
+	# 可自訂英雄死亡動畫，預設不做任何事
+	pass

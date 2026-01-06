@@ -23,6 +23,7 @@ var max_turns: int = 100  # 防止無限戰鬥
 var player_tiles_placed: int = 0
 var max_tiles_per_turn: int = 100
 var enemies_remaining: int = 0
+var hero_scene: Node = null        # 英雄場景實例 (Hero節點)
 var enemies_scenes: Array[Node] = []    # 敵人場景實例 (Enemy節點)
 var current_hands: Array[String] = []   # 當前手牌 (方塊ID字串陣列)
 var deck_data: Array[String] = []       # 牌組數據 (可用方塊ID字串陣列)
@@ -157,6 +158,19 @@ func handle_input(event: InputEvent):
 	if current_state:
 		current_state.handle_input(event)
 
+func create_hero_from_data(hero_data: Dictionary) -> Node:
+	var hero_id = hero_data.get("hero_id", "")
+	if hero_id == "":
+		print("[BattleStateMachine] Error: No hero_id provided")
+		return null
+	
+	var hero = ResourceManager.create_hero_with_overrides(hero_data)
+	
+	# 設置英雄位置（UI會負責添加到場景樹）
+	hero.position = Vector2(540, 600)
+	print("[BattleStateMachine] 創建英雄: ", hero_id, " 節點: ", hero)
+	return hero
+
 # 創建敵人場景
 func create_enemies_from_data(enemies_data: Array) -> Array[Node]:
 	var created_enemies: Array[Node] = []
@@ -271,6 +285,12 @@ class PreparingState extends BaseState:
 	func _setup_ui(level_id: String, deck_id: String) -> void:
 		var level_data: Dictionary = _get_level_data(level_id)
 		var deck_data: Dictionary = _get_deck_data(deck_id)
+
+		#創建英雄場景
+		var hero_id:String = level_data.get("hero_id", "") #關卡裡面的英雄只有ID
+		#這裡要把String轉換成Dictionary
+		var hero_data:Dictionary = {"hero_id": hero_id}
+		state_machine.hero_scene = state_machine.create_hero_from_data(hero_data)
 		
 		# 先創建敵人場景實例
 		var enemies_data = level_data.get("enemies", [])
@@ -281,9 +301,10 @@ class PreparingState extends BaseState:
 		
 		# 設置初始手牌
 		state_machine.setup_initial_hand(deck_data)
+
 		
 		# 發送UI設置信號
-		EventBus.emit_signal("setup_battle_ui", level_data, state_machine.enemies_scenes)
+		EventBus.emit_signal("setup_battle_ui", level_data, state_machine.enemies_scenes, state_machine.hero_scene)
 		EventBus.emit_signal("setup_deck_ui", state_machine.current_hands)
 		
 		# 加一點延遲確保UI有時間處理

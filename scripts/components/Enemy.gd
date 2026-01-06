@@ -6,6 +6,7 @@ extends BaseCharacter
 @export var base_attack: int = 10
 @export var max_countdown: int = 3
 var current_countdown: int = 3
+var attack_aim: Node = null  # 目標，需要在建立時設定
 
 # === 敵人特有組件 ===
 @onready var countdown_label: Label = null  # 動態創建
@@ -96,7 +97,7 @@ func attack():
 	
 	# 發送攻擊事件
 	if EventBus:
-		EventBus.damage_dealt.emit(self, null, base_attack, "enemy_attack")
+		EventBus.damage_dealt_to_hero.emit(self, base_attack, "enemy_attack")
 	
 	# 發送信號
 	enemy_attacked.emit(self, base_attack)

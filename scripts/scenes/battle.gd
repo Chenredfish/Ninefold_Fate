@@ -74,7 +74,7 @@ func create_control_buttons():
 	add_child(pause_button)
 
 # 狀態機調用的UI設置函數
-func setup_battle_ui(level_data: Dictionary, enemies_scenes: Array = []):
+func setup_battle_ui(level_data: Dictionary, enemies_scenes: Array = [], hero_scene: Node = null) -> void:
 	print("[BattleScene] 收到更新戰鬥UI的請求，關卡資料ID：", level_data.get("level_id", ""))
 
 	# 設置棋盤UI
@@ -89,6 +89,12 @@ func setup_battle_ui(level_data: Dictionary, enemies_scenes: Array = []):
 		if enemy and not enemy.get_parent():
 			add_child(enemy)
 			print("[BattleScene] 添加敵人場景到UI: ", enemy.name)
+
+	# 顯示玩家(英雄)
+	if hero_scene and not hero_scene.get_parent():
+		add_child(hero_scene)
+		print("[BattleScene] 添加英雄場景到UI: ", hero_scene.name)
+
 
 	EventBus.emit_signal("battle_ui_update_complete")
 
