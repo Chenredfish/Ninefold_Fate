@@ -80,12 +80,18 @@ func end_battle(result: String, rewards: Array = []):
 	enemies_scenes.clear()
 	
 	# 重置戰鬥數據
+	_battle_clean()
+
+func _battle_clean():
 	battle_data.clear()
 	turn_number = 0
 	player_tiles_placed = 0
 	enemies_remaining = 0
 	current_hands.clear()
 	deck_data.clear()
+	hero_scene = null
+	enemies_scenes.clear()
+
 
 # 下一回合
 func next_turn():
@@ -106,7 +112,7 @@ func check_battle_end():
 		return true
 	
 	# TODO: 檢查玩家是否失敗（血量為0等）
-	var player_hp = battle_data.get("player_hp", 100)
+	var player_hp = hero_scene.get("current_hp")
 	if player_hp <= 0:
 		transition_to("defeat")
 		return true
