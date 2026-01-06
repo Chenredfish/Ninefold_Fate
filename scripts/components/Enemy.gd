@@ -158,8 +158,8 @@ func _play_attack_animation():
 	else:
 		# 簡單的攻擊效果
 		var tween = create_tween()
-		tween.tween_property(self, "scale", Vector2(1.2, 1.2), 0.1)
-		tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.1)
+		tween.tween_property(self, "scale", Vector2(2.2, 2.2), 0.1)
+		tween.tween_property(self, "scale", Vector2(2.0, 2.0), 0.1)
 
 # === 事件處理 ===
 func _on_turn_started(turn_type: String):

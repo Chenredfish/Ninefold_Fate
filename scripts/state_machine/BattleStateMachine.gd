@@ -450,58 +450,41 @@ class EnemyTurnState extends BaseState:
 		super.enter(previous_state, data)
 		
 		print("[BattleStateMachine] Enemy turn started")
+
+		#連接敵人行動處理
+		if not EventBus.damage_dealt_to_hero.is_connected(_on_damage_dealt_to_hero):
+			EventBus.damage_dealt_to_hero.connect(_on_damage_dealt_to_hero)
 		
-		# 處理所有敵人的行動
-		_process_enemy_actions()
-		
-		# 敵人行動完成後，檢查戰鬥狀態
-		await state_machine.get_tree().create_timer(2.0).timeout
+		await _process_enemy_actions()
 		
 		if not state_machine.check_battle_end():
 			# 開始下一回合
 			state_machine.next_turn()
 	
 	func _process_enemy_actions():
-		# TODO: 處理敵人行動
-		# 1. 更新敵人倒數
-		# 2. 執行攻擊（倒數為0的敵人）
-		# 3. 應用狀態效果
-		
-		var enemies = state_machine.battle_data.get("enemies", [])
-		for enemy_data in enemies:
-			var enemy_id = enemy_data.get("id", "")
-			var cooldown = enemy_data.get("cooldown", 3)
-			
-			# 倒數減1
-			cooldown -= 1
-			enemy_data["cooldown"] = cooldown
-			
-			if cooldown <= 0:
-				# 敵人攻擊
-				_enemy_attack(enemy_data)
-				# 重置倒數
-				enemy_data["cooldown"] = enemy_data.get("max_cooldown", 3)
-		
-		EventBus.emit_signal("enemies_updated", enemies)
+		var alive_enemies = state_machine.enemies_scenes.filter(func(enemy): return enemy.is_alive)
+		if alive_enemies.size() > 0:
+			print("[BattleStateMachine] 處理敵人倒數")
+			for enemy in alive_enemies:
+				enemy.tick_countdown()
 	
-	func _enemy_attack(enemy_data: Dictionary):
-		var damage = enemy_data.get("attack", 10)
-		var enemy_id = enemy_data.get("id", "")
-		
-		print("[BattleStateMachine] Enemy ", enemy_id, " attacks for ", damage, " damage")
-		
-		# 對玩家造成傷害
-		EventBus.emit_signal("damage_dealt", null, null, damage, "enemy_attack")
-		
-		# 更新玩家血量
-		var current_hp = state_machine.battle_data.get("player_hp", 100)
-		current_hp -= damage
-		state_machine.battle_data["player_hp"] = current_hp
-		
-		EventBus.emit_signal("player_hp_changed", current_hp)
 	
 	func can_transition_to(next_state_id: String) -> bool:
 		return next_state_id in ["player_turn", "victory", "defeat"]
+
+	func _on_damage_dealt_to_hero(source: Node, amount: int, damage_type: String):
+		state_machine.hero_scene.take_damage(amount, damage_type, source)
+		"""監聽對英雄的傷害事件"""
+		var source_name = "環境傷害"
+		if source and source.has_method("get_hero_info"):
+			source_name = source.hero_name
+		elif source and source.has_method("get_enemy_info"):
+			source_name = source.enemy_name
+		elif source:
+			source_name = source.name
+
+		print("[BattleStateMachine] 英雄受到傷害事件: ", source_name, " → ", state_machine.hero_scene.hero_name, " (", amount, " ", damage_type, "傷害)")
+
 
 # 勝利狀態
 class VictoryState extends BaseState:
