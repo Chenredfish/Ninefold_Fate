@@ -23,9 +23,9 @@ var max_turns: int = 100  # 防止無限戰鬥
 var player_tiles_placed: int = 0
 var max_tiles_per_turn: int = 100
 var enemies_remaining: int = 0
-var enemies_scenes: Array = []  # 敵人場景實例
-var current_hands: Array = []   # 當前手牌
-var deck_data: Array = []       # 牌組數據
+var enemies_scenes: Array[Node] = []    # 敵人場景實例 (Enemy節點)
+var current_hands: Array[String] = []   # 當前手牌 (方塊ID字串陣列)
+var deck_data: Array[String] = []       # 牌組數據 (可用方塊ID字串陣列)
 
 func _init():
 	super._init()
@@ -123,7 +123,7 @@ func _on_turn_ended(total_damage: int = 0, cards_in_ui: Array = []):
 	print("[BattleStateMachine] Turn ended, damage dealt: ", total_damage, ", cards remaining: ", cards_in_ui)
 	
 	# 處理已使用的卡片
-	var used_cards = []
+	var used_cards: Array[String] = []
 	for card_id in current_hands:
 		if card_id not in cards_in_ui:
 			used_cards.append(card_id)
@@ -158,8 +158,8 @@ func handle_input(event: InputEvent):
 		current_state.handle_input(event)
 
 # 創建敵人場景
-func create_enemies_from_data(enemies_data: Array) -> Array:
-	var created_enemies = []
+func create_enemies_from_data(enemies_data: Array) -> Array[Node]:
+	var created_enemies: Array[Node] = []
 	var number_of_enemies = 0
 	
 	for enemy_data in enemies_data:
@@ -177,7 +177,10 @@ func create_enemies_from_data(enemies_data: Array) -> Array:
 
 # 初始化手牌
 func setup_initial_hand(deck: Dictionary):
-	deck_data = deck.get("blocks", [])
+	var blocks_data = deck.get("blocks", [])
+	deck_data.clear()
+	for block in blocks_data:
+		deck_data.append(str(block))
 	var deck_size = deck_data.size()
 	current_hands.clear()
 	
@@ -194,7 +197,7 @@ func setup_initial_hand(deck: Dictionary):
 # 補充手牌到4張
 func refill_hand():
 	while current_hands.size() < 4:
-		var available_cards = []
+		var available_cards: Array[String] = []
 		for card_id in deck_data:
 			if card_id not in current_hands:
 				available_cards.append(card_id)
@@ -211,7 +214,7 @@ func refill_hand():
 	EventBus.emit_signal("hand_updated", current_hands)
 
 # 移除使用過的卡片
-func remove_used_cards(used_cards: Array):
+func remove_used_cards(used_cards: Array[String]):
 	for card_id in used_cards:
 		current_hands.erase(card_id)
 		print("[BattleStateMachine] 移除已使用的卡片: ", card_id)
