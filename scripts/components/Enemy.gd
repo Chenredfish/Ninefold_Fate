@@ -97,7 +97,7 @@ func attack():
 	
 	# 發送攻擊事件
 	if EventBus:
-		EventBus.damage_dealt_to_hero.emit(self, base_attack, "enemy_attack")
+		EventBus.damage_dealt_to_hero.emit(self, base_attack, element)
 	
 	# 發送信號
 	enemy_attacked.emit(self, base_attack)
