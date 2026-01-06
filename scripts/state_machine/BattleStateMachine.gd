@@ -144,7 +144,7 @@ func load_next_enemy_wave():
 	else :
 		#print("[BattleStateMachine] 確認所有敵人已被擊敗，準備載入下一波")
 		#載入下一波敵人
-		EventBus.emit_signal("load_next_enemy_wave")
+		EventBus.emit_signal("ui_load_next_enemy_wave")
 
 		pass
 
@@ -220,6 +220,8 @@ func create_enemies_from_data(enemies_data: Array) -> Array[Node]:
 				var enemy = ResourceManager.create_enemy_with_overrides(enemy_data)
 				# 設置敵人位置（UI會負責添加到場景樹）
 				enemy.position = Vector2(540 + number_of_enemies * 220 - ((enemies_data.size() - 1) * 110), 300)
+				#把它加入敵人群組
+				enemy.add_to_group("enemy")
 				created_enemies.append(enemy)
 				number_of_enemies += 1
 				print("[BattleStateMachine] 創建敵人: ", enemy_id, " 節點: ", enemy)

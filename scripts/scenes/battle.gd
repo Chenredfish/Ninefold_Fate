@@ -15,6 +15,7 @@ func _ready():
 	EventBus.hand_updated.connect(update_hand_display)
 	EventBus.ui_damage_animation_requested.connect(_on_ui_damage_animation_requested)
 	EventBus.ui_unlock_end_turn_button.connect(_on_ui_unlock_end_turn_button)
+	EventBus.ui_load_next_enemy_wave.connect(_on_ui_load_next_enemy_wave)
 	
 	# 初始化UI
 	setup_ui()
@@ -248,3 +249,9 @@ func _on_ui_unlock_end_turn_button():
 	var end_turn_button = bottom_right_container.get_node("end_turn_button")
 	if end_turn_button:
 		end_turn_button.disabled = false
+
+func _on_ui_load_next_enemy_wave():
+	#先把上一波的敵人清掉
+	for enemy_scene in get_children():
+		if enemy_scene.is_in_group("enemy"):
+			enemy_scene.queue_free()
