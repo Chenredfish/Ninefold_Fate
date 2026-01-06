@@ -105,11 +105,22 @@ func next_turn():
 	
 	transition_to("player_turn", {"turn_number": turn_number})
 
-# 檢查戰鬥是否應該結束
+# 檢查戰鬥的三個結果，勝利，失敗，載入下一波
 func check_battle_end():
-	if enemies_remaining <= 0:
-		transition_to("victory")
-		return true
+	#不能這樣看，因為敵人會留下屍體，要檢查 is_alive 屬性
+	var alive_enemies_scenes = enemies_scenes.filter(func(enemy): return enemy.is_alive)
+	print("[BattleStateMachine] 剩餘的敵人物件數量: ", alive_enemies_scenes.size(), ", 剩餘的敵人數量: ", enemies_remaining)
+		
+	if alive_enemies_scenes.size() == 0:
+		if enemies_remaining > 0:
+			# 場上的敵人都被擊敗，但還有剩餘波次
+			print("[BattleStateMachine] 準備載入下一波敵人")
+			load_next_enemy_wave()
+			return false  
+		else :
+			# 所有敵人都被擊敗
+			transition_to("victory")
+			return true
 	
 	# TODO: 檢查玩家是否失敗（血量為0等）
 	var player_hp = hero_scene.get("current_hp")
@@ -118,6 +129,26 @@ func check_battle_end():
 		return true
 	
 	return false
+
+# 載入下一波敵人
+func load_next_enemy_wave():
+
+	await get_tree().create_timer(1.0).timeout
+
+	enemies_scenes = enemies_scenes.filter(func(enemy): return enemy.is_alive) #要先真的移除節點，才刪除陣列中的參考
+
+	#理論上到這裡應該都是死的，但是檢查一下好了
+	if enemies_scenes.size() != 0:
+		print("[BattleStateMachine] 出現邏輯錯誤：載入下一波前仍有存活敵人")
+		return
+	else :
+		#print("[BattleStateMachine] 確認所有敵人已被擊敗，準備載入下一波")
+		#載入下一波敵人
+		EventBus.emit_signal("load_next_enemy_wave")
+
+		pass
+
+
 
 # EventBus 事件處理
 func _on_battle_started(level_data: Dictionary):
@@ -303,7 +334,8 @@ class PreparingState extends BaseState:
 		state_machine.enemies_scenes = state_machine.create_enemies_from_data(enemies_data)
 		
 		# 根據實際創建的敵人數量設定 enemies_remaining
-		state_machine.enemies_remaining = state_machine.enemies_scenes.size()
+		# 這個是錯誤的，因為敵人不會一次全部出現
+		state_machine.enemies_remaining = level_data.get("enemies").size()
 		
 		# 設置初始手牌
 		state_machine.setup_initial_hand(deck_data)
@@ -335,6 +367,7 @@ class PlayerTurnState extends BaseState:
 		# 通知UI更新
 		EventBus.emit_signal("turn_started", turn_num)
 		EventBus.emit_signal("ui_turn_timer_started", turn_timer)
+		EventBus.emit_signal("ui_unlock_end_turn_button")
 	
 	func update(delta: float):
 		super.update(delta)
@@ -419,6 +452,7 @@ class CalculatingState extends BaseState:
 		# 對敵人造成傷害並檢查死亡
 		var enemies_defeated = 0
 		print("[BattleStateMachine] enemies_scenes 數組大小: ", state_machine.enemies_scenes.size())
+		#因為敵人不一定會立刻出現，所以還要看enemies_remaining
 		for i in range(state_machine.enemies_scenes.size()):
 			var enemy = state_machine.enemies_scenes[i]
 			print("[BattleStateMachine] 敵人 ", i, ": ", enemy, " 是否有效: ", enemy != null)
@@ -432,15 +466,13 @@ class CalculatingState extends BaseState:
 				if was_alive and not is_alive_now:
 					enemies_defeated += 1
 					print("[BattleStateMachine] Enemy defeated: ", enemy.name)
-					# 發送敵人被擊敗事件
+					# 發送敵人被擊敗事件，這個事件只會減少enemies_remaining
 					EventBus.emit_signal("enemy_defeated", enemy.name, {})
 					damage_info.targets.append(enemy.name)
 			else:
 				print("[BattleStateMachine] 敵人 ", i, " 無法接收傷害或已無效")
 		
-		# 更新剩餘敵人數量
-		state_machine.enemies_remaining -= enemies_defeated
-		print("[BattleStateMachine] Enemies remaining after damage: ", state_machine.enemies_remaining)
+		print("[BattleStateMachine] 本回合擊倒的敵人數量: ", enemies_defeated)
 		
 		EventBus.emit_signal("damage_calculated", damage_info)
 		print("[BattleStateMachine] Calculated damage: ", ui_damage, " to ", enemies_defeated, " enemies")

@@ -14,6 +14,7 @@ func _ready():
 	EventBus.setup_deck_ui.connect(setup_deck_ui) 
 	EventBus.hand_updated.connect(update_hand_display)
 	EventBus.ui_damage_animation_requested.connect(_on_ui_damage_animation_requested)
+	EventBus.ui_unlock_end_turn_button.connect(_on_ui_unlock_end_turn_button)
 	
 	# 初始化UI
 	setup_ui()
@@ -50,6 +51,7 @@ func create_control_buttons():
 	var end_turn_button = Button.new()
 	end_turn_button.text = "結束回合"
 	end_turn_button.custom_minimum_size = Vector2(240, 80) # 放大兩倍
+	end_turn_button.name = "end_turn_button"
 	end_turn_button.connect("pressed", _on_end_turn_pressed)
 	bottom_right_container.add_child(end_turn_button)
 
@@ -170,6 +172,9 @@ func _on_end_turn_pressed():
 			elif tile.block_id:
 				cards_in_ui.append(tile.block_id)
 	
+	#要鎖住回合結束按鈕，避免重複點擊
+	_on_ui_lock_end_turn_button()
+
 	# 通知狀態機回合結束（傳遞UI數據）
 	EventBus.emit_signal("turn_ended", total_damage, cards_in_ui)
 
@@ -231,3 +236,15 @@ func _on_ui_damage_animation_requested(target: Node, amount: int, damage_type: S
 	tween.tween_property(
 		damage_label, "scale", Vector2.ZERO, 0.5
 	).set_ease(Tween.EASE_IN).set_delay(0.5)
+
+func _on_ui_lock_end_turn_button():
+	"""鎖住結束回合按鈕"""
+	var end_turn_button = bottom_right_container.get_node("end_turn_button")
+	if end_turn_button:
+		end_turn_button.disabled = true
+
+func _on_ui_unlock_end_turn_button():
+	"""解鎖結束回合按鈕"""
+	var end_turn_button = bottom_right_container.get_node("end_turn_button")
+	if end_turn_button:
+		end_turn_button.disabled = false
