@@ -134,7 +134,7 @@ func _on_turn_ended(total_damage: int = 0, cards_in_ui: Array = []):
 	# 儲存UI傷害數據供計算狀態使用
 	battle_data["ui_damage"] = total_damage
 	
-	transition_to("calculating")
+	transition_to("calculating", battle_data)
 
 func _on_enemy_defeated(enemy_id: String, rewards: Dictionary):
 	enemies_remaining -= 1
@@ -167,12 +167,13 @@ func create_enemies_from_data(enemies_data: Array) -> Array[Node]:
 			var enemy_id = enemy_data.get("enemy_id", "")
 			if enemy_id != "":
 				var enemy = ResourceManager.create_enemy_with_overrides(enemy_data)
-				# 設置敵人位置
+				# 設置敵人位置（UI會負責添加到場景樹）
 				enemy.position = Vector2(540 + number_of_enemies * 220 - ((enemies_data.size() - 1) * 110), 300)
 				created_enemies.append(enemy)
 				number_of_enemies += 1
-				print("[BattleStateMachine] 創建敵人: ", enemy_id)
+				print("[BattleStateMachine] 創建敵人: ", enemy_id, " 節點: ", enemy)
 	
+	print("[BattleStateMachine] 總共創建了 ", created_enemies.size(), " 個敵人，等待UI添加到場景樹")
 	return created_enemies
 
 # 初始化手牌
@@ -359,7 +360,7 @@ class CalculatingState extends BaseState:
 	func enter(previous_state: BaseState = null, data: Dictionary = {}):
 		super.enter(previous_state, data)
 		
-		print("[BattleStateMachine] Calculating damage...")
+		print("[BattleStateMachine] calculating damage with data: ", data)
 		
 		# 計算傷害
 		_calculate_damage()
@@ -390,17 +391,24 @@ class CalculatingState extends BaseState:
 		
 		# 對敵人造成傷害並檢查死亡
 		var enemies_defeated = 0
-		for enemy in state_machine.enemies_scenes:
-			if enemy and enemy.has_method("take_damage") and enemy.has_method("is_dead"):
-				var was_alive = not enemy.is_dead()
+		print("[BattleStateMachine] enemies_scenes 數組大小: ", state_machine.enemies_scenes.size())
+		for i in range(state_machine.enemies_scenes.size()):
+			var enemy = state_machine.enemies_scenes[i]
+			print("[BattleStateMachine] 敵人 ", i, ": ", enemy, " 是否有效: ", enemy != null)
+			if enemy and enemy.has_method("take_damage"):
+				print("[BattleStateMachine] 對敵人 ", enemy.name, " 造成傷害: ", ui_damage)
+				var was_alive = enemy.is_alive if "is_alive" in enemy else true
 				enemy.take_damage(ui_damage)
 				# 檢查敵人是否在這次攻擊後死亡
-				if was_alive and enemy.is_dead():
+				var is_alive_now = enemy.is_alive if "is_alive" in enemy else true
+				if was_alive and not is_alive_now:
 					enemies_defeated += 1
 					print("[BattleStateMachine] Enemy defeated: ", enemy.name)
 					# 發送敵人被擊敗事件
 					EventBus.emit_signal("enemy_defeated", enemy.name, {})
 					damage_info.targets.append(enemy.name)
+			else:
+				print("[BattleStateMachine] 敵人 ", i, " 無法接收傷害或已無效")
 		
 		# 更新剩餘敵人數量
 		state_machine.enemies_remaining -= enemies_defeated
