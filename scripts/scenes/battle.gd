@@ -13,6 +13,7 @@ func _ready():
 	EventBus.setup_battle_ui.connect(setup_battle_ui)
 	EventBus.setup_deck_ui.connect(setup_deck_ui) 
 	EventBus.hand_updated.connect(update_hand_display)
+	EventBus.ui_damage_animation_requested.connect(_on_ui_damage_animation_requested)
 	
 	# 初始化UI
 	setup_ui()
@@ -181,3 +182,52 @@ func _on_tile_dropped(tile_data: Dictionary):
 	print("[BattleScene] 方塊已放置到棋盤：", tile_data)
 	# 通知狀態機方塊已放置（由狀態機處理遊戲邏輯）
 	EventBus.emit_signal("block_placed", null, Vector2.ZERO)
+
+func _on_ui_damage_animation_requested(target: Node, amount: int, damage_type: String):
+	"""處理UI傷害動畫請求"""
+	#print("[BattleScene] 收到UI傷害動畫請求，目標：", target, " 傷害量：", amount, " 類型：", damage_type)
+	#跳出傷害數字動畫
+	var damage_label = Label.new()
+	damage_label.global_position = target.global_position
+	damage_label.text = str(amount)
+	damage_label.z_index = 5
+	damage_label.label_settings = LabelSettings.new()
+
+	var color: Color = Color.WHITE
+	match damage_type:
+		"fire":
+			color = Color(1, 0.5, 0, 1) # Orange for fire
+		"water":
+			color = Color(0, 0.5, 1, 1) # Blue for water
+		"grass":
+			color = Color(0, 1, 0.5, 1) # Green for grass
+		"light":
+			color = Color(1, 1, 0.8, 1) # Light yellow for light
+		"dark":
+			color = Color(0.5, 0, 0.5, 1) # Purple for dark
+		_:
+			color = Color(1, 1, 1, 1) # White as default
+
+	damage_label.label_settings.font_color = color
+	damage_label.label_settings.font_size = 48
+	damage_label.label_settings.outline_color = Color.BLACK
+	damage_label.label_settings.outline_size = 2
+	
+	call_deferred("add_child", damage_label)
+
+	await damage_label.resized
+	damage_label.pivot_offset = Vector2(damage_label.size / 2)
+
+	var tween = get_tree().create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(
+		damage_label, "position:y", damage_label.position.y - 48, 0.25
+	).set_ease(Tween.EASE_OUT)
+
+	tween.tween_property(
+		damage_label, "position:y", damage_label.position.y, 0.5
+	).set_ease(Tween.EASE_IN).set_delay(0.25)
+
+	tween.tween_property(
+		damage_label, "scale", Vector2.ZERO, 0.5
+	).set_ease(Tween.EASE_IN).set_delay(0.5)

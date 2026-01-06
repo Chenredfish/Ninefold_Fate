@@ -424,6 +424,7 @@ class CalculatingState extends BaseState:
 			print("[BattleStateMachine] 敵人 ", i, ": ", enemy, " 是否有效: ", enemy != null)
 			if enemy and enemy.has_method("take_damage"):
 				print("[BattleStateMachine] 對敵人 ", enemy.name, " 造成傷害: ", ui_damage)
+				EventBus.ui_damage_animation_requested.emit(enemy, ui_damage, state_machine.hero_scene.get("element"))
 				var was_alive = enemy.is_alive if "is_alive" in enemy else true
 				enemy.take_damage(ui_damage)
 				# 檢查敵人是否在這次攻擊後死亡
@@ -488,6 +489,9 @@ class EnemyTurnState extends BaseState:
 			source_name = source.enemy_name
 		elif source:
 			source_name = source.name
+
+		#通知UI跳出傷害動畫
+		EventBus.ui_damage_animation_requested.emit(state_machine.hero_scene, amount, damage_type)
 
 		print("[BattleStateMachine] 英雄受到傷害事件: ", source_name, " → ", state_machine.hero_scene.hero_name, " (", amount, " ", damage_type, "傷害)")
 

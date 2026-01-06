@@ -34,6 +34,8 @@ signal hand_updated(current_hands: Array)
 signal request_used_cards()
 signal used_cards_response(used_cards: Array)
 
+signal ui_damage_animation_requested(target: Node, amount: int, damage_type: String)
+
 # 系統事件
 signal game_paused()
 signal game_resumed()
