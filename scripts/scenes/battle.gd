@@ -100,7 +100,7 @@ func setup_battle_ui(level_data: Dictionary, enemies_scenes: Array = [], hero_sc
 		print("[BattleScene] 添加英雄場景到UI: ", hero_scene.name)
 
 
-	EventBus.emit_signal("battle_ui_update_complete")
+	EventBus.battle_ui_update_complete.emit()
 
 func _setup_board_ui(board_size: Vector2, board_blocked: Array):
 	# 先加底色區塊
@@ -177,7 +177,7 @@ func _on_end_turn_pressed():
 	_on_ui_lock_end_turn_button()
 
 	# 通知狀態機回合結束（傳遞UI數據）
-	EventBus.emit_signal("turn_ended", total_damage, cards_in_ui)
+	EventBus.turn_ended.emit(total_damage, cards_in_ui)
 
 func _on_skill_pressed():
 	# 施放技能，需要看能量是否足夠，反正也是之後再說
@@ -187,7 +187,7 @@ func _on_tile_dropped(tile_data: Dictionary):
 	"""棋盤放置方塊事件 - 只負責UI反饋"""
 	print("[BattleScene] 方塊已放置到棋盤：", tile_data)
 	# 通知狀態機方塊已放置（由狀態機處理遊戲邏輯）
-	EventBus.emit_signal("block_placed", null, Vector2.ZERO)
+	EventBus.block_placed.emit(null, Vector2.ZERO)
 
 func _on_ui_damage_animation_requested(target: Node, amount: int, damage_type: String):
 	"""處理UI傷害動畫請求"""

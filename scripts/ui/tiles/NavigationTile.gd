@@ -192,7 +192,7 @@ func perform_scene_transition():
 	var scene_type = _get_scene_type_from_function(function_name)
 	if scene_type != -1:
 		# 通過EventBus發送場景切換請求
-		EventBus.emit_signal("scene_transition_requested", get_state_name_from_function(function_name), navigation_data)
+		EventBus.scene_transition_requested.emit(get_state_name_from_function(function_name), navigation_data)
 		print("[NavigationTile] 已發送場景切換請求：", function_name)
 	else:
 		print("[NavigationTile] 錯誤：未知的功能類型 - ", function_name)

@@ -72,7 +72,7 @@ func start_battle(level_data: Dictionary):
 
 # 結束戰鬥
 func end_battle(result: String, rewards: Array = []):
-	EventBus.emit_signal("battle_ended", result, rewards)
+	EventBus.battle_ended.emit(result, rewards)
 	
 	# 清理敵人場景
 	for enemy in enemies_scenes:
@@ -145,7 +145,7 @@ func load_next_enemy_wave():
 	else :
 		#print("[BattleStateMachine] 確認所有敵人已被擊敗，準備載入下一波")
 		#載入下一波敵人
-		EventBus.emit_signal("ui_load_next_enemy_wave")
+		EventBus.ui_load_next_enemy_wave.emit()
 
 		pass
 
@@ -272,7 +272,7 @@ func setup_initial_hand(deck: Dictionary):
 			current_hands.append(random_block)
 	
 	print("[BattleStateMachine] 初始手牌: ", current_hands)
-	EventBus.emit_signal("hand_updated", current_hands)
+	EventBus.hand_updated.emit(current_hands)
 
 # 補充手牌到4張
 func refill_hand():
@@ -291,7 +291,7 @@ func refill_hand():
 		current_hands.append(drawn_card)
 		print("[BattleStateMachine] 抽到卡片: ", drawn_card)
 	
-	EventBus.emit_signal("hand_updated", current_hands)
+	EventBus.hand_updated.emit(current_hands)
 
 # 移除使用過的卡片
 func remove_used_cards(used_cards: Array[String]):
@@ -370,8 +370,8 @@ class PreparingState extends BaseState:
 
 		
 		# 發送UI設置信號
-		EventBus.emit_signal("setup_battle_ui", level_data, state_machine.enemies_scenes, state_machine.hero_scene)
-		EventBus.emit_signal("setup_deck_ui", state_machine.current_hands)
+		EventBus.setup_battle_ui.emit(level_data, state_machine.enemies_scenes, state_machine.hero_scene)
+		EventBus.setup_deck_ui.emit(state_machine.current_hands)
 		
 		# 加一點延遲確保UI有時間處理
 		await state_machine.get_tree().process_frame
@@ -394,8 +394,8 @@ class PlayerTurnState extends BaseState:
 		
 		# 通知UI更新
 		EventBus.turn_started.emit("player")
-		EventBus.emit_signal("ui_turn_timer_started", turn_timer)
-		EventBus.emit_signal("ui_unlock_end_turn_button")
+		EventBus.ui_turn_timer_started.emit(turn_timer)
+		EventBus.ui_unlock_end_turn_button.emit()
 	
 	func update(delta: float):
 		super.update(delta)
@@ -434,8 +434,9 @@ class PlayerTurnState extends BaseState:
 	
 	func end_player_turn():
 		print("[BattleStateMachine] Player turn ended")
-		# 直接發送回合結束事件，由UI處理具體數據
-		EventBus.emit_signal("turn_ended")
+		# 注意：回合結束由 battle.gd 的結束回合按鈕觸發並帶入傷害數據
+		# 這裡只作為備援路徑（B11 待整合）
+		EventBus.turn_ended.emit(0, [])
 	
 	func can_transition_to(next_state_id: String) -> bool:
 		return next_state_id in ["calculating", "defeat", "victory"]
@@ -474,7 +475,7 @@ class CalculatingState extends BaseState:
 		# 如果沒有傷害，直接跳過
 		if ui_damage <= 0:
 			print("[BattleStateMachine] No damage dealt this turn")
-			EventBus.emit_signal("damage_calculated", damage_info)
+			EventBus.damage_calculated.emit(damage_info)
 			return
 		
 		# 對敵人造成傷害並檢查死亡
@@ -495,14 +496,14 @@ class CalculatingState extends BaseState:
 					enemies_defeated += 1
 					print("[BattleStateMachine] Enemy defeated: ", enemy.name)
 					# 發送敵人被擊敗事件，這個事件只會減少enemies_remaining
-					EventBus.emit_signal("enemy_defeated", enemy.name, {})
+					EventBus.enemy_defeated.emit(enemy.name, {})
 					damage_info.targets.append(enemy.name)
 			else:
 				print("[BattleStateMachine] 敵人 ", i, " 無法接收傷害或已無效")
 		
 		print("[BattleStateMachine] 本回合擊倒的敵人數量: ", enemies_defeated)
 		
-		EventBus.emit_signal("damage_calculated", damage_info)
+		EventBus.damage_calculated.emit(damage_info)
 		print("[BattleStateMachine] Calculated damage: ", ui_damage, " to ", enemies_defeated, " enemies")
 	
 	func can_transition_to(next_state_id: String) -> bool:

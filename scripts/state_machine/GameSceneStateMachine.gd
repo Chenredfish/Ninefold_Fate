@@ -181,7 +181,7 @@ class MainMenuState extends BaseState:
 		var scene = await state_machine.load_scene(SceneType.MAIN_MENU)
 		
 		# 發送進入主選單事件
-		EventBus.emit_signal("scene_entered", "main_menu")
+		EventBus.scene_entered.emit("main_menu")
 	
 	func can_transition_to(next_state_id: String) -> bool:
 		# 主選單可以切換到任何場景
@@ -202,7 +202,7 @@ class LevelSelectionState extends BaseState:
 			await scene.ready
 			print("[LevelSelectionState] Level selection scene loaded and ready")
 		
-		EventBus.emit_signal("scene_entered", "level_selection")
+		EventBus.scene_entered.emit("level_selection")
 	
 	func can_transition_to(next_state_id: String) -> bool:
 		# 關卡選擇可以返回主選單或進入戰鬥
@@ -222,12 +222,10 @@ class BattleState extends BaseState:
 			if scene.has_method("initialize_battle"):
 				scene.initialize_battle(data.level_id)
 		
-		EventBus.emit_signal("battle_started", data)
-	
+		EventBus.battle_started.emit(data)
+
 	func exit(next_state: BaseState = null):
 		super.exit(next_state)
-		# 清理戰鬥相關資源
-		EventBus.emit_signal("battle_cleanup_requested")
 	
 	func can_transition_to(next_state_id: String) -> bool:
 		# 戰鬥中只能切換到結算或返回選單
@@ -246,7 +244,7 @@ class ResultState extends BaseState:
 		if scene and scene.has_method("set_result_data"):
 			scene.set_result_data(data)
 		
-		EventBus.emit_signal("scene_entered", "result")
+		EventBus.scene_entered.emit("result")
 	
 	func can_transition_to(next_state_id: String) -> bool:
 		# 結算可以返回選單、重試戰鬥或繼續下一關
@@ -261,7 +259,7 @@ class SettingsState extends BaseState:
 		super.enter(previous_state, data)
 		var scene = await state_machine.load_scene(SceneType.SETTINGS)
 		
-		EventBus.emit_signal("scene_entered", "settings")
+		EventBus.scene_entered.emit("settings")
 	
 	func can_transition_to(next_state_id: String) -> bool:
 		# 設定可以返回任何場景
@@ -276,7 +274,7 @@ class DeckBuildState extends BaseState:
 		super.enter(previous_state, data)
 		var scene = await state_machine.load_scene(SceneType.DECK_BUILD)
 
-		EventBus.emit_signal("scene_entered", "deck_build")
+		EventBus.scene_entered.emit("deck_build")
 
 	func can_transition_to(next_state_id: String) -> bool:
 		# 構築可以返回主選單

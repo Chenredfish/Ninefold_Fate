@@ -75,7 +75,7 @@ func register_state_machine(name: String, state_machine: BaseStateMachine) -> bo
 		state_machine.transition_failed.connect(_on_state_machine_transition_failed.bind(name))
 	
 	# 通知EventBus
-	EventBus.emit_signal("state_machine_created", name, state_machine)
+	EventBus.state_machine_created.emit(name, state_machine)
 	
 	if debug_enabled:
 		print("[StateManager] Registered state machine: ", name)
@@ -172,7 +172,7 @@ func pause_all_state_machines():
 			state_machine.set_auto_process(false)
 			state_machine.set_auto_physics_process(false)
 	
-	EventBus.emit_signal("game_paused")
+	EventBus.game_paused.emit()
 
 # 恢復所有狀態機
 func resume_all_state_machines():
@@ -181,7 +181,7 @@ func resume_all_state_machines():
 			state_machine.set_auto_process(true)
 			# 物理處理根據需要設置
 	
-	EventBus.emit_signal("game_resumed")
+	EventBus.game_resumed.emit()
 
 # 獲取調試信息
 func get_debug_info() -> Dictionary:
@@ -243,10 +243,10 @@ func _on_battle_ended(result: String, rewards: Array):
 
 # 狀態機信號處理（帶名稱綁定）
 func _on_state_machine_state_changed(state_machine_name: String, previous_state_id: String, current_state_id: String):
-	EventBus.emit_signal("state_changed", state_machine_name, previous_state_id, current_state_id)
+	EventBus.state_changed.emit(state_machine_name, previous_state_id, current_state_id)
 
 func _on_state_machine_transition_failed(state_machine_name: String, from_state_id: String, to_state_id: String, reason: String):
-	EventBus.emit_signal("transition_failed", state_machine_name, from_state_id, to_state_id, reason)
+	EventBus.transition_failed.emit(state_machine_name, from_state_id, to_state_id, reason)
 
 # 輸入處理（轉發給戰鬥狀態機，拖放由DragDropManager處理）
 func _input(event: InputEvent):
@@ -276,7 +276,7 @@ func go_to_settings(data: Dictionary = {}):
 # 便利方法：戰鬥控制
 func submit_player_turn():
 	if battle_state_machine and battle_state_machine.is_in_state("player_turn"):
-		EventBus.emit_signal("player_turn_submit")
+		EventBus.player_turn_submit.emit()
 
 func end_battle_with_victory():
 	if battle_state_machine:

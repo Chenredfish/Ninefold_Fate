@@ -6,8 +6,8 @@ signal battle_started(level_data: Dictionary)
 signal battle_ended(result: String, rewards: Array)
 signal turn_started(turn_type: String)  # "player" 或 "enemy"
 signal turn_ended(total_damage: int, cards_in_ui: Array)
-signal setup_battle_ui(level_data: Dictionary)
-signal setup_deck_ui(deck_data: Dictionary)  # 參數改名：deck_id → deck_data
+signal setup_battle_ui(level_data: Dictionary, enemies_scenes: Array, hero_scene: Node)
+signal setup_deck_ui(current_hands: Array)  # 傳手牌 ID 陣列
 signal battle_ui_update_complete()
 
 # 角色生命週期事件
