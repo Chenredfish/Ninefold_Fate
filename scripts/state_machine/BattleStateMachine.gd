@@ -54,6 +54,7 @@ func _connect_event_bus():
 	EventBus.enemy_defeated.connect(_on_enemy_defeated)
 	EventBus.block_placed.connect(_on_block_placed)
 	EventBus.damage_dealt.connect(_on_damage_dealt)
+	EventBus.skill_effect_requested.connect(_on_skill_effect_requested)
 
 # 開始戰鬥
 func start_battle(level_data: Dictionary):
@@ -154,8 +155,33 @@ func load_next_enemy_wave():
 func _on_battle_started(level_data: Dictionary):
 	start_battle(level_data)
 
-func _on_turn_started(turn_num: int):
-	print("[BattleStateMachine] Turn ", turn_num, " started")
+func _on_turn_started(turn_type: String):
+	print("[BattleStateMachine] Turn started: ", turn_type)
+
+func _on_skill_effect_requested(effect: Dictionary):
+	var effect_type = effect.get("type", "")
+	var target = effect.get("target") as Node
+	var source = effect.get("source") as Node
+	var amount = effect.get("amount", 0)
+	var element = effect.get("element", "normal")
+
+	if not is_instance_valid(target):
+		push_warning("[BattleStateMachine] skill_effect_requested: 目標無效")
+		return
+
+	match effect_type:
+		"damage":
+			if target.has_method("take_damage"):
+				target.take_damage(amount, element, source)
+			else:
+				push_warning("[BattleStateMachine] 目標沒有 take_damage 方法：" + target.name)
+		"heal":
+			if target.has_method("heal"):
+				target.heal(amount, source)
+			else:
+				push_warning("[BattleStateMachine] 目標沒有 heal 方法：" + target.name)
+		_:
+			push_warning("[BattleStateMachine] 未知的技能效果類型：" + effect_type)
 
 func _on_turn_ended(total_damage: int = 0, cards_in_ui: Array = []):
 	print("[BattleStateMachine] Turn ended, damage dealt: ", total_damage, ", cards remaining: ", cards_in_ui)
@@ -367,7 +393,7 @@ class PlayerTurnState extends BaseState:
 		print("[BattleStateMachine] Player turn ", turn_num, " started")
 		
 		# 通知UI更新
-		EventBus.emit_signal("turn_started", turn_num)
+		EventBus.turn_started.emit("player")
 		EventBus.emit_signal("ui_turn_timer_started", turn_timer)
 		EventBus.emit_signal("ui_unlock_end_turn_button")
 	

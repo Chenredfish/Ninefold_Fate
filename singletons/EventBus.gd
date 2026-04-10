@@ -1,16 +1,16 @@
 # EventBus.gd - AutoLoad 單例
 extends Node
 
-# 戰鬥相關事件
+# 戰鬥流程事件
 signal battle_started(level_data: Dictionary)
 signal battle_ended(result: String, rewards: Array)
-signal turn_started(turn_number: int)
+signal turn_started(turn_type: String)  # "player" 或 "enemy"
 signal turn_ended(total_damage: int, cards_in_ui: Array)
 signal setup_battle_ui(level_data: Dictionary)
-signal setup_deck_ui(deck_id: Dictionary)
+signal setup_deck_ui(deck_data: Dictionary)  # 參數改名：deck_id → deck_data
 signal battle_ui_update_complete()
 
-# 物件生命週期事件  
+# 角色生命週期事件
 signal hero_created(hero_instance: Node)
 signal hero_destroyed(hero_id: String)
 signal enemy_spawned(enemy_instance: Node)
@@ -18,7 +18,11 @@ signal enemy_defeated(enemy_id: String, rewards: Dictionary)
 signal block_placed(block_instance: Node, position: Vector2)
 signal block_removed(block_id: String)
 
-# 能力與效果事件
+# 技能效果事件（技能透過此訊號請求效果，由 BattleStateMachine 執行）
+# effect 格式：{ "type": "damage"/"heal", "amount": int, "element": String, "source": Node, "target": Node }
+signal skill_effect_requested(effect: Dictionary)
+
+# 保留：其他系統仍在使用，之後逐步整合
 signal ability_triggered(ability_id: String, caster: Node, target: Node)
 signal effect_applied(effect_id: String, target: Node, duration: float)
 signal effect_expired(effect_id: String, target: Node)

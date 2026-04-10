@@ -1,0 +1,98 @@
+{
+  "_rule": "每個卡組 8 張圖塊，ID 不可重複。跨卡組可以使用相同圖塊。",
+
+  "deck_fire": {
+    "id": "deck_fire",
+    "hero_id": "H001",
+    "name": { "zh": "赤炎·純火牌組", "en": "Pure Flame Deck" },
+    "description": { "zh": "新手友善。純粹傷害體系，透過倍率疊加學習 combo 計算。", "en": "Beginner friendly. Pure damage system to learn combo calculation." },
+    "size": 8,
+    "blocks": [
+      { "id": "B001", "role": "filler",    "note": "無效果，補位用。任何空格都能放，確保每回合能出牌。" },
+      { "id": "B106", "role": "damage",    "note": "×1.2，第一個有倍率的卡，讓玩家感受傷害提升。" },
+      { "id": "B101", "role": "main",      "note": "×1.35，L 型 4 格，主要爆發來源。" },
+      { "id": "B107", "role": "main",      "note": "×1.35，S 型 4 格，提供不同形狀選擇，與 L 型互補。" },
+      { "id": "B202", "role": "ultimate",  "note": "AoE + ×1.3，多敵時最強，稀有卡，十字形放置挑戰。" },
+      { "id": "B005", "role": "off_synergy", "note": "暗系單格，暴擊率 +20% / ×1.5。讓火系偶發暴擊，增加興奮感。" },
+      { "id": "B004", "role": "off_defense", "note": "光系單格，護盾 15。新手保護，讓低血量玩家有緩衝。" },
+      { "id": "B003", "role": "off_sustain", "note": "草系單格，lifesteal 10% hero_atk。提供少量回血，不喧賓奪主。" }
+    ],
+    "strategy": "每回合選擇最大倍率的組合放置。先用 B106 熟悉倍率，再學習 L/S 型的放置技巧，最後以十字烈焰清場。"
+  },
+
+  "deck_water": {
+    "id": "deck_water",
+    "hero_id": "H002",
+    "name": { "zh": "霜凜·激流牌組", "en": "Aggressive Torrent Deck" },
+    "description": { "zh": "高風險高回報。每次放置水系卡都會讓敵人更快攻擊，但傷害更高。Freeze 是扭轉乾坤的保命手段。", "en": "High risk, high reward. Water tiles accelerate enemy countdown but deal more damage. Freeze is the safety valve." },
+    "size": 8,
+    "blocks": [
+      { "id": "B002", "role": "aggressor_s", "note": "倒數 -1 + ×1.2。最小的賭注，學習水系風險概念。" },
+      { "id": "B108", "role": "aggressor_s", "note": "倒數 -1 + ×1.3，2 格，比 B002 更划算但形狀受限。" },
+      { "id": "B102", "role": "aggressor_l", "note": "倒數 -2 + ×1.5，核心博弈卡。敵人快攻但傷害爆增。" },
+      { "id": "B109", "role": "aggressor_m", "note": "倒數 -1 + ×1.4，L 型 4 格，中間選項。" },
+      { "id": "B110", "role": "safety",    "note": "Freeze：敵人倒數歸零這一次不攻擊。無倍率補償，純防禦用途。關鍵時刻保命。" },
+      { "id": "B005", "role": "off_burst",  "note": "暗系，crit_boost +20% / ×1.5。敵人即將攻擊前，用高倍率水卡 + 暴擊一刀秒殺。" },
+      { "id": "B114", "role": "off_heal",   "note": "光系 T 型，heal 40。推進過猛導致被打時的回血手段。" },
+      { "id": "B003", "role": "off_sustain", "note": "草系，lifesteal 10% hero_atk。持久戰回血補充。" }
+    ],
+    "strategy": "計算敵人何時倒數歸零，在最後 1-2 回合集中放高倍率水卡造成最大傷害，再用 Freeze 攔截攻擊。敵人倒數較長時可以多放幾張積累傷害；倒數快歸零時切換策略，留住 Freeze。"
+  },
+
+  "deck_grass": {
+    "id": "deck_grass",
+    "hero_id": "H003",
+    "name": { "zh": "綠葉·循環牌組", "en": "Nature Cycle Deck" },
+    "description": { "zh": "持久戰體系。回血依賴英雄攻擊力計算，不因敵人強弱失衡。T 型有 HP 條件，鼓勵在危機時機出牌。", "en": "Sustain system. Healing scales with hero ATK, balanced regardless of enemy. T-shape has HP condition, rewards crisis timing." },
+    "size": 8,
+    "blocks": [
+      { "id": "B003", "role": "sustain",     "note": "lifesteal 10% hero_atk，無條件觸發，每回合穩定回血。" },
+      { "id": "B111", "role": "emergency",   "note": "直接回血 30，固定值。HP 緊急時補血，不依賴 hero_atk。" },
+      { "id": "B103", "role": "crisis",      "note": "lifesteal 15% hero_atk，但只有 HP < 70% 才觸發。危機時刻的強力回血。" },
+      { "id": "B112", "role": "multiplier",  "note": "lifesteal 倍率 ×1.25，本回合所有 lifesteal 效果乘算。必須搭配其他吸血卡。" },
+      { "id": "B203", "role": "ultimate",    "note": "lifesteal 20% hero_atk + 直接回血 50，無條件觸發。逆轉牌。" },
+      { "id": "B004", "role": "off_shield",  "note": "光系，護盾 15。補充防禦，讓草系不只是回血也有主動扛傷。" },
+      { "id": "B002", "role": "off_aggress", "note": "水系，-1 倒數 + ×1.2。需要傷害時的外援，加快戰鬥節奏。" },
+      { "id": "B005", "role": "off_burst",   "note": "暗系，crit_boost。偶發暴擊提升傷害，間接提升 lifesteal 量（因 lifesteal 基於 hero_atk 固定，暴擊不影響吸血）。" }
+    ],
+    "strategy": "前期用 B003 穩定回血，B111 應急。中期等 HP 下滑至 70% 以下觸發 B103 高效吸血。搭配 B112 讓吸血量 ×1.25。B203 留作最後逆轉手段。"
+  },
+
+  "deck_light": {
+    "id": "deck_light",
+    "hero_id": "H004",
+    "name": { "zh": "晨曦·護盾牌組", "en": "Radiance Shield Deck" },
+    "description": { "zh": "攻防兼備。護盾積累吸收敵人傷害，AoE 同時傷害多敵。移除原先抽牌機制，改以護盾建立前排優勢。", "en": "Balanced offense-defense. Shield accumulation absorbs enemy damage. AoE hits multiple enemies. Removed card draw, replaced with shield building." },
+    "size": 8,
+    "blocks": [
+      { "id": "B004", "role": "shield_s",   "note": "護盾 15，單格，靈活填角。每一格都是一層防護。" },
+      { "id": "B113", "role": "shield_m",   "note": "護盾 25，雙連，效率更高。旋轉靈活。" },
+      { "id": "B201", "role": "ultimate",   "note": "AoE ×1.2 打全敵 + 護盾 40。光系最強牌，攻防同時。" },
+      { "id": "B114", "role": "heal",       "note": "heal 40，T 型 4 格，回血來源。護盾破了之後的補充。" },
+      { "id": "B115", "role": "balanced",   "note": "傷害 ×1.15 + 護盾 20。輸出與防禦的平衡點，多敵不多的回合使用。" },
+      { "id": "B003", "role": "off_sustain","note": "草系，lifesteal 10% hero_atk。護盾破損後的第二層回血。" },
+      { "id": "B102", "role": "off_aggress","note": "水系 3 格，-2 倒數 + ×1.5。當護盾充足時可以冒險推進，大傷害換快勝。" },
+      { "id": "B005", "role": "off_burst",  "note": "暗系，crit_boost。護盾充足時打暴擊爆發，配合 AoE 清場。" }
+    ],
+    "strategy": "前期積累護盾（B004 + B113），建立安全緩衝。中期用 B201 十字聖光打 AoE 同時補護盾。護盾充足時可用 B102 水系冒進推快。"
+  },
+
+  "deck_dark": {
+    "id": "deck_dark",
+    "hero_id": "H005",
+    "name": { "zh": "夜幕·扣血牌組", "en": "Shadow Sacrifice Deck" },
+    "description": { "zh": "操作性最強。用 HP 換取傷害倍率，吸血回收部分損耗。暴擊與削弱讓關鍵一擊極限爆發。", "en": "Highest skill ceiling. Spend HP for damage multipliers, recover with lifesteal. Crits and defense debuffs enable explosive kills." },
+    "size": 8,
+    "blocks": [
+      { "id": "B005", "role": "crit_base",  "note": "暴擊率 +20% / ×1.5，基礎暴擊建立。" },
+      { "id": "B116", "role": "debuff",     "note": "敵方防禦 -15%，持續 1 回合。削弱後打出的傷害更高，配合暴擊最大化。" },
+      { "id": "B104", "role": "sacrifice_l","note": "扣 50HP 換 ×1.5 倍率，HP < 100 自動跳過。高風險高回報，4 格方形。" },
+      { "id": "B117", "role": "sacrifice_s","note": "扣 30HP 換 ×1.3 + lifesteal 15% hero_atk。比 B104 溫和，附帶回收機制。" },
+      { "id": "B118", "role": "crit_amp",   "note": "暴擊率 +30% / ×1.8，暗系暴擊頂點。3 格直線，有直線同屬加成。" },
+      { "id": "B003", "role": "off_sustain","note": "草系，lifesteal 10% hero_atk。扣血後的主要回血手段。必備。" },
+      { "id": "B111", "role": "off_heal",   "note": "草系雙連，heal 30。固定回血，HP 太低時的應急卡。" },
+      { "id": "B004", "role": "off_shield", "note": "光系，護盾 15。HP 不足以扣血時，先堆護盾再操作。" }
+    ],
+    "strategy": "核心節奏：先 B116 削弱敵方防禦，再 B104/B117 扣血換高倍率傷害，接著用 B005/B118 暴擊卡觸發爆傷，最後 B003/B111 回血補充。HP 管理是技術所在：HP > 100 才扣血，低血時切換防守模式。"
+  }
+}

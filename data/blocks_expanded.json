@@ -1,0 +1,481 @@
+{
+  "_comment": "special_effects: Array[String] 對應 AbilityComponent.create_by_id() 的 ability_id。effect_parameters 由各 AbilityComponent 子類的 setup_parameters() 讀取。",
+  "_new_abilities_needed": [
+    "damage_multiplier  → DamageMultiplierAbility  (乘上傷害倍率)",
+    "countdown_push     → CountdownPushAbility     (加速敵人倒數，是負面效果，用更高傷害補償)",
+    "lifesteal          → LifestealAbility         (依英雄 base_attack 百分比回血，不是依傷害)",
+    "lifesteal_amplify  → LifestealAmplifyAbility  (本回合所有 lifesteal 倍率乘法)",
+    "aoe_damage         → AoeDamageAbility         (傷害分散至所有敵人)",
+    "crit_boost         → CritBoostAbility         (提升暴擊率和暴擊傷害倍率)",
+    "hp_sacrifice       → HpSacrificeAbility       (扣除自身 HP 換取傷害倍率，HP 不足則跳過)"
+  ],
+  "_existing_abilities": [
+    "heal      → HealAbility      (已實裝)",
+    "shield    → ShieldAbility    (已實裝)",
+    "burn      → BurnAbility      (已實裝，不建議再使用於火系 - 太複雜)",
+    "freeze    → FreezeAbility    (已實裝，水系使用)",
+    "debuff_defense → DefenseDebuffAbility (已實裝，暗系使用)"
+  ],
+
+  "B001": {
+    "id": "B001",
+    "name": { "zh": "火焰方塊", "en": "Fire Block" },
+    "element": "fire",
+    "shape": "single",
+    "shape_pattern": [[1]],
+    "rotation_allowed": false,
+    "flip_allowed": false,
+    "bonus_value": 2,
+    "rarity": "common",
+    "special_effects": [],
+    "effect_parameters": {},
+    "_design_note": "火系入門基礎磚，無附加效果。初學者感受純粹的傷害系統。"
+  },
+
+  "B106": {
+    "id": "B106",
+    "name": { "zh": "火焰雙連", "en": "Fire Pair" },
+    "element": "fire",
+    "shape": "line_2",
+    "shape_pattern": [[1, 1]],
+    "rotation_allowed": true,
+    "flip_allowed": false,
+    "bonus_value": 4,
+    "rarity": "common",
+    "special_effects": ["damage_multiplier"],
+    "effect_parameters": {
+      "damage_multiplier": { "multiplier": 1.2 }
+    },
+    "_design_note": "火系第一個有效果的磚，溫和的 +20%，教玩家倍率概念。"
+  },
+
+  "B101": {
+    "id": "B101",
+    "name": { "zh": "L型火焰", "en": "L-Fire" },
+    "element": "fire",
+    "shape": "L_shape",
+    "shape_pattern": [[1, 0], [1, 0], [1, 1]],
+    "rotation_allowed": true,
+    "flip_allowed": true,
+    "bonus_value": 7,
+    "rarity": "uncommon",
+    "special_effects": ["damage_multiplier"],
+    "effect_parameters": {
+      "damage_multiplier": { "multiplier": 1.35 }
+    },
+    "_design_note": "L 形佔 4 格，較難放置，補償更高倍率 ×1.35。"
+  },
+
+  "B107": {
+    "id": "B107",
+    "name": { "zh": "S型火焰", "en": "S-Fire" },
+    "element": "fire",
+    "shape": "S_shape",
+    "shape_pattern": [[0, 1], [1, 1], [1, 0]],
+    "rotation_allowed": true,
+    "flip_allowed": true,
+    "bonus_value": 7,
+    "rarity": "uncommon",
+    "special_effects": ["damage_multiplier"],
+    "effect_parameters": {
+      "damage_multiplier": { "multiplier": 1.35 }
+    },
+    "_design_note": "S 形同樣 4 格，放置難度高，倍率與 L 型對等。提供不同形狀選擇。"
+  },
+
+  "B202": {
+    "id": "B202",
+    "name": { "zh": "十字烈焰", "en": "Cross-Fire" },
+    "element": "fire",
+    "shape": "cross",
+    "shape_pattern": [[0, 1, 0], [1, 1, 1], [0, 1, 0]],
+    "rotation_allowed": false,
+    "flip_allowed": false,
+    "bonus_value": 10,
+    "rarity": "rare",
+    "special_effects": ["aoe_damage", "damage_multiplier"],
+    "effect_parameters": {
+      "aoe_damage": { "split_to_all_enemies": true },
+      "damage_multiplier": { "multiplier": 1.3 }
+    },
+    "_design_note": "火系稀有核心：傷害打到所有敵人，倍率 ×1.3。多敵場景的終極解答。"
+  },
+
+  "B002": {
+    "id": "B002",
+    "name": { "zh": "水滴方塊", "en": "Water Block" },
+    "element": "water",
+    "shape": "single",
+    "shape_pattern": [[1]],
+    "rotation_allowed": false,
+    "flip_allowed": false,
+    "bonus_value": 3,
+    "rarity": "common",
+    "special_effects": ["countdown_push", "damage_multiplier"],
+    "effect_parameters": {
+      "countdown_push": { "amount": 1 },
+      "damage_multiplier": { "multiplier": 1.2 }
+    },
+    "_design_note": "水系核心設計：countdown_push 是負面效果（敵人提早攻擊），以 ×1.2 補償。小賭注。"
+  },
+
+  "B108": {
+    "id": "B108",
+    "name": { "zh": "水滴雙連", "en": "Water Pair" },
+    "element": "water",
+    "shape": "line_2",
+    "shape_pattern": [[1, 1]],
+    "rotation_allowed": true,
+    "flip_allowed": false,
+    "bonus_value": 5,
+    "rarity": "common",
+    "special_effects": ["countdown_push", "damage_multiplier"],
+    "effect_parameters": {
+      "countdown_push": { "amount": 1 },
+      "damage_multiplier": { "multiplier": 1.3 }
+    },
+    "_design_note": "2 格水系，-1 倒數但 ×1.3 補償。比單格版本更值，但形狀更難放。"
+  },
+
+  "B102": {
+    "id": "B102",
+    "name": { "zh": "直線水流", "en": "Line-Water" },
+    "element": "water",
+    "shape": "line_3",
+    "shape_pattern": [[1, 1, 1]],
+    "rotation_allowed": true,
+    "flip_allowed": false,
+    "bonus_value": 7,
+    "rarity": "uncommon",
+    "special_effects": ["countdown_push", "damage_multiplier"],
+    "effect_parameters": {
+      "countdown_push": { "amount": 2 },
+      "damage_multiplier": { "multiplier": 1.5 }
+    },
+    "_design_note": "高風險高回報：-2 倒數（敵人快攻！），但 ×1.5 傷害。核心博弈卡。"
+  },
+
+  "B109": {
+    "id": "B109",
+    "name": { "zh": "L型潮汐", "en": "L-Water" },
+    "element": "water",
+    "shape": "L_shape",
+    "shape_pattern": [[1, 0], [1, 0], [1, 1]],
+    "rotation_allowed": true,
+    "flip_allowed": true,
+    "bonus_value": 7,
+    "rarity": "uncommon",
+    "special_effects": ["countdown_push", "damage_multiplier"],
+    "effect_parameters": {
+      "countdown_push": { "amount": 1 },
+      "damage_multiplier": { "multiplier": 1.4 }
+    },
+    "_design_note": "4 格 L 形，難放置補償 ×1.4，搭配 -1 倒數的輕度風險。"
+  },
+
+  "B110": {
+    "id": "B110",
+    "name": { "zh": "方形冰壁", "en": "Ice Wall" },
+    "element": "water",
+    "shape": "square",
+    "shape_pattern": [[1, 1], [1, 1]],
+    "rotation_allowed": false,
+    "flip_allowed": false,
+    "bonus_value": 6,
+    "rarity": "uncommon",
+    "special_effects": ["freeze"],
+    "effect_parameters": {
+      "freeze": { "prevent_attack_on_zero": true }
+    },
+    "_design_note": "水系唯一純防禦卡：freeze 讓敵人即使倒數歸零也不攻擊（這一次）。無倒數推進，但也無傷害加成。用於絕命時機。"
+  },
+
+  "B003": {
+    "id": "B003",
+    "name": { "zh": "草葉方塊", "en": "Grass Block" },
+    "element": "grass",
+    "shape": "single",
+    "shape_pattern": [[1]],
+    "rotation_allowed": false,
+    "flip_allowed": false,
+    "bonus_value": 2,
+    "rarity": "common",
+    "special_effects": ["lifesteal"],
+    "effect_parameters": {
+      "lifesteal": {
+        "heal_base": "hero_attack",
+        "percent": 0.10,
+        "_note": "回血 = 英雄 base_attack × 10%，不依據傷害值，避免弱敵無限白嫖。"
+      }
+    },
+    "_design_note": "草系基礎回血：heal = hero_attack × 10%，如英雄ATK=90則回9HP。穩定但不過分。"
+  },
+
+  "B111": {
+    "id": "B111",
+    "name": { "zh": "草葉雙連", "en": "Grass Pair" },
+    "element": "grass",
+    "shape": "line_2",
+    "shape_pattern": [[1, 1]],
+    "rotation_allowed": true,
+    "flip_allowed": false,
+    "bonus_value": 3,
+    "rarity": "common",
+    "special_effects": ["heal"],
+    "effect_parameters": {
+      "heal": { "heal_amount": 30 }
+    },
+    "_design_note": "直接回血，不依賴 hero_attack，是固定的 30HP。應急治療。"
+  },
+
+  "B103": {
+    "id": "B103",
+    "name": { "zh": "T型草葉", "en": "T-Grass" },
+    "element": "grass",
+    "shape": "T_shape",
+    "shape_pattern": [[1, 1, 1], [0, 1, 0]],
+    "rotation_allowed": true,
+    "flip_allowed": false,
+    "bonus_value": 7,
+    "rarity": "uncommon",
+    "special_effects": ["lifesteal"],
+    "effect_parameters": {
+      "lifesteal": {
+        "heal_base": "hero_attack",
+        "percent": 0.15,
+        "condition": "hp_below_percent",
+        "condition_value": 0.70,
+        "_note": "只有 HP < 70% 時才觸發。避免滿血狀態無限賺免費HP，同時在需要時提供強力回復。"
+      }
+    },
+    "_design_note": "條件式吸血：只有 HP 低於 70% 時才觸發，15% hero_attack。鼓勵玩家在危機時機打出。"
+  },
+
+  "B112": {
+    "id": "B112",
+    "name": { "zh": "直線藤蔓", "en": "Line-Grass" },
+    "element": "grass",
+    "shape": "line_3",
+    "shape_pattern": [[1, 1, 1]],
+    "rotation_allowed": true,
+    "flip_allowed": false,
+    "bonus_value": 6,
+    "rarity": "uncommon",
+    "special_effects": ["lifesteal_amplify"],
+    "effect_parameters": {
+      "lifesteal_amplify": {
+        "multiplier": 1.25,
+        "scope": "this_turn",
+        "_note": "本回合所有 lifesteal 效果的回血量乘以 1.25，複利計算。"
+      }
+    },
+    "_design_note": "倍率卡：讓這一回合其他吸血卡效果 ×1.25，必須配合其他草系卡才有意義。"
+  },
+
+  "B203": {
+    "id": "B203",
+    "name": { "zh": "十字森林", "en": "Cross-Grass" },
+    "element": "grass",
+    "shape": "cross",
+    "shape_pattern": [[0, 1, 0], [1, 1, 1], [0, 1, 0]],
+    "rotation_allowed": false,
+    "flip_allowed": false,
+    "bonus_value": 10,
+    "rarity": "rare",
+    "special_effects": ["lifesteal", "heal"],
+    "effect_parameters": {
+      "lifesteal": {
+        "heal_base": "hero_attack",
+        "percent": 0.20
+      },
+      "heal": { "heal_amount": 50 }
+    },
+    "_design_note": "草系稀有王牌：20% hero_attack 吸血 + 直接回血 50。不設 HP 條件，作為逆轉卡使用。"
+  },
+
+  "B004": {
+    "id": "B004",
+    "name": { "zh": "光明方塊", "en": "Light Block" },
+    "element": "light",
+    "shape": "single",
+    "shape_pattern": [[1]],
+    "rotation_allowed": false,
+    "flip_allowed": false,
+    "bonus_value": 2,
+    "rarity": "common",
+    "special_effects": ["shield"],
+    "effect_parameters": {
+      "shield": { "shield_amount": 15 }
+    },
+    "_design_note": "光系最小護盾單元，單格堆疊。每放一次就為己方建立 15 點護盾。"
+  },
+
+  "B113": {
+    "id": "B113",
+    "name": { "zh": "光明雙連", "en": "Light Pair" },
+    "element": "light",
+    "shape": "line_2",
+    "shape_pattern": [[1, 1]],
+    "rotation_allowed": true,
+    "flip_allowed": false,
+    "bonus_value": 4,
+    "rarity": "common",
+    "special_effects": ["shield"],
+    "effect_parameters": {
+      "shield": { "shield_amount": 25 }
+    },
+    "_design_note": "護盾 25，是單格版的升級。注意：移除原先的抽牌機制，避免手牌無限堆積。"
+  },
+
+  "B201": {
+    "id": "B201",
+    "name": { "zh": "十字聖光", "en": "Cross-Light" },
+    "element": "light",
+    "shape": "cross",
+    "shape_pattern": [[0, 1, 0], [1, 1, 1], [0, 1, 0]],
+    "rotation_allowed": false,
+    "flip_allowed": false,
+    "bonus_value": 10,
+    "rarity": "rare",
+    "special_effects": ["aoe_damage", "shield"],
+    "effect_parameters": {
+      "aoe_damage": { "split_to_all_enemies": true, "multiplier": 1.2 },
+      "shield": { "shield_amount": 40 }
+    },
+    "_design_note": "光系稀有：AoE 打全敵 ×1.2，同時建立護盾 40。攻防合一。"
+  },
+
+  "B114": {
+    "id": "B114",
+    "name": { "zh": "T型聖光", "en": "T-Light" },
+    "element": "light",
+    "shape": "T_shape",
+    "shape_pattern": [[1, 1, 1], [0, 1, 0]],
+    "rotation_allowed": true,
+    "flip_allowed": false,
+    "bonus_value": 7,
+    "rarity": "uncommon",
+    "special_effects": ["heal"],
+    "effect_parameters": {
+      "heal": { "heal_amount": 40 }
+    },
+    "_design_note": "純回血卡，T 形 4 格，回血 40。光系的治療核心，不依賴 hero_attack。"
+  },
+
+  "B115": {
+    "id": "B115",
+    "name": { "zh": "L型曙光", "en": "L-Light" },
+    "element": "light",
+    "shape": "L_shape",
+    "shape_pattern": [[1, 0], [1, 0], [1, 1]],
+    "rotation_allowed": true,
+    "flip_allowed": true,
+    "bonus_value": 6,
+    "rarity": "uncommon",
+    "special_effects": ["damage_multiplier", "shield"],
+    "effect_parameters": {
+      "damage_multiplier": { "multiplier": 1.15 },
+      "shield": { "shield_amount": 20 }
+    },
+    "_design_note": "光系平衡卡：小幅傷害提升 ×1.15 + 護盾 20，攻防兼顧。"
+  },
+
+  "B005": {
+    "id": "B005",
+    "name": { "zh": "黑暗方塊", "en": "Dark Block" },
+    "element": "dark",
+    "shape": "single",
+    "shape_pattern": [[1]],
+    "rotation_allowed": false,
+    "flip_allowed": false,
+    "bonus_value": 2,
+    "rarity": "common",
+    "special_effects": ["crit_boost"],
+    "effect_parameters": {
+      "crit_boost": { "crit_rate_bonus": 0.20, "crit_multiplier": 1.5 }
+    },
+    "_design_note": "暗系基礎暴擊卡：+20% 暴擊率，暴擊時傷害 ×1.5。"
+  },
+
+  "B116": {
+    "id": "B116",
+    "name": { "zh": "黑暗雙連", "en": "Dark Pair" },
+    "element": "dark",
+    "shape": "line_2",
+    "shape_pattern": [[1, 1]],
+    "rotation_allowed": true,
+    "flip_allowed": false,
+    "bonus_value": 4,
+    "rarity": "common",
+    "special_effects": ["debuff_defense"],
+    "effect_parameters": {
+      "debuff_defense": { "reduction_percent": 0.15, "duration_turns": 1 }
+    },
+    "_design_note": "削弱敵方防禦 15%，持續 1 回合。配合暗系暴擊，讓穿透感更強。"
+  },
+
+  "B104": {
+    "id": "B104",
+    "name": { "zh": "方形暗影", "en": "Shadow Square" },
+    "element": "dark",
+    "shape": "square",
+    "shape_pattern": [[1, 1], [1, 1]],
+    "rotation_allowed": false,
+    "flip_allowed": false,
+    "bonus_value": 9,
+    "rarity": "uncommon",
+    "special_effects": ["hp_sacrifice"],
+    "effect_parameters": {
+      "hp_sacrifice": {
+        "hp_cost": 50,
+        "damage_multiplier": 1.5,
+        "min_hp_required": 100,
+        "_note": "HP 低於 100 時此效果自動跳過（不扣血也不加倍）。"
+      }
+    },
+    "_design_note": "暗系扣血換攻核心：扣 50HP 換 ×1.5 傷害。HP 不足則無效，不會讓玩家直接死亡。"
+  },
+
+  "B117": {
+    "id": "B117",
+    "name": { "zh": "S型暗影", "en": "S-Dark" },
+    "element": "dark",
+    "shape": "S_shape",
+    "shape_pattern": [[0, 1], [1, 1], [1, 0]],
+    "rotation_allowed": true,
+    "flip_allowed": true,
+    "bonus_value": 8,
+    "rarity": "uncommon",
+    "special_effects": ["hp_sacrifice", "lifesteal"],
+    "effect_parameters": {
+      "hp_sacrifice": {
+        "hp_cost": 30,
+        "damage_multiplier": 1.3,
+        "min_hp_required": 80
+      },
+      "lifesteal": {
+        "heal_base": "hero_attack",
+        "percent": 0.15,
+        "_note": "先扣血，再造成傷害，再吸血。吸血是否能補回扣掉的血取決於傷害量。"
+      }
+    },
+    "_design_note": "扣血 + 吸血組合：犧牲 30HP，造成 ×1.3 傷害，然後吸血 15% hero_atk 回血。暗系風格的自我回收。"
+  },
+
+  "B118": {
+    "id": "B118",
+    "name": { "zh": "直線深淵", "en": "Line-Dark" },
+    "element": "dark",
+    "shape": "line_3",
+    "shape_pattern": [[1, 1, 1]],
+    "rotation_allowed": true,
+    "flip_allowed": false,
+    "bonus_value": 7,
+    "rarity": "uncommon",
+    "special_effects": ["crit_boost"],
+    "effect_parameters": {
+      "crit_boost": { "crit_rate_bonus": 0.30, "crit_multiplier": 1.8 }
+    },
+    "_design_note": "強化暴擊卡：+30% 暴擊率，暴擊倍率提升至 ×1.8。3 格放置有直線同屬加成。"
+  }
+}

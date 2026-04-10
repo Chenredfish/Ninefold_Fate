@@ -17,42 +17,28 @@ func execute(target: Node = null, position: Vector2 = Vector2.ZERO) -> bool:
 	if not target:
 		push_warning("FireballSkill需要目標")
 		return false
-	
+
 	# 消耗魔力
 	var mana_cost = parameters.get("mana_cost", 0)
 	if owner and owner.has_method("consume_mana"):
 		if not owner.consume_mana(mana_cost):
 			return false
-	
-	# 計算傷害
+
+	# 創建火球視覺效果（動畫本身不阻塞邏輯）
+	_create_fireball_effect(owner.global_position, target.global_position)
+
+	# 透過 EventBus 請求傷害效果，由 BattleStateMachine 執行
 	var base_damage = parameters.get("base_damage", 100)
-	var damage_info = {
+	EventBus.skill_effect_requested.emit({
+		"type": "damage",
 		"amount": base_damage,
 		"element": "fire",
 		"source": owner,
-		"skill_id": skill_id,
-		"type": "spell"
-	}
-	
-	# 創建火球效果
-	_create_fireball_effect(owner.global_position, target.global_position)
-	
-	# 等待一段時間後造成傷害（模擬飛行時間）
-	await get_tree().create_timer(0.5).timeout
-	
-	# 對目標造成傷害
-	if target and target.has_method("take_damage"):
-		target.take_damage(damage_info)
-	
-	# 發送事件
-	var scene_tree = Engine.get_main_loop() as SceneTree
-	if scene_tree and scene_tree.current_scene:
-		var eb = scene_tree.get_first_node_in_group("autoload_eventbus")
-		if eb and eb.has_signal("ability_triggered"):
-			eb.ability_triggered.emit(skill_id, owner, target)
-			eb.damage_dealt.emit(owner, target, base_damage, "fire")
-	
-	print("[Fireball] ", owner.name, " 對 ", target.name, " 造成 ", base_damage, " 火焰傷害")
+		"target": target,
+		"skill_id": skill_id
+	})
+
+	print("[Fireball] ", owner.name if owner else "?", " 對 ", target.name, " 請求造成 ", base_damage, " 火焰傷害")
 	return true
 
 func _create_fireball_effect(start_pos: Vector2, end_pos: Vector2):

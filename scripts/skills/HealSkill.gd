@@ -17,35 +17,31 @@ func execute(target: Node = null, position: Vector2 = Vector2.ZERO) -> bool:
 	# 如果沒有指定目標，治療自己
 	if not target:
 		target = owner
-	
-	if not target or not target.has_method("heal"):
-		push_warning("治療目標無效")
+
+	if not target:
+		push_warning("HealSkill：沒有可治療的目標")
 		return false
-	
+
 	# 消耗魔力
 	var mana_cost = parameters.get("mana_cost", 0)
 	if owner and owner.has_method("consume_mana"):
 		if not owner.consume_mana(mana_cost):
 			return false
-	
-	# 計算治療量
-	var heal_amount = parameters.get("heal_amount", 100)
-	
-	# 創建治療效果
+
+	# 創建治療視覺效果
 	_create_heal_effect(target.global_position)
-	
-	# 執行治療
-	var actual_healed = target.heal(heal_amount)
-	
-	# 發送事件
-	var scene_tree = Engine.get_main_loop() as SceneTree
-	if scene_tree and scene_tree.current_scene:
-		var eb = scene_tree.get_first_node_in_group("autoload_eventbus")
-		if eb and eb.has_signal("ability_triggered"):
-			eb.ability_triggered.emit(skill_id, owner, target)
-			eb.healing_applied.emit(owner, target, actual_healed)
-	
-	print("[Heal] ", owner.name, " 治療了 ", target.name, " ", actual_healed, " 點生命值")
+
+	# 透過 EventBus 請求治療效果，由 BattleStateMachine 執行
+	var heal_amount = parameters.get("heal_amount", 100)
+	EventBus.skill_effect_requested.emit({
+		"type": "heal",
+		"amount": heal_amount,
+		"source": owner,
+		"target": target,
+		"skill_id": skill_id
+	})
+
+	print("[Heal] ", owner.name if owner else "?", " 對 ", target.name, " 請求治療 ", heal_amount, " 點")
 	return true
 
 func _create_heal_effect(target_pos: Vector2):

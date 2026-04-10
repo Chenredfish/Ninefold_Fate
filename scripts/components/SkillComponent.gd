@@ -78,7 +78,7 @@ func _on_battle_started(level_data: Dictionary):
 	for skill in skills:
 		skill.on_battle_start()
 
-func _on_turn_started(turn_number: int):
+func _on_turn_started(turn_type: String):
 	for skill in skills:
 		skill.on_turn_start()
 
