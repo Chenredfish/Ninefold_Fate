@@ -327,8 +327,8 @@ class PreparingState extends BaseState:
 		
 		# 模擬載入時間（實際中可能需要載入資源）
 		await _setup_ui(level_id, deck_id)
-		# 等待 UI 更新完成
-		await EventBus.battle_ui_update_complete.connect(func(): pass, Object.CONNECT_ONE_SHOT)
+		# 等待 battle.gd 的 setup_battle_ui 處理完畢並 emit battle_ui_update_complete
+		await EventBus.battle_ui_update_complete
 		
 		# 開始第一回合
 		state_machine.next_turn()
