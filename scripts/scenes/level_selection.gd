@@ -105,7 +105,7 @@ func create_confirm_grid():
 	for i in range(3):
 		for j in range(3):
 			var drop_zone = DropZone.new()
-			drop_zone.position = Vector2(i * 200, j * 200)
+			drop_zone.position = Vector2(j * 200, i * 200)
 			drop_zone.size = Vector2(200, 200)
 			drop_zone.set_accepted_types(["level", "back_level", "main_menu", "confirm_level"])
 			unified_confirm_grid.add_child(drop_zone)

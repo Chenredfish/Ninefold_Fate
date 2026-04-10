@@ -307,48 +307,40 @@ func get_status_color() -> Color:
 		_:
 			return Color.WHITE
 
+# 從 level_data 取第一個敵人的 ID（共用邏輯）
+func _get_first_enemy_id() -> String:
+	var enemies_list = level_data.get("enemies", [])
+	if enemies_list.is_empty():
+		return ""
+	var enemy_info = enemies_list[0]
+	if enemy_info is String:
+		return enemy_info
+	elif enemy_info is Dictionary:
+		var eid = enemy_info.get("id", "")
+		if eid == "":
+			eid = enemy_info.get("enemy_id", "")
+		return eid
+	return ""
+
 # 獲取元素文字
 func get_element_text() -> String:
-	enemies = level_data.get("enemies", [])
-	if enemies.size() > 0:
-		var enemy_info = enemies[0]
-		var enemy_id = ""
-		
-		# 處理兩種格式:純字串或字典
-		if enemy_info is String:
-			enemy_id = enemy_info
-		elif enemy_info is Dictionary:
-			enemy_id = enemy_info.get("id", "")
-			if enemy_id == "":
-				enemy_id = enemy_info.get("enemy_id", "")
-		
-		if enemy_id != "" and ResourceManager:
-			var enemy_data = ResourceManager.get_enemy_data(enemy_id)
-			if enemy_data.size() > 0:
-				var element = enemy_data.get("element", "")
-				print("[LevelTile] 敵人ID：", enemy_id, " 元素：", element)
-				return get_element_display_name(element)
+	var enemy_id = _get_first_enemy_id()
+	if enemy_id != "" and ResourceManager:
+		var enemy_data = ResourceManager.get_enemy_data(enemy_id)
+		if enemy_data.size() > 0:
+			var element = enemy_data.get("element", "")
+			print("[LevelTile] 敵人ID：", enemy_id, " 元素：", element)
+			return get_element_display_name(element)
 	return "無"
 
 # 獲取元素顏色
 func get_element_color() -> Color:
-	if enemies.size() > 0:
-		var enemy_info = enemies[0]
-		var enemy_id = ""
-		
-		# 處理兩種格式:純字串或字典
-		if enemy_info is String:
-			enemy_id = enemy_info
-		elif enemy_info is Dictionary:
-			enemy_id = enemy_info.get("id", "")
-			if enemy_id == "":
-				enemy_id = enemy_info.get("enemy_id", "")
-		
-		if enemy_id != "" and ResourceManager:
-			var enemy_data = ResourceManager.get_enemy_data(enemy_id)
-			if enemy_data.size() > 0:
-				var element = enemy_data.get("element", "")
-				return get_element_display_color(element)
+	var enemy_id = _get_first_enemy_id()
+	if enemy_id != "" and ResourceManager:
+		var enemy_data = ResourceManager.get_enemy_data(enemy_id)
+		if enemy_data.size() > 0:
+			var element = enemy_data.get("element", "")
+			return get_element_display_color(element)
 	return Color.WHITE
 
 # 獲取元素顯示名稱

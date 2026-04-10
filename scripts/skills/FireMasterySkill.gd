@@ -19,11 +19,8 @@ func on_damage_dealt(damage_info: Dictionary) -> Dictionary:
 		damage_info["boost_source"] = skill_name
 		
 		# 發送事件通知
-		var scene_tree = Engine.get_main_loop() as SceneTree
-		if scene_tree and scene_tree.current_scene:
-			var eb = scene_tree.get_first_node_in_group("autoload_eventbus")
-			if eb and eb.has_signal("ability_triggered"):
-				eb.ability_triggered.emit(skill_id, owner, null)
+		if EventBus and EventBus.has_signal("ability_triggered"):
+			EventBus.ability_triggered.emit(skill_id, owner, null)
 		
 		print("[FireMastery] 火屬性傷害從 ", original_damage, " 提升到 ", boosted_damage)
 	

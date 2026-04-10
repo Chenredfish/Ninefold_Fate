@@ -35,44 +35,18 @@ func get_character_type() -> String:
 func _get_health_bar_color() -> Color:
 	return Color.GREEN
 
-func take_damage(damage: int, damage_type: String = "normal", source: Node = null, emit_event: bool = true):
-	"""英雄受到傷害（包含技能系統介入）"""
-	if not is_alive:
-		return
-	
-	# 技能系統介入傷害計算
-	var damage_info = {
-		"base_damage": damage,
-		"damage_type": damage_type,
-		"source": source,
-		"target": self
-	}
-	
+func _calculate_damage(damage: int, damage_type: String, source: Node) -> int:
+	"""覆寫父類：讓技能系統介入傷害計算，父類 take_damage() 流程保持不變"""
 	if skill_component and skill_component.has_method("modify_incoming_damage"):
+		var damage_info = {
+			"base_damage": damage,
+			"damage_type": damage_type,
+			"source": source,
+			"target": self
+		}
 		damage_info = skill_component.modify_incoming_damage(damage_info)
-	
-	var actual_damage = damage_info.get("base_damage", damage)
-	
-	# 調用父類的傷害處理（但跳過重複計算）
-	var old_hp = current_hp
-	current_hp = max(0, current_hp - actual_damage)
-	
-	print("[Hero] ", character_name, " 受到 ", actual_damage, " 點傷害，剩餘HP: ", current_hp)
-	
-	# 更新UI
-	_update_ui()
-	
-	# 觸發動畫
-	_play_damage_animation()
-	
-	# 發送信號和事件
-	health_changed.emit(self, old_hp, current_hp)
-	if emit_event and EventBus:
-		EventBus.damage_dealt.emit(source, self, actual_damage, damage_type)
-	
-	# 檢查是否死亡
-	if current_hp <= 0:
-		die()
+		return damage_info.get("base_damage", damage)
+	return damage
 
 func get_character_info() -> Dictionary:
 	"""獲取英雄資訊"""

@@ -36,7 +36,10 @@ func start_drag(tile, global_pos: Vector2) -> bool:
 	# 創建拖拽預覽
 	create_drag_preview(tile)
 	
-	# 設置原圖塊為半透明
+	# 重置所有 hover 視覺效果（scale / modulate / rotation 等，由各子類負責）
+	if tile.has_method("set_hover_effect"):
+		tile.set_hover_effect(false)
+	# 設為半透明表示正在拖曳
 	tile.modulate.a = 0.5
 	
 	# 發送開始拖拽訊號
@@ -181,19 +184,23 @@ func play_drop_success_animation():
 func play_drop_fail_animation():
 	if current_dragging_tile == null or drag_preview == null:
 		return
-	
-	# 回彈動畫
+
+	current_dragging_tile.modulate.a = 1.0
+
+	# 回彈位移動畫（暫時關閉）
+	# var tween = create_tween()
+	# var original_pos = current_dragging_tile.global_position
+	# var current_pos = drag_preview.global_position
+	# tween.tween_method(
+	# 	func(pos): if is_instance_valid(drag_preview): drag_preview.global_position = pos,
+	# 	current_pos,
+	# 	original_pos,
+	# 	0.4
+	# )
+	# tween.tween_callback(_finish_drag)
+
 	var tween = create_tween()
-	var original_pos = current_dragging_tile.global_position
-	var current_pos = drag_preview.global_position
-	
-	# 彈性回到原位置
-	tween.tween_method(
-		func(pos): if is_instance_valid(drag_preview): drag_preview.global_position = pos,
-		current_pos,
-		original_pos + drag_offset,
-		0.4
-	)
+	tween.tween_interval(0.05)
 	tween.tween_callback(_finish_drag)
 
 # 創建成功粒子效果
@@ -219,7 +226,12 @@ func create_success_particles(position: Vector2):
 # 清理拖拽狀態
 func cleanup_drag():
 	if current_dragging_tile:
-		current_dragging_tile.modulate.a = 1.0
+		# 還原所有視覺效果（scale / modulate / rotation 等，由各子類負責）
+		if current_dragging_tile.has_method("set_hover_effect"):
+			current_dragging_tile.set_hover_effect(false)
+		else:
+			current_dragging_tile.modulate.a = 1.0
+			current_dragging_tile.scale = Vector2(1.0, 1.0)
 	
 	if drag_preview:
 		drag_preview.queue_free()

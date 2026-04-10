@@ -361,9 +361,9 @@ class PreparingState extends BaseState:
 		var enemies_data = level_data.get("enemies", [])
 		state_machine.enemies_scenes = state_machine.create_enemies_from_data(enemies_data)
 		
-		# 根據實際創建的敵人數量設定 enemies_remaining
-		# 這個是錯誤的，因為敵人不會一次全部出現
-		state_machine.enemies_remaining = level_data.get("enemies").size()
+		# enemies_remaining = 敵人總數；_on_enemy_defeated 每次扣 1
+		# 場上全滅且 enemies_remaining > 0 → 載入下一波；= 0 → 勝利
+		state_machine.enemies_remaining = enemies_data.size()
 		
 		# 設置初始手牌
 		state_machine.setup_initial_hand(deck_data)

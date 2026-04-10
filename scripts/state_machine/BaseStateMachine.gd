@@ -163,14 +163,18 @@ func go_back(data: Dictionary = {}) -> bool:
 	if state_history.size() <= 1:  # 當前狀態也在歷史中，所以需要至少2個
 		print("[StateMachine] Cannot go back: No previous state in history")
 		return false
-	
+
 	# 獲取倒數第二個狀態（因為最後一個是當前狀態）
 	var previous_state_id = state_history[state_history.size() - 2]
-	
-	# 從歷史中移除最後兩個狀態（避免重複添加）
+
+	# 先備份歷史，轉換失敗時還原，避免歷史被破壞
+	var saved_history = state_history.duplicate()
 	state_history = state_history.slice(0, state_history.size() - 2)
-	
-	return transition_to(previous_state_id, data)
+
+	var success = transition_to(previous_state_id, data)
+	if not success:
+		state_history = saved_history
+	return success
 
 # 獲取所有狀態ID列表
 func get_all_state_ids() -> Array[String]:
