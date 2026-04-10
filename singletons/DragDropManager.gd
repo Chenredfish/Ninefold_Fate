@@ -56,29 +56,28 @@ func end_drag(global_pos: Vector2) -> bool:
 	if current_dragging_tile == null:
 		print("[DragDropManager] 警告：沒有正在拖拽的圖塊")
 		return false
-	
+
+	var tile = current_dragging_tile
 	var drop_zone = find_drop_zone_at_position(global_pos)
-	var success = false
-	
-	if drop_zone != null and can_drop_on_zone(current_dragging_tile, drop_zone):
-		# 成功投放
-		success = true
-		perform_drop_action(current_dragging_tile, drop_zone)
+	var success = drop_zone != null and can_drop_on_zone(tile, drop_zone)
+
+	if success:
+		perform_drop_action(tile, drop_zone)
 		play_drop_success_animation()
 		print("[DragDropManager] 投放成功")
+		tile_drag_ended.emit(tile.tile_data, drop_zone, true)
+		_finish_drag()
 	else:
-		# 失敗，回彈動畫
-		play_drop_fail_animation()
 		print("[DragDropManager] 投放失敗，執行回彈")
-	
-	# 發送結束拖拽訊號
-	tile_drag_ended.emit(current_dragging_tile.tile_data, drop_zone, success)
-	
-	# 清理拖拽狀態
+		tile_drag_ended.emit(tile.tile_data, drop_zone, false)
+		play_drop_fail_animation()  # tween callback 會呼叫 _finish_drag
+
+	return success
+
+# 清理並重置拖拽狀態（cleanup_drag 的完整版，包含清除 current_dragging_tile）
+func _finish_drag():
 	cleanup_drag()
 	current_dragging_tile = null
-	
-	return success
 
 # === 拖拽預覽管理 ===
 
@@ -184,12 +183,12 @@ func play_drop_fail_animation():
 	
 	# 彈性回到原位置
 	tween.tween_method(
-		func(pos): if drag_preview: drag_preview.global_position = pos,
+		func(pos): if is_instance_valid(drag_preview): drag_preview.global_position = pos,
 		current_pos,
 		original_pos + drag_offset,
 		0.4
 	)
-	tween.tween_callback(cleanup_drag)
+	tween.tween_callback(_finish_drag)
 
 # 創建成功粒子效果
 func create_success_particles(position: Vector2):

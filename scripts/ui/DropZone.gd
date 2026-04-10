@@ -17,6 +17,7 @@ signal tile_hover_exit()
 # === 內部節點 ===
 var highlight_overlay: ColorRect
 var border_highlight: NinePatchRect
+var _active_tween: Tween
 
 func _ready():
 	# 創建高亮覆蓋層
@@ -161,25 +162,31 @@ func clear_highlight():
 
 # 開始脈動動畫
 func start_pulse_animation():
-	var tween = create_tween()
-	tween.set_loops()
-	tween.tween_property(highlight_overlay, "modulate:a", 0.3, 0.5)
-	tween.tween_property(highlight_overlay, "modulate:a", 0.8, 0.5)
+	_kill_active_tween()
+	_active_tween = create_tween()
+	_active_tween.set_loops()
+	_active_tween.tween_property(highlight_overlay, "modulate:a", 0.3, 0.5)
+	_active_tween.tween_property(highlight_overlay, "modulate:a", 0.8, 0.5)
 
 # 開始搖擺動畫
 func start_shake_animation():
-	var tween = create_tween()
-	tween.set_loops()
+	_kill_active_tween()
 	var original_pos = position
-	tween.tween_property(self, "position", original_pos + Vector2(2, 0), 0.1)
-	tween.tween_property(self, "position", original_pos + Vector2(-2, 0), 0.1)
-	tween.tween_property(self, "position", original_pos, 0.1)
+	_active_tween = create_tween()
+	_active_tween.set_loops()
+	_active_tween.tween_property(self, "position", original_pos + Vector2(2, 0), 0.1)
+	_active_tween.tween_property(self, "position", original_pos + Vector2(-2, 0), 0.1)
+	_active_tween.tween_property(self, "position", original_pos, 0.1)
 
 # 停止所有動畫
 func stop_all_animations():
-	# 在 Godot 4.x 中，Tween 會自動管理，我們只需要恢復狀態
-	# 恢復原始狀態
+	_kill_active_tween()
 	highlight_overlay.modulate.a = 1.0
+
+func _kill_active_tween():
+	if _active_tween and _active_tween.is_valid():
+		_active_tween.kill()
+	_active_tween = null
 
 # === 投放處理 ===
 

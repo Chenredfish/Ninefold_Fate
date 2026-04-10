@@ -175,7 +175,11 @@ func on_drag_ended(success: bool):
 		
 		# 延遲切換場景，讓動畫完成
 		await get_tree().create_timer(0.5).timeout
-		
+
+		# 節點可能在等待期間被移除
+		if not is_instance_valid(self):
+			return
+
 		# 實際場景切換
 		perform_scene_transition()
 	elif success:
