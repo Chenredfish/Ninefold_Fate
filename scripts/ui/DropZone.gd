@@ -256,19 +256,22 @@ func get_drop_zone_rect() -> Rect2:
 # 設置接受的圖塊類型
 func set_accepted_types(types: Array[String]):
 	accepted_tile_types = types
-	create_hint_label()  # 更新提示
+	if is_node_ready():
+		create_hint_label()  # 更新提示
 
 # 添加接受的圖塊類型
 func add_accepted_type(type: String):
 	if type not in accepted_tile_types:
 		accepted_tile_types.append(type)
-		create_hint_label()
+		if is_node_ready():
+			create_hint_label()
 
 # 移除接受的圖塊類型
 func remove_accepted_type(type: String):
 	if type in accepted_tile_types:
 		accepted_tile_types.erase(type)
-		create_hint_label()
+		if is_node_ready():
+			create_hint_label()
 
 # === 除錯方法 ===
 

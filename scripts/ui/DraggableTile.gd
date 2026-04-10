@@ -56,9 +56,8 @@ func _on_gui_input(event: InputEvent):
 	
 	# 處理拖拽移動
 	elif (event is InputEventScreenDrag and is_dragging) or \
-		 (event is InputEventMouseMotion and is_dragging and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)):
-		var drag_pos = event.position if event is InputEventScreenDrag else event.position
-		update_dragging(drag_pos)
+		 (event is InputEventMouseMotion and is_dragging and (event.button_mask & MOUSE_BUTTON_MASK_LEFT)):
+		update_dragging(event.position)
 
 # === 拖拽控制方法 ===
 

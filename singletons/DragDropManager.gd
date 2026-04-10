@@ -15,6 +15,12 @@ var drag_offset: Vector2 = Vector2.ZERO  # 拖拽偏移量
 
 func _ready():
 	print("[DragDropManager] 拖放系統已初始化")
+	EventBus.scene_transition_requested.connect(_on_scene_transition_requested)
+
+func _on_scene_transition_requested(_target_scene: String, _data: Dictionary):
+	if current_dragging_tile != null or drag_preview != null:
+		_finish_drag()
+	valid_drop_zones.clear()
 
 # === 拖拽控制方法 ===
 

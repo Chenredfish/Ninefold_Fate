@@ -265,11 +265,11 @@ func handle_tile_drop(tile_data: Dictionary):
 		update_board_visual()
 		check_board_completion()
 
-		# 投放成功後記錄到 drop_history
+		# 投放成功後記錄到 drop_history（深拷貝避免共用參考）
 		drop_history.append({
-			"tile_data": tile_data.duplicate(), 
+			"tile_data": tile_data.duplicate(true),
 			"pos": drop_position,
-			"shape_pattern": shape_pattern
+			"shape_pattern": shape_pattern.duplicate(true)
 		})
 
 		# 投放成功後自動移除 BattleTile 實例（如果有）
