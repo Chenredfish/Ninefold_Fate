@@ -30,10 +30,14 @@ var base_hp: int:
 
 func _ready():
 	super._ready()  # 調用父類的 _ready
-	
+
 	# 敵人特有的初始化
 	current_countdown = max_countdown
 	_create_countdown_label()
+
+	# 連接回合事件（修 B06）
+	if not EventBus.turn_started.is_connected(_on_turn_started):
+		EventBus.turn_started.connect(_on_turn_started)
 
 # === 重寫父類方法 ===
 func get_character_type() -> String:

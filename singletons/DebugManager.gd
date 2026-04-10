@@ -21,7 +21,7 @@ func _input(event):
 	if not debug_enabled:
 		return
 		
-	if event.is_action_pressed("ui_accept") and Input.is_key_pressed(KEY_F1):
+	if event is InputEventKey and event.keycode == KEY_F1 and event.pressed and not event.echo:
 		toggle_debug_info()
 
 func toggle_debug_info():

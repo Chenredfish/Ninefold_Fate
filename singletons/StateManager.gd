@@ -168,19 +168,17 @@ func get_current_drag_drop_state() -> String:
 # 暫停所有狀態機
 func pause_all_state_machines():
 	for state_machine in state_machines.values():
-		if state_machine.has_method("set_auto_process"):
-			state_machine.set_auto_process(false)
-			state_machine.set_auto_physics_process(false)
-	
+		state_machine.set_process(false)
+		state_machine.set_physics_process(false)
+
 	EventBus.game_paused.emit()
 
 # 恢復所有狀態機
 func resume_all_state_machines():
 	for state_machine in state_machines.values():
-		if state_machine.has_method("set_auto_process"):
-			state_machine.set_auto_process(true)
-			# 物理處理根據需要設置
-	
+		state_machine.set_process(true)
+		state_machine.set_physics_process(true)
+
 	EventBus.game_resumed.emit()
 
 # 獲取調試信息
