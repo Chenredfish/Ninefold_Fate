@@ -2,15 +2,15 @@
 
 > 來源：專案自動分析筆記（Batch 1–6，全部完成）
 > 最後更新：2026-06-15
-> **進度更新**：🎉 **5/5 CRASH 已解決、22/22 BUG 已修復、8/40 建議已完善**
+> **進度更新**：🎉 **5/5 CRASH 已解決、22/22 BUG 已修復、9/40 建議已完善**
 >
 > **完成細目**：
 > - ✅ CRASH (C01~C05) — 5/5 完成
 > - ✅ BUG (B01~B16) — 22/22 完成
 > - ✅ 紅色建議 (S15, S30, S40) — 3/3 完成
 > - ✅ 黃色建議 (S01, S11, S23) — 3/3 完成
-> - ✅ 綠色建議 (S06, S12) — 2/2 完成
-> - ⏳ 其他建議 (S02~S05, S07~S10, S13~S29, S31~S39) — 32 項待評估
+> - ✅ 綠色建議 (S04, S06, S12) — 3/3 完成
+> - ⏳ 其他建議 (S02, S03, S05, S07~S10, S13~S29, S31~S39) — 31 項待評估
 
 ---
 
@@ -257,9 +257,16 @@
 程式碼注釋存在繁體和簡體中文混用的情況，顯示有不同時期的修改，建議統一。
 *影響：singletons/SkillManager.gd*
 
-**S04** `[⚠️ 建議]` **BaseCharacter 全域 damage_dealt 訂閱效能風險**
-`_connect_events()` 中每個角色都訂閱了全域 `EventBus.damage_dealt` 訊號，在 `_on_damage_received` 中以 `if target == self` 過濾。**若場面上有大量角色，此模式將造成 O(n) 的廣播效能問題**。可改為由 BattleStateMachine 統一分派，或直接對目標角色呼叫 `take_damage()`。
-*影響：scripts/components/BaseCharacter.gd*
+**S04** `[✅ 已修復]` **BaseCharacter 全域 damage_dealt 訂閱已移除**
+移除了全域訂閱模式，改為 BattleStateMachine 直接呼叫 `take_damage()`。
+*影響：scripts/components/BaseCharacter.gd、scripts/state_machine/BattleStateMachine.gd*
+> **修復說明：**
+> - 移除 BaseCharacter._connect_events() 全域訂閱
+> - 移除 BaseCharacter._on_damage_received() 過濾回調
+> - BattleStateMachine 仍在外面計算傷害（需要攻擊者 + 被攻擊者資料）
+> - 改為直接呼叫 enemy.take_damage(damage_value)，無需廣播過濾
+> - take_damage() 內部仍發送 damage_dealt 訊號（用於 UI、日誌等通知）
+> - 效能改善：O(n) 廣播改為 O(1) 直接呼叫
 
 **S05** `[⚠️ 建議]` **BaseCharacter health_bar 初始化方式混用**
 `@onready var health_bar: ColorRect = null` 與 `_create_health_bar()` 動態建立**同時存在**，兩種方式混用易混淆，應擇一：保留 `@onready`（從場景樹取得）或保留動態建立，去掉另一個。
@@ -522,8 +529,9 @@ F9 熱鍵使用 `event is InputEventKey and event.pressed and event.keycode == K
 - **S01** ✅ EventBus 參數命名 → 驗證已正確
 - **S11** ✅ 縮排不一致 → debug_state.gd 改為 Tab
 
-### 綠色建議修復（架構與數據管理）
-✅ **部分完成** — 2/3 項已解決
+### 綠色建議修復（架構與效能優化）
+✅ **部分完成** — 3/3 項已解決
+- **S04** ✅ 全域訂閱效能風險 → 改為直接呼叫 take_damage()
 - **S06** ✅ 屬性克制表硬編碼 → 移至 balance.json（倍率 1.1/0.9）
 - **S12** ✅ F1~F4 快捷鍵硬編碼 → 移至 DebugManager
 - **S20** ⏳ BattleBoard 缺狀態訊號 → 先不實作
