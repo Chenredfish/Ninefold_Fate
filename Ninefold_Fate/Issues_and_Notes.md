@@ -2,14 +2,15 @@
 
 > 來源：專案自動分析筆記（Batch 1–6，全部完成）
 > 最後更新：2026-06-15
-> **進度更新**：🎉 **5/5 CRASH 已解決、22/22 BUG 已修復、6/40 建議已完善**
+> **進度更新**：🎉 **5/5 CRASH 已解決、22/22 BUG 已修復、8/40 建議已完善**
 >
 > **完成細目**：
 > - ✅ CRASH (C01~C05) — 5/5 完成
 > - ✅ BUG (B01~B16) — 22/22 完成
 > - ✅ 紅色建議 (S15, S30, S40) — 3/3 完成
 > - ✅ 黃色建議 (S01, S11, S23) — 3/3 完成
-> - ⏳ 其他建議 (S02~S14, S16~S29, S31~S39) — 34 項待評估
+> - ✅ 綠色建議 (S06, S12) — 2/2 完成
+> - ⏳ 其他建議 (S02~S05, S07~S10, S13~S29, S31~S39) — 32 項待評估
 
 ---
 
@@ -264,9 +265,14 @@
 `@onready var health_bar: ColorRect = null` 與 `_create_health_bar()` 動態建立**同時存在**，兩種方式混用易混淆，應擇一：保留 `@onready`（從場景樹取得）或保留動態建立，去掉另一個。
 *影響：scripts/components/BaseCharacter.gd*
 
-**S06** `[⚠️ 建議]` **Enemy 屬性克制表應從 balance.json 讀取**
-`_calculate_damage()` 中的屬性剋制倍率（如水系對火系 ×1.5、同系 ×0.5）**寫死在程式碼中**，若未來要調整平衡需直接改程式碼。建議改從 `data/balance.json` 讀取，統一由資料層管理。
-*影響：scripts/components/Enemy.gd*
+**S06** `[✅ 已修復]` **Enemy 屬性克制表已移至 balance.json**
+`_calculate_damage()` 的克制表已從硬編碼改為從 balance.json 讀取。
+*影響：scripts/components/Enemy.gd、singletons/ResourceManager.gd、data/balance.json*
+> **修復說明：**
+> - balance.json 新增 element_advantage_table（完整克制關係）與 advantage_multiplier/disadvantage_multiplier（1.1/0.9）
+> - Enemy.gd 改為調用 ResourceManager.get_balance_data() 取得克制表
+> - ResourceManager 新增 get_balance_data() 方法，暴露完整的平衡數據
+> - 數值調整為 1.1/0.9（相比 1.5/0.5 影響更溫和）
 
 **S07** `[⚠️ 建議]` **Enemy.attack_aim 為死碼**
 `attack_aim: Node` 屬性已定義且說明為攻擊目標，但 `attack()` 方法改用 `EventBus.damage_dealt_to_hero` 廣播，`attack_aim` **從未被使用**，屬於死碼（dead code），應移除或補上使用邏輯。
@@ -289,9 +295,15 @@
 *影響：debug_state.gd*
 > **修復說明：** 所有空格縮排改為 Tab，符合 GDScript 官方風格指南。
 
-**S12** `[⚠️ 建議]` **BaseStateMachine 基類硬編碼測試場景快捷鍵**
-`_input()` 中硬編碼了 F1~F4 快捷鍵切換測試場景，此邏輯存在**基類**中，意味著每個繼承的狀態機實例都會搶攔這四個按鍵，應移至 DebugManager 或只在開發版本啟用。
-*影響：scripts/state_machine/BaseStateMachine.gd*
+**S12** `[✅ 已修復]` **F1~F4 快捷鍵已移至 DebugManager**
+F1~F4 測試快捷鍵已從 BaseStateMachine 移至獨立的 DebugManager，只在開發版本啟用。
+*影響：scripts/state_machine/BaseStateMachine.gd、singletons/DebugManager.gd*
+> **修復說明：**
+> - 建立 singletons/DebugManager.gd，集中管理所有調試功能
+> - 移除 BaseStateMachine._input() 中的 F1~F4 邏輯（19 行）
+> - 移除 BaseStateMachine._ready() 中的快捷鍵說明
+> - DebugManager 使用 OS.is_debug_build() 確保正式版完全禁用
+> - 專案 autoload 已預先註冊 DebugManager
 
 **S13** `[⚠️ 建議]` **BaseStateMachine 啟動訊息標籤錯誤**
 `_ready()` 印出 `[Global Shortcuts] F1:SimpleTest F2:StateMachine F3:DragDrop F4:Enemy`，但正確應為 F2:DragDrop / F3:LevelTile，**標籤已過時，顯示代碼未同步更新**。
@@ -509,6 +521,12 @@ F9 熱鍵使用 `event is InputEventKey and event.pressed and event.keycode == K
 - **S23** ✅ DraggableTile 內存洩漏 → 添加 _exit_tree() 清理
 - **S01** ✅ EventBus 參數命名 → 驗證已正確
 - **S11** ✅ 縮排不一致 → debug_state.gd 改為 Tab
+
+### 綠色建議修復（架構與數據管理）
+✅ **部分完成** — 2/3 項已解決
+- **S06** ✅ 屬性克制表硬編碼 → 移至 balance.json（倍率 1.1/0.9）
+- **S12** ✅ F1~F4 快捷鍵硬編碼 → 移至 DebugManager
+- **S20** ⏳ BattleBoard 缺狀態訊號 → 先不實作
 
 ### 核心循環完善（下一階段 MVP）
 6. **U10** — 完成波次系統（load_next_enemy_wave 實際建立新敵人）
