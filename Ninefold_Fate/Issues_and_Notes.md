@@ -1,7 +1,7 @@
 # 九重命運 (Ninefold Fate) — 注意事項總覽
 
 > 來源：專案自動分析筆記（Batch 1–6，全部完成）
-> 最後更新：2026-04-09
+> 最後更新：2026-04-10
 
 ---
 
@@ -14,58 +14,67 @@
 | `[🚧 未實作]` | 框架已建立但功能尚未填入 |
 | `[⚠️ 建議]` | 程式碼品質、可維護性或設計改善 |
 | `[📝 備注]` | 中性觀察、設計合理的說明、預留空間描述 |
+| `[✅ 已修復]` | 已確認修復完成 |
 
 ---
 
 ## 💥 CRASH — 執行時必定崩潰
 
-**C01** `[💥 CRASH]` **FireballSkill / HealSkill 在 RefCounted 中呼叫 get_tree()**
+**C01** `[✅ 已修復]` **FireballSkill / HealSkill 在 RefCounted 中呼叫 get_tree()**
 `BaseSkill.gd` 繼承 `RefCounted`（非 Node），`FireballSkill.execute()` 中有 `await get_tree().create_timer(0.5).timeout`，`_create_fireball_effect()` 中的 Tween 也依賴 SceneTree。RefCounted 沒有 `get_tree()` 方法，**任何技能使用都必定崩潰**。修復方式：改為 `Engine.get_main_loop() as SceneTree`，或讓技能透過 `owner` 存取場景樹。
 *影響：scripts/skills/FireballSkill.gd、scripts/skills/HealSkill.gd*
+> **修復說明：** 傷害邏輯改為透過 `EventBus.skill_effect_requested.emit()` 委派，視覺效果在加入場景的 Node 上呼叫 `create_tween()`，不再在 RefCounted 上呼叫 `get_tree()`。
 
 **C02** `[💥 CRASH]` **BattleTile.create_from_block_data() 使用 new() 繞過 _ready()**
 靜態工廠方法 `BattleTile.create_from_block_data()` 使用 `BattleTile.new()` 建立實例，但 `Control` 節點必須透過 `.instantiate()` 或加入場景樹後才會執行 `_ready()`，`@onready` 變數均為 null，視覺節點不存在。**產生初始化不完整的物件，觸摸相關操作必定崩潰**。
 *影響：scripts/ui/tiles/BattleTile.gd*
 
-**C03** `[💥 CRASH]` **GameSceneStateMachine.BattleState.enter() 呼叫不存在的方法**
+**C03** `[✅ 已修復]` **GameSceneStateMachine.BattleState.enter() 呼叫不存在的方法**
 `BattleState.enter()` 載入場景後呼叫 `scene.initialize_battle(data.level_id)`，但 `battle.gd` 中**沒有此方法**（戰鬥初始化透過 EventBus 的 `battle_started` 驅動）。此呼叫靜默失敗但可能在某些設定下導致崩潰。
 *影響：scripts/state_machine/GameSceneStateMachine.gd*
+> **修復說明：** 改為 `if scene.has_method("initialize_battle"):` 守衛後才呼叫，避免崩潰；同時補充 `EventBus.battle_started.emit(data)` 作為主要初始化路徑。
 
 **C04** `[💥 CRASH]` **deck / settings / result 場景檔尚不存在**
 `GameSceneStateMachine` 的 `DeckBuildState`、`SettingsState`、`ResultState` 在 `enter()` 中呼叫 `load_scene()`，但 `deck_build.tscn`、`settings.tscn`、`result.tscn` 很可能尚未建立，`load_scene()` 會回傳 null，切換至這些場景**必定崩潰**。
 *影響：scripts/state_machine/GameSceneStateMachine.gd*
 
-**C05** `[💥 CRASH]` **FireballSkill.take_damage() 型別不匹配**
+**C05** `[✅ 已修復]` **FireballSkill.take_damage() 型別不匹配**
 `FireballSkill.execute()` 呼叫 `target.take_damage(damage_info)`，傳入的是 Dictionary，但 `BaseCharacter.take_damage()` 的簽名為 `take_damage(damage: int, damage_type: String, source, emit_event: bool)`，**型別不匹配，執行時錯誤**。
 *影響：scripts/skills/FireballSkill.gd*
+> **修復說明：** 改為透過 `EventBus.skill_effect_requested.emit({...})` 委派傷害，不再直接呼叫 `target.take_damage()`，型別衝突問題消除。
 
 ---
 
 ## 🐛 BUG — 功能異常或邏輯錯誤
 
-**B01** `[🐛 BUG]` **GDScript 3 遺留寫法：emit_signal() 字串形式**
+**B01** `[✅ 已修復]` **GDScript 3 遺留寫法：emit_signal() 字串形式**
 `StateManager.gd` 多處使用 `EventBus.emit_signal("event_name", ...)` 字串形式，`BattleStateMachine.gd` 也有類似情況（`end_battle()`、`PlayerTurnState.end_player_turn()`、`refill_hand()` 等）。Godot 4 正確寫法應為 `EventBus.event_name.emit(...)`，字串形式在 GDScript 4 中有相容性風險。
 *影響：singletons/StateManager.gd、scripts/state_machine/BattleStateMachine.gd*
+> **修復說明：** 全面換為 `.emit()` 格式，僅剩一行被注釋掉的舊格式殘留（無實際影響）。
 
-**B02** `[🐛 BUG]` **StateManager.pause_all_state_machines() 使用錯誤的 Godot 4 API**
+**B02** `[✅ 已修復]` **StateManager.pause_all_state_machines() 使用錯誤的 Godot 4 API**
 呼叫 `set_auto_process()` 和 `set_auto_physics_process()`，Godot 4 的正確 API 應為 `set_process(false)` 和 `set_physics_process(false)`。此方法可能完全無效。
 *影響：singletons/StateManager.gd*
+> **修復說明：** 改為正確的 `set_process(false)` / `set_physics_process(false)`，pause/resume 功能現在有實際效果。
 
 **B03** `[🐛 BUG]` **DebugManager F1 熱鍵偵測邏輯有誤**
 偵測條件為 `event.is_action_pressed("ui_accept") and Input.is_key_pressed(KEY_F1)`，`ui_accept` 通常對應 Enter/Space 而非 F1，邏輯上需要同時按 Enter 才能切換 debug。應直接偵測 `event is InputEventKey and event.keycode == KEY_F1 and event.pressed`。
 *影響：singletons/DebugManager.gd*
 
-**B04** `[🐛 BUG]` **DragDropManager 雙重清理風險**
+**B04** `[✅ 已修復]` **DragDropManager 雙重清理風險**
 `play_drop_fail_animation()` 的 tween 回調呼叫 `cleanup_drag()`，但 `end_drag()` 本身也呼叫 `cleanup_drag()`，存在**雙重清理**風險，可能造成 null 存取或重複釋放節點。
 *影響：singletons/DragDropManager.gd*
+> **修復說明：** `end_drag()` 失敗路徑改為呼叫 `play_drop_fail_animation()`，由其 tween 回調呼叫 `_finish_drag()`（包含 cleanup）；成功路徑直接呼叫 `_finish_drag()`，消除雙重清理。
 
-**B05** `[🐛 BUG]` **DragDropManager.create_drag_preview() 場景切換後殘留**
+**B05** `[✅ 已修復]` **DragDropManager.create_drag_preview() 場景切換後殘留**
 `create_drag_preview()` 直接加到 `get_tree().current_scene`，若場景在拖拽過程中切換，預覽節點將**殘留在已切換的場景中**，造成視覺污染或記憶體洩漏。
 *影響：singletons/DragDropManager.gd*
+> **修復說明：** 在 `_ready()` 連接 `EventBus.scene_transition_requested`，場景切換時自動呼叫 `_finish_drag()` 清理拖拽狀態並清空 `valid_drop_zones`。
 
-**B06** `[🐛 BUG]` **Enemy._on_turn_started() 未連接訊號**
+**B06** `[✅ 已修復]` **Enemy._on_turn_started() 未連接訊號**
 `_on_turn_started(turn_type)` 方法存在，但 `_ready()` 中並未看到明確連接 `EventBus.turn_started` 訊號的程式碼，**敵人可能永遠不會自動觸發倒數攻擊**（turn_started 發射時沒有接收方）。
 *影響：scripts/components/Enemy.gd*
+> **修復說明：** 在 `_ready()` 加入 `EventBus.turn_started.connect(_on_turn_started)`（附帶重複連接保護），敵人現在能正確接收回合開始事件。
 
 **B07** `[🐛 BUG]` **DropZone 多 Tween 動畫疊加**
 `set_highlight_valid()` / `set_highlight_invalid()` 各自呼叫 `start_pulse_animation()` / `start_shake_animation()` 但未保存 Tween 引用，若動畫進行中再次呼叫，會**建立多個 Tween 造成動畫疊加混亂**。
@@ -75,57 +84,67 @@
 因 Tween 無引用，`stop_all_animations()` 只能恢復 `highlight_overlay.modulate.a = 1.0`，但 Tween 繼續在背景運行，**動畫實際上無法被停止**。
 *影響：scripts/ui/DropZone.gd*
 
-**B09** `[🐛 BUG]` **DropZone.create_hint_label() 在 highlight_overlay 建立前呼叫**
+**B09** `[✅ 已修復]` **DropZone.create_hint_label() 在 highlight_overlay 建立前呼叫**
 `setup_base_style()` 中呼叫 `create_hint_label()`，但 `highlight_overlay` 在稍後的 `setup_highlight_overlay()` 才建立，可能造成**提示標籤疊加順序錯誤或 null 存取**。
 *影響：scripts/ui/DropZone.gd*
+> **修復說明：** `set_accepted_types()`、`add_accepted_type()`、`remove_accepted_type()` 加入 `is_node_ready()` 守衛，未就緒時不呼叫 `create_hint_label()`，改由 `_ready()` 統一初始化。
 
-**B10** `[🐛 BUG]` **BattleStateMachine.PreparingState 波次數設定已知錯誤**
+**B10** `[✅ 已修復]` **BattleStateMachine.PreparingState 波次數設定已知錯誤**
 `_setup_ui()` 中 `enemies_remaining` 被設為**全部敵人數量**而非第一波數量，程式碼中有注釋「`# 這個是錯誤的，因為敵人不會一次全部出現`」，波次系統存在已知 Bug。
 *影響：scripts/state_machine/BattleStateMachine.gd (PreparingState)*
+> **修復說明：** `enemies_remaining` 改為只取第一波（`enemies_data`）的 `size()`，而非全部敵人總數。
 
 **B11** `[🐛 BUG]` **PlayerTurnState.end_player_turn() 與 battle.gd 回合結束路徑衝突**
 `PlayerTurnState.end_player_turn()` 呼叫 `EventBus.emit_signal("turn_ended")` 且**無任何參數**，但 `_on_turn_ended(total_damage: int, cards_in_ui: Array)` 期待兩個參數；另一條路徑由 `battle.gd._on_end_turn_pressed()` 發送含參數的 `turn_ended`。**兩路徑邏輯重複且參數不一致**。
 *影響：scripts/state_machine/BattleStateMachine.gd、scripts/scenes/battle.gd*
 
-**B12** `[🐛 BUG]` **GameSceneStateMachine.BattleState.exit() 發送不存在的訊號**
+**B12** `[✅ 已修復]` **GameSceneStateMachine.BattleState.exit() 發送不存在的訊號**
 `BattleState.exit()` 發送 `battle_cleanup_requested` 訊號，但 `EventBus.gd` 中**沒有定義此訊號**，訊號名稱不一致，發送無效。
 *影響：scripts/state_machine/GameSceneStateMachine.gd*
+> **修復說明：** 在 `EventBus.gd` 補充定義 `signal battle_cleanup_requested()`，訊號現在可正常發送接收。
 
-**B13** `[🐛 BUG]` **DraggableTile MouseMotion 事件可能遺漏**
+**B13** `[✅ 已修復]` **DraggableTile MouseMotion 事件可能遺漏**
 `_on_gui_input()` 中 `InputEventMouseMotion` 判斷依賴 `Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)`，在某些邊界情況下（如快速移動或 GUI 焦點切換）可能**漏掉移動事件**。應改為直接檢查 `InputEventMouseMotion.button_mask`。
 *影響：scripts/ui/DraggableTile.gd*
+> **修復說明：** 改為 `event.button_mask & MOUSE_BUTTON_MASK_LEFT` 直接從事件本身取得按鍵狀態，不再依賴全域 Input 查詢。
 
-**B14** `[🐛 BUG]` **BattleBoard.drop_history 深拷貝可能不完整**
+**B14** `[✅ 已修復]` **BattleBoard.drop_history 深拷貝可能不完整**
 `drop_history` 中的 `tile_data` 使用 `duplicate()` 備份，若 `tile_data` 包含複雜型別（如內嵌物件或節點引用），`duplicate()` 的**淺拷貝可能造成撤銷時資料不一致**。
 *影響：scripts/ui/BattleBoard.gd*
+> **修復說明：** 改為 `duplicate(true)` 深拷貝，確保 `tile_data` 與 `shape_pattern` 均完整複製。
 
-**B15** `[🐛 BUG]` **LevelTile.get_element_text() 防禦性不足**
+**B15** `[✅ 已修復]` **LevelTile.get_element_text() 防禦性不足**
 假設 `enemies[0]` 為首敵且資料格式統一（純字串 vs 字典），但若關卡資料格式不統一或敵人陣列為空，會造成**執行時錯誤**。
 *影響：scripts/ui/tiles/LevelTile.gd*
+> **修復說明：** 提取 `_get_first_enemy_id()` 輔助方法，統一處理字串/字典格式及空陣列邊界，`get_element_text()` 和 `get_element_color()` 均改用此方法。
 
-**B16** `[🐛 BUG]` **FireMasterySkill 存取 EventBus 靜默失敗**
+**B16** `[✅ 已修復]` **FireMasterySkill 存取 EventBus 靜默失敗**
 透過 `scene_tree.get_first_node_in_group("autoload_eventbus")` 取得 EventBus，若 EventBus 未加入此 group，`eb` 為 null，事件發送**靜默失敗，無任何錯誤訊息**。
 *影響：scripts/skills/FireMasterySkill.gd*
+> **修復說明：** 改為直接使用 autoload 名稱 `EventBus` 存取，並以 `EventBus.ability_triggered.emit(...)` 發送事件，同時解決了 S18。
 
-**B17** `[🐛 BUG]` **level_selection.gd DropZone 座標 x/y 相反**
+**B17** `[✅ 已修復]` **level_selection.gd DropZone 座標 x/y 相反**
 `create_confirm_grid()` 中迴圈以 `(i, j)` 設位置，但 `x = i*200, y = j*200`（行→x、列→y），與 `main_menu.gd` 的 `(j*200, i*200)` 方向**不一致**，可能導致九宮格確認區佈局異常。
 *影響：scripts/scenes/level_selection.gd*
+> **修復說明：** 改為 `Vector2(j * 200, i * 200)`，與 `main_menu.gd` 保持一致（j=列→x，i=行→y）。
 
 **B18** `[🐛 BUG]` **battle.gd setup_battle_ui 訊號參數不匹配**
 `EventBus.setup_battle_ui` 訊號定義只有 `level_data: Dictionary` 一個參數，但 `battle.gd` 的連接函式簽名為 `(level_data, enemies_scenes, hero_scene)`，**額外的 enemies_scenes 和 hero_scene 始終為預設值**，無法由訊號傳入。
 *影響：scripts/scenes/battle.gd、singletons/EventBus.gd*
 
-**B19** `[🐛 BUG]` **Hero.take_damage() 複製父類邏輯不呼叫 super**
+**B19** `[✅ 已修復]` **Hero.take_damage() 複製父類邏輯不呼叫 super**
 `Hero.take_damage()` 完全重寫父類流程（先呼叫 `skill_component.modify_incoming_damage()`，再手動執行傷害邏輯），**未呼叫 `super.take_damage()`**，若父類傷害邏輯更新，Hero 不會自動同步，造成維護困難。
 *影響：scripts/components/Hero.gd*
+> **修復說明：** 移除 `take_damage()` 覆寫，改為覆寫 `_calculate_damage()` hook 方法，讓技能系統介入傷害計算，父類流程完整保留。
 
 **B20** `[🐛 BUG]` **NavigationTile.on_drag_ended() await 懸掛風險**
 使用 `await get_tree().create_timer(0.5).timeout` 延遲場景切換，但若拖拽過程中節點被移除，**await 將永久懸掛**。應在 await 後加入 `if not is_instance_valid(self): return`。
 *影響：scripts/ui/tiles/NavigationTile.gd*
 
-**B21** `[🐛 BUG]` **BaseStateMachine.go_back() 歷史紀錄可能不一致**
+**B21** `[✅ 已修復]` **BaseStateMachine.go_back() 歷史紀錄可能不一致**
 `go_back()` 手動修改 `state_history` 切片後再呼叫 `transition_to()`，而 `transition_to()` 又呼叫 `_update_history()` 添加新記錄，**歷史管理邏輯存在潛在不一致**，連續 go_back() 可能產生預期外的狀態序列。
 *影響：scripts/state_machine/BaseStateMachine.gd*
+> **修復說明：** 先備份歷史再修改，若 `transition_to()` 失敗則還原備份，確保歷史狀態的原子性。
 
 **B22** `[🐛 BUG]` **SkillComponent 與 Enemy 的 turn_started 回調簽名不一致**
 `SkillComponent._on_turn_started()` 簽名為 `(turn_number: int)`，但 `Enemy._on_turn_started()` 簽名為 `(turn_type: String)`，需確認 `EventBus.turn_started` 實際發射的參數型別，其中一個連接**可能因參數型別不匹配而無法正常呼叫**。
@@ -267,9 +286,10 @@
 `_ready()` 印出 `[Global Shortcuts] F1:SimpleTest F2:StateMachine F3:DragDrop F4:Enemy`，但正確應為 F2:DragDrop / F3:LevelTile，**標籤已過時，顯示代碼未同步更新**。
 *影響：scripts/state_machine/BaseStateMachine.gd*
 
-**S14** `[⚠️ 建議]` **BattleStateMachine 等待訊號的錯誤寫法**
+**S14** `[✅ 已修復]` **BattleStateMachine 等待訊號的錯誤寫法**
 `PreparingState._setup_ui()` 中等待方式為 `await EventBus.battle_ui_update_complete.connect(func(): pass, CONNECT_ONE_SHOT)`，語義錯誤（`connect` 回傳 Error，await 一個 Error 無意義）。正確寫法應為 `await EventBus.battle_ui_update_complete`。
 *影響：scripts/state_machine/BattleStateMachine.gd (PreparingState)*
+> **修復說明：** 改為 `await EventBus.battle_ui_update_complete`，正確暫停至 `battle.gd` 發射訊號後才繼續執行 `next_turn()`。
 
 **S15** `[⚠️ 建議]` **BattleStateMachine 三引號字串誤用為注釋**
 `EnemyTurnState._on_damage_dealt_to_hero()` 後面有三引號包裹的說明文字，GDScript 中三引號字串只是運算式而非文件注釋，位置也在程式碼之後，**應改為 `##` 文件注釋或普通 `#` 注釋**。
@@ -283,9 +303,10 @@
 使用 `Engine.get_main_loop().get_nodes_in_group("autoload_resource_manager")` 存取 ResourceManager，但 ResourceManager 可能並未加入此 group，應直接以全域名稱 `ResourceManager` 存取 autoload。
 *影響：scripts/skills/BaseSkill.gd*
 
-**S18** `[⚠️ 建議]` **FireMasterySkill 存取 EventBus 方式不一致**
+**S18** `[✅ 已修復]` **FireMasterySkill 存取 EventBus 方式不一致**
 透過 `scene_tree.get_first_node_in_group("autoload_eventbus")` 取得 EventBus，與其他地方直接使用 `EventBus.xxx.emit()` 的方式**不一致**，建議統一使用 autoload 直接存取。
 *影響：scripts/skills/FireMasterySkill.gd*
+> **修復說明：** 隨 B16 一同修復，統一改為直接使用 `EventBus` autoload。
 
 **S19** `[⚠️ 建議]` **HealSkill 假設 heal() 的回傳值格式**
 `target.heal(heal_amount)` 假設回傳 `actual_healed`（實際治療量），但 `BaseCharacter.heal()` 的回傳值需確認是否與此一致，存在潛在的型別假設。
