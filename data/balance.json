@@ -20,8 +20,8 @@
     "light": ["dark"],
     "dark": ["light"]
   },
-  "advantage_multiplier": 1.5,
-  "disadvantage_multiplier": 0.5,
+  "advantage_multiplier": 1.1,
+  "disadvantage_multiplier": 0.9,
   "combo_multiplier_table": {
     "1": 1.0,
     "2": 1.1,
