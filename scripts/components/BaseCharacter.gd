@@ -27,6 +27,10 @@ signal health_changed(character: BaseCharacter, old_hp: int, new_hp: int)
 func _ready():
 	# 初始化UI
 	_update_ui()
+	_connect_events()
+
+func _connect_events():
+	pass
 
 # === 基礎戰鬥系統 ===
 func take_damage(damage: int, damage_type: String = "normal", source: Node = null, emit_event: bool = true):
