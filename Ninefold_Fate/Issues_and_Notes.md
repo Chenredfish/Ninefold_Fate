@@ -1,7 +1,8 @@
 # 九重命運 (Ninefold Fate) — 注意事項總覽
 
 > 來源：專案自動分析筆記（Batch 1–6，全部完成）
-> 最後更新：2026-04-10
+> 最後更新：2026-06-15
+> **進度更新**：21/22 BUG 已修復、5/5 CRASH 已解決，僅 B11 待整合
 
 ---
 
@@ -58,8 +59,8 @@
 *影響：singletons/StateManager.gd*
 > **修復說明：** 改為正確的 `set_process(false)` / `set_physics_process(false)`，pause/resume 功能現在有實際效果。
 
-**B03** `[🐛 BUG]` **DebugManager F1 熱鍵偵測邏輯有誤**
-偵測條件為 `event.is_action_pressed("ui_accept") and Input.is_key_pressed(KEY_F1)`，`ui_accept` 通常對應 Enter/Space 而非 F1，邏輯上需要同時按 Enter 才能切換 debug。應直接偵測 `event is InputEventKey and event.keycode == KEY_F1 and event.pressed`。
+**B03** `[✅ 已修復]` **DebugManager F1 熱鍵偵測邏輯有誤**
+偵測條件已改為正確的 `event is InputEventKey and event.keycode == KEY_F1 and event.pressed and not event.echo`，直接檢查 F1 鍵，避免與 `ui_accept` 混用。
 *影響：singletons/DebugManager.gd*
 
 **B04** `[✅ 已修復]` **DragDropManager 雙重清理風險**
@@ -77,12 +78,12 @@
 *影響：scripts/components/Enemy.gd*
 > **修復說明：** 在 `_ready()` 加入 `EventBus.turn_started.connect(_on_turn_started)`（附帶重複連接保護），敵人現在能正確接收回合開始事件。
 
-**B07** `[🐛 BUG]` **DropZone 多 Tween 動畫疊加**
-`set_highlight_valid()` / `set_highlight_invalid()` 各自呼叫 `start_pulse_animation()` / `start_shake_animation()` 但未保存 Tween 引用，若動畫進行中再次呼叫，會**建立多個 Tween 造成動畫疊加混亂**。
+**B07** `[✅ 已修復]` **DropZone 多 Tween 動畫疊加**
+`_active_tween` 變數已用來保存 Tween 引用，`start_pulse_animation()` 和 `start_shake_animation()` 執行前均呼叫 `_kill_active_tween()` 殺死舊動畫，防止動畫疊加。
 *影響：scripts/ui/DropZone.gd*
 
-**B08** `[🐛 BUG]` **DropZone.stop_all_animations() 無法真正停止動畫**
-因 Tween 無引用，`stop_all_animations()` 只能恢復 `highlight_overlay.modulate.a = 1.0`，但 Tween 繼續在背景運行，**動畫實際上無法被停止**。
+**B08** `[✅ 已修復]` **DropZone.stop_all_animations() 無法真正停止動畫**
+`stop_all_animations()` 已正確呼叫 `_kill_active_tween()` 來殺死 Tween，動畫能被完整停止。
 *影響：scripts/ui/DropZone.gd*
 
 **B09** `[✅ 已修復]` **DropZone.create_hint_label() 在 highlight_overlay 建立前呼叫**
@@ -129,8 +130,8 @@
 *影響：scripts/scenes/level_selection.gd*
 > **修復說明：** 改為 `Vector2(j * 200, i * 200)`，與 `main_menu.gd` 保持一致（j=列→x，i=行→y）。
 
-**B18** `[🐛 BUG]` **battle.gd setup_battle_ui 訊號參數不匹配**
-`EventBus.setup_battle_ui` 訊號定義只有 `level_data: Dictionary` 一個參數，但 `battle.gd` 的連接函式簽名為 `(level_data, enemies_scenes, hero_scene)`，**額外的 enemies_scenes 和 hero_scene 始終為預設值**，無法由訊號傳入。
+**B18** `[✅ 已修復]` **battle.gd setup_battle_ui 訊號參數不匹配**
+`EventBus.setup_battle_ui` 訊號已更新為 `(level_data: Dictionary, enemies_scenes: Array, hero_scene: Node)`，與 `battle.gd` 的處理函式簽名相符。
 *影響：scripts/scenes/battle.gd、singletons/EventBus.gd*
 
 **B19** `[✅ 已修復]` **Hero.take_damage() 複製父類邏輯不呼叫 super**
@@ -138,8 +139,8 @@
 *影響：scripts/components/Hero.gd*
 > **修復說明：** 移除 `take_damage()` 覆寫，改為覆寫 `_calculate_damage()` hook 方法，讓技能系統介入傷害計算，父類流程完整保留。
 
-**B20** `[🐛 BUG]` **NavigationTile.on_drag_ended() await 懸掛風險**
-使用 `await get_tree().create_timer(0.5).timeout` 延遲場景切換，但若拖拽過程中節點被移除，**await 將永久懸掛**。應在 await 後加入 `if not is_instance_valid(self): return`。
+**B20** `[✅ 已修復]` **NavigationTile.on_drag_ended() await 懸掛風險**
+已加入 `if not is_instance_valid(self): return` 防守，在 await 後檢查節點是否仍有效，防止懸掛風險。
 *影響：scripts/ui/tiles/NavigationTile.gd*
 
 **B21** `[✅ 已修復]` **BaseStateMachine.go_back() 歷史紀錄可能不一致**
@@ -147,9 +148,9 @@
 *影響：scripts/state_machine/BaseStateMachine.gd*
 > **修復說明：** 先備份歷史再修改，若 `transition_to()` 失敗則還原備份，確保歷史狀態的原子性。
 
-**B22** `[🐛 BUG]` **SkillComponent 與 Enemy 的 turn_started 回調簽名不一致**
-`SkillComponent._on_turn_started()` 簽名為 `(turn_number: int)`，但 `Enemy._on_turn_started()` 簽名為 `(turn_type: String)`，需確認 `EventBus.turn_started` 實際發射的參數型別，其中一個連接**可能因參數型別不匹配而無法正常呼叫**。
-*影響：scripts/components/SkillComponent.gd、scripts/components/Enemy.gd*
+**B22** `[✅ 已修復]` **SkillComponent 與 Enemy 的 turn_started 回調簽名一致**
+`SkillComponent._on_turn_started(turn_type: String)` 和 `Enemy._on_turn_started(turn_type: String)` 簽名已一致，均與 `EventBus.turn_started(turn_type: String)` 相符。
+*影響：scripts/components/SkillComponent.gd、scripts/components/Enemy.gd、singletons/EventBus.gd*
 
 ---
 
@@ -474,8 +475,7 @@ F9 熱鍵使用 `event is InputEventKey and event.pressed and event.keycode == K
 ## 綜合開發建議
 
 ### 優先修復（MVP 阻礙）
-1. **B06** — 補上 Enemy turn_started 訊號連接，使敵人倒數正常運作
-2. **C03** — 移除或修正 BattleState.enter() 中不存在的方法呼叫
+1. **B11** — 消除 PlayerTurnState 與 battle.gd 的回合結束重複路徑（待整合）
 
 ### 核心循環完善
 6. **U10** — 完成波次系統（load_next_enemy_wave 實際建立新敵人）
