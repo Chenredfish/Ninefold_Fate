@@ -224,3 +224,16 @@ func _enter_tree():
 		mouse_entered.connect(_mouse_entered)
 	if not mouse_exited.is_connected(_mouse_exited):
 		mouse_exited.connect(_mouse_exited)
+
+# 節點移除時清理拖拽狀態
+func _exit_tree():
+	# 如果節點在拖拽中被移除，清理拖拽狀態
+	if is_dragging and DragDropManager:
+		DragDropManager.cancel_drag()
+		is_dragging = false
+
+	# 斷開滑鼠事件連接
+	if mouse_entered.is_connected(_mouse_entered):
+		mouse_entered.disconnect(_mouse_entered)
+	if mouse_exited.is_connected(_mouse_exited):
+		mouse_exited.disconnect(_mouse_exited)
