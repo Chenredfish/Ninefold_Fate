@@ -11,7 +11,8 @@ enum SceneType {
 	BATTLE,
 	RESULT,
 	SETTINGS,
-	DECK_BUILD  # 預留給構築系統
+	DECK_BUILD,  # 預留給構築系統
+	ERROR  # 錯誤場景
 }
 
 # 場景路徑配置
@@ -21,7 +22,8 @@ var scene_paths: Dictionary = {
 	SceneType.BATTLE: "res://scripts/scenes/battle.tscn",
 	SceneType.RESULT: "res://scripts/scenes/result.tscn",
 	SceneType.SETTINGS: "res://scripts/scenes/settings.tscn",
-	SceneType.DECK_BUILD: "res://scripts/scenes/deck_build.tscn"
+	SceneType.DECK_BUILD: "res://scripts/scenes/deck_build.tscn",
+	SceneType.ERROR: "res://scripts/scenes/error.tscn"
 }
 
 # 場景狀態映射
@@ -98,31 +100,36 @@ func change_scene_to(scene_type: SceneType, data: Dictionary = {}):
 
 # 載入場景文件
 func load_scene(scene_type: SceneType) -> Node:
+	# 防止無限遞迴（ERROR 場景本身失敗時）
+	if scene_type == SceneType.ERROR:
+		print("[GameSceneStateMachine] ERROR: 連錯誤場景都無法加載!")
+		return null
+
 	var scene_path = scene_paths.get(scene_type, "")
 	if scene_path.is_empty():
-		print("[GameSceneStateMachine] No scene path for type: ", scene_type)
-		return null
-	
+		print("[GameSceneStateMachine] Scene path not configured for type: ", scene_type)
+		return await load_scene(SceneType.ERROR)
+
 	print("[GameSceneStateMachine] Loading scene: ", scene_path)
 	scene_loading = true
-	
+
 	# 先卸載當前場景
 	if current_scene and is_instance_valid(current_scene):
 		print("[GameSceneStateMachine] Unloading current scene: ", current_scene.name)
 		current_scene.queue_free()
 		await current_scene.tree_exited
 		current_scene = null
-	
+
 	# 載入新場景
 	var packed_scene = load(scene_path) as PackedScene
 	if not packed_scene:
 		print("[GameSceneStateMachine] Failed to load scene: ", scene_path)
 		scene_loading = false
-		return null
-	
+		return await load_scene(SceneType.ERROR)
+
 	var new_scene = packed_scene.instantiate()
-	
-	# 取得main scene並替換它，而不是添加到根節點
+
+	# 取得main scene並替換它
 	var main_scene = get_tree().current_scene
 	if main_scene and main_scene != new_scene:
 		print("[GameSceneStateMachine] Replacing main scene")
@@ -133,10 +140,10 @@ func load_scene(scene_type: SceneType) -> Node:
 		print("[GameSceneStateMachine] Setting as main scene")
 		get_tree().root.add_child(new_scene)
 		get_tree().current_scene = new_scene
-	
+
 	current_scene = new_scene
 	scene_loading = false
-	
+
 	print("[GameSceneStateMachine] Successfully loaded scene: ", scene_path)
 	return new_scene
 

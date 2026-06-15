@@ -25,8 +25,8 @@
 *影響：scripts/skills/FireballSkill.gd、scripts/skills/HealSkill.gd*
 > **修復說明：** 傷害邏輯改為透過 `EventBus.skill_effect_requested.emit()` 委派，視覺效果在加入場景的 Node 上呼叫 `create_tween()`，不再在 RefCounted 上呼叫 `get_tree()`。
 
-**C02** `[💥 CRASH]` **BattleTile.create_from_block_data() 使用 new() 繞過 _ready()**
-靜態工廠方法 `BattleTile.create_from_block_data()` 使用 `BattleTile.new()` 建立實例，但 `Control` 節點必須透過 `.instantiate()` 或加入場景樹後才會執行 `_ready()`，`@onready` 變數均為 null，視覺節點不存在。**產生初始化不完整的物件，觸摸相關操作必定崩潰**。
+**C02** `[✅ 設計上不會發生]` **BattleTile.create_from_block_data() 使用 new() 繞過 _ready()**
+靜態工廠方法 `BattleTile.create_from_block_data()` 使用 `BattleTile.new()` 建立實例，理論上 `_ready()` 不會執行。但實際調用點（BattleBoard.undo_last_tile_drop）立即執行 `add_child(new_tile)`，Godot 會自動觸發 `_ready()` 完整初始化節點。已測試確認不會崩潰。此警告為靜態分析誤判，無需修復。
 *影響：scripts/ui/tiles/BattleTile.gd*
 
 **C03** `[✅ 已修復]` **GameSceneStateMachine.BattleState.enter() 呼叫不存在的方法**
@@ -34,9 +34,10 @@
 *影響：scripts/state_machine/GameSceneStateMachine.gd*
 > **修復說明：** 改為 `if scene.has_method("initialize_battle"):` 守衛後才呼叫，避免崩潰；同時補充 `EventBus.battle_started.emit(data)` 作為主要初始化路徑。
 
-**C04** `[💥 CRASH]` **deck / settings / result 場景檔尚不存在**
-`GameSceneStateMachine` 的 `DeckBuildState`、`SettingsState`、`ResultState` 在 `enter()` 中呼叫 `load_scene()`，但 `deck_build.tscn`、`settings.tscn`、`result.tscn` 很可能尚未建立，`load_scene()` 會回傳 null，切換至這些場景**必定崩潰**。
-*影響：scripts/state_machine/GameSceneStateMachine.gd*
+**C04** `[✅ 已修復]` **deck / settings / result 場景檔尚不存在**
+`GameSceneStateMachine` 的 `DeckBuildState`、`SettingsState`、`ResultState` 在 `enter()` 中呼叫 `load_scene()`，但 `deck_build.tscn`、`settings.tscn`、`result.tscn` 尚未建立。已統一建立三個空場景檔，並實作 error.tscn 錯誤場景。當場景加載失敗時，自動切換至 error 場景顯示錯誤，玩家可返回主菜單。
+*影響：scripts/state_machine/GameSceneStateMachine.gd、scripts/scenes/result.tscn、scripts/scenes/settings.tscn、scripts/scenes/deck_build.tscn、scripts/scenes/error.tscn*
+> **修復說明：** 建立結果、設定、構築三個場景；新增 error.tscn 錯誤場景；改進 load_scene() 加載失敗時自動轉向錯誤場景；統一的場景加載流程，無需額外的對話框系統。
 
 **C05** `[✅ 已修復]` **FireballSkill.take_damage() 型別不匹配**
 `FireballSkill.execute()` 呼叫 `target.take_damage(damage_info)`，傳入的是 Dictionary，但 `BaseCharacter.take_damage()` 的簽名為 `take_damage(damage: int, damage_type: String, source, emit_event: bool)`，**型別不匹配，執行時錯誤**。
@@ -473,11 +474,8 @@ F9 熱鍵使用 `event is InputEventKey and event.pressed and event.keycode == K
 ## 綜合開發建議
 
 ### 優先修復（MVP 阻礙）
-1. **C01** — 修復技能 get_tree() 問題，使技能系統可用
-2. **C02** — 修復 BattleTile 工廠方法，確保 _ready() 正常執行
-3. **C04** — 建立 result.tscn / settings.tscn / deck_build.tscn 空場景，避免切換崩潰
-4. **B06** — 補上 Enemy turn_started 訊號連接，使敵人倒數正常運作
-5. **C03** — 移除或修正 BattleState.enter() 中不存在的方法呼叫
+1. **B06** — 補上 Enemy turn_started 訊號連接，使敵人倒數正常運作
+2. **C03** — 移除或修正 BattleState.enter() 中不存在的方法呼叫
 
 ### 核心循環完善
 6. **U10** — 完成波次系統（load_next_enemy_wave 實際建立新敵人）

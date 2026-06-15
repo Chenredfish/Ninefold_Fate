@@ -24,10 +24,10 @@ var bonus_label: Label
 func _ready():
 	# 設置基本屬性
 	tile_type = "battle_block"  # 戰鬥方塊，區別於導航中的 "battle"
-	
+
 	# 調用父類初始化
 	super._ready()
-	
+
 	# 設置戰鬥方塊的特殊樣式
 	setup_battle_tile_style()
 
