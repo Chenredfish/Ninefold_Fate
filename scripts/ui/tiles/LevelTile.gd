@@ -20,6 +20,10 @@ var star_container: HBoxContainer
 var lock_icon: TextureRect
 var difficulty_indicator: ColorRect
 
+# === 敵人資料快取 ===
+var _enemy_data_cache: Dictionary = {}  # 快取敵人數據
+var _cached_first_enemy_id: String = ""  # 快取第一個敵人 ID
+
 # === 靜態創建方法 ===
 
 # 從關卡ID創建
@@ -61,12 +65,17 @@ static func create_available_level(chapter: String, level_id: String, title: Str
 func _ready():
 	# 設置基本屬性
 	tile_type = "level"
-	
+
 	# 調用父類初始化
 	super._ready()
-	
+
 	#資料取出
 	setup_self_data()
+
+	# ✅ 預先快取敵人資料，避免後續重複查詢
+	var first_enemy_id = _get_first_enemy_id()
+	if first_enemy_id != "":
+		_cache_enemy_data(first_enemy_id)
 
 	# 設置關卡圖塊的特殊樣式
 	setup_level_tile_style()
@@ -322,11 +331,35 @@ func _get_first_enemy_id() -> String:
 		return eid
 	return ""
 
+# 快取敵人資料（避免重複查詢）
+func _cache_enemy_data(enemy_id: String) -> void:
+	if enemy_id.is_empty():
+		return
+
+	# 如果已經快取過這個敵人，不需要重新查詢
+	if _enemy_data_cache.has(enemy_id):
+		return
+
+	# 第一次查詢時，快取結果
+	if ResourceManager:
+		var enemy_data = ResourceManager.get_enemy_data(enemy_id)
+		if enemy_data.size() > 0:
+			_enemy_data_cache[enemy_id] = enemy_data
+			_cached_first_enemy_id = enemy_id
+			print("[LevelTile] 快取敵人資料：", enemy_id)
+
+# 取得快取的敵人資料（不再查詢 ResourceManager）
+func _get_cached_enemy_data(enemy_id: String) -> Dictionary:
+	if not _enemy_data_cache.has(enemy_id):
+		_cache_enemy_data(enemy_id)
+
+	return _enemy_data_cache.get(enemy_id, {})
+
 # 獲取元素文字
 func get_element_text() -> String:
 	var enemy_id = _get_first_enemy_id()
-	if enemy_id != "" and ResourceManager:
-		var enemy_data = ResourceManager.get_enemy_data(enemy_id)
+	if enemy_id != "":
+		var enemy_data = _get_cached_enemy_data(enemy_id)  # ✅ 使用快取
 		if enemy_data.size() > 0:
 			var element = enemy_data.get("element", "")
 			print("[LevelTile] 敵人ID：", enemy_id, " 元素：", element)
@@ -336,8 +369,8 @@ func get_element_text() -> String:
 # 獲取元素顏色
 func get_element_color() -> Color:
 	var enemy_id = _get_first_enemy_id()
-	if enemy_id != "" and ResourceManager:
-		var enemy_data = ResourceManager.get_enemy_data(enemy_id)
+	if enemy_id != "":
+		var enemy_data = _get_cached_enemy_data(enemy_id)  # ✅ 使用快取
 		if enemy_data.size() > 0:
 			var element = enemy_data.get("element", "")
 			return get_element_display_color(element)
