@@ -126,7 +126,6 @@ func create_middle_UI():
 
 			if i == 1 and j == 1:
 				drop_zone.modulate = Color(1.2, 1.2, 1.0, 1.0)
-				drop_zone.tile_dropped.connect(_on_start_tile_dropped)
 
 	confirm_label = Label.new()
 	confirm_label.text = "Drag start tile here to begin"
@@ -173,6 +172,3 @@ func create_lower_UI():
 	settings_tile.size = Vector2(200, 200)
 	settings_tile.position = Vector2(900, 0)
 	tile_container.add_child(settings_tile)
-
-func _on_start_tile_dropped(dropped_tile):
-	print("Start tile dropped: ", dropped_tile)

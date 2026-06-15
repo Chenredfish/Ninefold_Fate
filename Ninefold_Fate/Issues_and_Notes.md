@@ -154,7 +154,7 @@
 
 ---
 
-## 🚧 未實作 — 框架已建立但功能尚未填入
+## 🚧 未實作 — 框架已建立但功能尚未填入（18 個）
 
 **U01** `[🚧 未實作]` **ResourceManager.return_to_pool() 是假物件池**
 `return_to_pool()` 的實際實作只是 `queue_free()`，**物件池功能完全未實作**，每次「回收」都是直接銷毀物件。
@@ -172,9 +172,9 @@
 `_play_damage_animation()`、`_play_heal_animation()`、`_play_death_animation()` 三個方法**全部是 pass**，英雄無任何戰鬥動畫反饋。
 *影響：scripts/components/Hero.gd*
 
-**U05** `[🚧 未實作]` **main_menu.gd 開始遊戲拖放未實作**
-`_on_start_tile_dropped(dropped_tile)` 只有 `print`，**未執行任何場景切換邏輯**。
-*影響：scripts/scenes/main_menu.gd*
+**U05** `[✅ 已實現]` **main_menu.gd 開始遊戲拖放**
+拖放下方的 battle_tile（NavigationTile）到中央棋盤時，自動觸發 NavigationTile.on_drag_ended() → perform_scene_transition()，進入 level_selection 場景。已刪除多餘的 _on_start_tile_dropped() 死代碼。
+*影響：scripts/scenes/main_menu.gd、scripts/ui/tiles/NavigationTile.gd*
 
 **U06** `[🚧 未實作]` **level_selection.gd 返回導航為 pass**
 `_on_back_tile_dropped()` 和 `_on_main_menu_tile_dropped()` 皆為 `pass`，**多層關卡導航尚未實作**。
