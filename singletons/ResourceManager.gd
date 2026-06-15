@@ -478,6 +478,9 @@ func create_hero_with_skills(hero_id: String) -> Node2D:
 # 简化版本 - 移除复杂的技能组件系统
 
 # 工具方法：訪問平衡數據
+func get_balance_data() -> Dictionary:
+	return balance_data
+
 func get_balance_value(key: String, default_value = null):
 	return balance_data.get(key, default_value)
 

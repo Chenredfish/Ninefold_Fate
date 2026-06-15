@@ -47,20 +47,31 @@ func _get_health_bar_color() -> Color:
 	return Color.RED
 
 func _calculate_damage(damage: int, damage_type: String, source: Node) -> int:
-	"""應用屬性剋制計算"""
-	# 簡化版屬性剋制
-	var resistance_table = {
-		"fire": {"water": 1.5, "fire": 0.5},
-		"water": {"grass": 1.5, "water": 0.5},
-		"grass": {"fire": 1.5, "grass": 0.5},
-		"light": {"dark": 1.5, "light": 0.5},
-		"dark": {"light": 1.5, "dark": 0.5}
-	}
-	
+	"""應用屬性剋制計算（從 balance.json 讀取）"""
 	var multiplier = 1.0
-	if element in resistance_table and damage_type in resistance_table[element]:
-		multiplier = resistance_table[element][damage_type]
-	
+
+	# 從 ResourceManager 取得克制表
+	var balance_data = ResourceManager.get_balance_data()
+	if not balance_data:
+		push_warning("[Enemy] Failed to load balance data, using neutral damage")
+		return damage
+
+	var advantage_table = balance_data.get("element_advantage_table", {})
+	var advantage_mult = balance_data.get("advantage_multiplier", 1.5)
+	var disadvantage_mult = balance_data.get("disadvantage_multiplier", 0.5)
+
+	# 檢查我的屬性是否被傷害屬性克制（傷害減少）
+	if element in advantage_table:
+		var advantage_list = advantage_table[element]
+		if damage_type in advantage_list:
+			multiplier = disadvantage_mult
+
+	# 檢查傷害屬性是否被我的屬性克制（傷害增加）
+	if damage_type in advantage_table:
+		var advantage_list = advantage_table[damage_type]
+		if element in advantage_list:
+			multiplier = advantage_mult
+
 	return int(damage * multiplier)
 
 func get_character_info() -> Dictionary:
