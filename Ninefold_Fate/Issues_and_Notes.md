@@ -293,9 +293,10 @@
 *影響：scripts/state_machine/BattleStateMachine.gd (PreparingState)*
 > **修復說明：** 改為 `await EventBus.battle_ui_update_complete`，正確暫停至 `battle.gd` 發射訊號後才繼續執行 `next_turn()`。
 
-**S15** `[⚠️ 建議]` **BattleStateMachine 三引號字串誤用為注釋**
+**S15** `[✅ 已修復]` **BattleStateMachine 三引號字串誤用為注釋**
 `EnemyTurnState._on_damage_dealt_to_hero()` 後面有三引號包裹的說明文字，GDScript 中三引號字串只是運算式而非文件注釋，位置也在程式碼之後，**應改為 `##` 文件注釋或普通 `#` 注釋**。
 *影響：scripts/state_machine/BattleStateMachine.gd (EnemyTurnState)*
+> **修復說明：** 改為單行注釋 `# 監聽對英雄的傷害事件`，移至方法體開始處。
 
 **S16** `[⚠️ 建議]` **GameSceneStateMachine LevelSelectionState 白名單過於嚴格**
 `LevelSelectionState.can_transition_to()` 限制只能轉換到 `["main_menu", "battle"]`，若未來需要從關卡選擇直接進入設定或其他頁面，需修改白名單，**設計不夠彈性**。
@@ -354,9 +355,10 @@
 呼叫後觸發 `setup_navigation_style()` 並重新創建所有子節點，若**頻繁呼叫**（如動態更新導航資料）會造成效能浪費，建議只更新差異部分。
 *影響：scripts/ui/tiles/NavigationTile.gd*
 
-**S30** `[⚠️ 建議]` **NavigationTile.perform_scene_transition() 仍用舊式字串 emit**
-硬編碼呼叫 `EventBus.emit_signal("scene_transition_requested", ...)` 字串形式，應改為 `EventBus.scene_transition_requested.emit(state_name, navigation_data)`。
+**S30** `[✅ 已修復]` **NavigationTile.perform_scene_transition() 已使用新式 emit 格式**
+原本擔心使用舊式字串 emit，但檢查後發現代碼已經是新格式 `EventBus.scene_transition_requested.emit(state_name, navigation_data)`。
 *影響：scripts/ui/tiles/NavigationTile.gd*
+> **說明：** 代碼已符合 Godot 4 新格式，無需修改。
 
 **S31** `[⚠️ 建議]` **balance.json tile_bonus 所有屬性相同**
 `tile_bonus` 中 fire/water/grass/light/dark 均為 2，**目前完全無差異化**，若未來要做屬性加成差異需要同步更新讀取此 JSON 的邏輯。
@@ -394,9 +396,14 @@
 `battle_old.gd` 保留著重構前的戰鬥場景，已與新版邏輯（UI 與遊戲狀態分離）不一致，**應在確認新版穩定後刪除**，避免混淆。
 *影響：scripts/scenes/battle_old.gd*
 
-**S40** `[⚠️ 建議]` **DragDropTest 導航場景路徑不存在**
+**S40** `[✅ 已修復]` **DragDropTest 導航場景路徑不存在**
 `DragDropTest.gd` 中 NavigationTile 使用 `res://scenes/BattleScene.tscn` 等**不存在的路徑**（正確應為 `res://scripts/scenes/battle.tscn`），拖入後切換場景會失敗，應同步修正。
 *影響：test_scenes/DragDropTest.gd*
+> **修復說明：** 更新所有路徑至正確位置：
+> - `res://scenes/BattleScene.tscn` → `res://scripts/scenes/battle.tscn`
+> - `res://scenes/ShopScene.tscn` → `res://scripts/scenes/shop_scene.tscn`
+> - `res://scenes/DeckScene.tscn` → `res://scripts/scenes/deck_scene.tscn`
+> - `res://scenes/SettingsScene.tscn` → `res://scripts/scenes/settings_scene.tscn`
 
 ---
 
