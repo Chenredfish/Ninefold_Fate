@@ -114,17 +114,9 @@ func _play_skill_animation(skill_id: String):
 func _connect_events():
 	"""連接EventBus事件"""
 	super._connect_events()  # 調用父類方法
-	
-	if EventBus:
-		# 英雄特有的事件連接
-		if EventBus.has_signal("healing_applied"):
-			if not EventBus.healing_applied.is_connected(_on_healing_received):
-				EventBus.healing_applied.connect(_on_healing_received)
-
-func _on_healing_received(source: Node, target: Node, amount: int):
-	"""接收治療事件"""
-	if target == self:
-		heal(amount, source)
+	# healing_applied 是通知訊號（heal() 發出後的廣播），不應用來觸發 heal()，
+	# 否則會造成 heal() → healing_applied → _on_healing_received → heal() 無限遞迴。
+	# 實際治療由 HealSkill 或外部直接呼叫 hero.heal() 完成。
 
 # === 重寫父類的 die 方法以發送英雄特有信號 ===
 func die():
