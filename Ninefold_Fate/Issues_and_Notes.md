@@ -236,9 +236,10 @@
 
 ## ⚠️ 建議 — 設計改善與技術債
 
-**S01** `[⚠️ 建議]` **EventBus: setup_deck_ui 參數命名易混淆**
-訊號 `setup_deck_ui(deck_id: Dictionary)` 參數名為 `deck_id` 但型別是 `Dictionary`，`id` 一般暗示是字串識別碼，應改名為 `deck_data: Dictionary` 以符合型別語意。
+**S01** `[✅ 已修復]` **EventBus: setup_deck_ui 參數命名已正確**
+訊號參數已改為 `setup_deck_ui(current_hands: Array)`，語意清晰，無需修改。
 *影響：singletons/EventBus.gd*
+> **說明：** 參數命名已符合語意，傳入的是當前手牌 ID 陣列。
 
 **S02** `[⚠️ 建議]` **SkillManager.create_skill() 回傳 Dictionary 而非物件**
 `create_skill()` 回傳 Dictionary 副本，與 `BaseSkill.gd` 的物件導向設計不一致；若外部呼叫者期待 Node 或 RefCounted 實例，可能造成混淆。應考慮統一介面。
@@ -276,9 +277,10 @@
 若 `StateManager` 初始化失敗，備用方案直接呼叫 `change_scene_to_file()` 而不印出任何警告，**使問題難以排查**。建議至少 `push_error()` 說明 StateManager 未找到。
 *影響：main.gd*
 
-**S11** `[⚠️ 建議]` **debug_state.gd 縮排風格不一致**
-`debug_state.gd` 使用空格縮排，而 `BaseCharacter.gd` 等主要檔案使用 Tab，**專案縮排風格不一致**（建議統一使用 Tab，符合 GDScript 官方風格）。
+**S11** `[✅ 已修復]` **debug_state.gd 縮排風格已統一**
+`debug_state.gd` 已轉換為 Tab 縮排，與 `BaseCharacter.gd` 等主要檔案統一。
 *影響：debug_state.gd*
+> **修復說明：** 所有空格縮排改為 Tab，符合 GDScript 官方風格指南。
 
 **S12** `[⚠️ 建議]` **BaseStateMachine 基類硬編碼測試場景快捷鍵**
 `_input()` 中硬編碼了 F1~F4 快捷鍵切換測試場景，此邏輯存在**基類**中，意味著每個繼承的狀態機實例都會搶攔這四個按鍵，應移至 DebugManager 或只在開發版本啟用。
@@ -327,8 +329,11 @@
 `setup_base_style()` 只在 `_ready()` 時呼叫一次，若子類修改了樣式後（如高亮選中），**無法自動還原**基本樣式，建議提供重置方法。
 *影響：scripts/ui/DraggableTile.gd*
 
-**S23** `[⚠️ 建議]` **DraggableTile 缺少 _exit_tree() 清理**
-沒有 `_exit_tree()` 覆寫，**拖拽進行中若節點被移除**，可能在場景中留下懸浮的拖拽預覽節點。建議在 `_exit_tree()` 中通知 DragDropManager 取消拖拽。
+**S23** `[✅ 已修復]` **DraggableTile 已加入 _exit_tree() 清理**
+添加了 `_exit_tree()` 方法，在節點被移除時：
+1. 通知 DragDropManager 取消拖拽狀態
+2. 斷開滑鼠事件訊號連接
+防止拖拽進行中節點被移除時留下孤兒節點。
 *影響：scripts/ui/DraggableTile.gd*
 
 **S24** `[⚠️ 建議]` **BattleTile.setup_from_resource_manager() 可能重複初始化**
