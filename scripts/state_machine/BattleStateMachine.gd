@@ -533,8 +533,8 @@ class EnemyTurnState extends BaseState:
 		return next_state_id in ["player_turn", "victory", "defeat"]
 
 	func _on_damage_dealt_to_hero(source: Node, amount: int, damage_type: String):
+		# 監聽對英雄的傷害事件
 		state_machine.hero_scene.take_damage(amount, damage_type, source)
-		"""監聽對英雄的傷害事件"""
 		var source_name = "環境傷害"
 		if source and source.has_method("get_hero_info"):
 			source_name = source.hero_name
