@@ -25,18 +25,8 @@ signal character_died(character: BaseCharacter)
 signal health_changed(character: BaseCharacter, old_hp: int, new_hp: int)
 
 func _ready():
-	# 連接到 EventBus
-	_connect_events()
-	
 	# 初始化UI
 	_update_ui()
-
-func _connect_events():
-	"""連接EventBus事件"""
-	if EventBus:
-		# 監聽傷害事件
-		if not EventBus.damage_dealt.is_connected(_on_damage_received):
-			EventBus.damage_dealt.connect(_on_damage_received)
 
 # === 基礎戰鬥系統 ===
 func take_damage(damage: int, damage_type: String = "normal", source: Node = null, emit_event: bool = true):
@@ -263,9 +253,3 @@ func has_status_effect(effect_id: String) -> bool:
 			return true
 	return false
 
-# === 事件處理 ===
-func _on_damage_received(source: Node, target: Node, amount: int, damage_type: String):
-	"""接收傷害事件"""
-	if target == self:
-		# 通過事件系統造成傷害時，設置 emit_event=false 避免遞迴
-		take_damage(amount, damage_type, source, false)
