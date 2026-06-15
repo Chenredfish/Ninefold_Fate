@@ -2,7 +2,7 @@
 
 > 來源：專案自動分析筆記（Batch 1–6，全部完成）
 > 最後更新：2026-06-15
-> **進度更新**：21/22 BUG 已修復、5/5 CRASH 已解決，僅 B11 待整合
+> **進度更新**：🎉 **22/22 BUG 已修復、5/5 CRASH 已解決**
 
 ---
 
@@ -96,8 +96,8 @@
 *影響：scripts/state_machine/BattleStateMachine.gd (PreparingState)*
 > **修復說明：** `enemies_remaining` 改為只取第一波（`enemies_data`）的 `size()`，而非全部敵人總數。
 
-**B11** `[🐛 BUG]` **PlayerTurnState.end_player_turn() 與 battle.gd 回合結束路徑衝突**
-`PlayerTurnState.end_player_turn()` 呼叫 `EventBus.emit_signal("turn_ended")` 且**無任何參數**，但 `_on_turn_ended(total_damage: int, cards_in_ui: Array)` 期待兩個參數；另一條路徑由 `battle.gd._on_end_turn_pressed()` 發送含參數的 `turn_ended`。**兩路徑邏輯重複且參數不一致**。
+**B11** `[✅ 已修復]` **PlayerTurnState.end_player_turn() 與 battle.gd 回合結束路徑衝突**
+已刪除 `PlayerTurnState.end_player_turn()` 方法和相關的事件處理分支，統一回合結束邏輯由 `battle.gd` 驅動，消除雙路徑衝突。回合結束訊號由 UI 層直接發送，帶入完整的傷害和卡片資料。
 *影響：scripts/state_machine/BattleStateMachine.gd、scripts/scenes/battle.gd*
 
 **B12** `[✅ 已修復]` **GameSceneStateMachine.BattleState.exit() 發送不存在的訊號**
@@ -475,7 +475,7 @@ F9 熱鍵使用 `event is InputEventKey and event.pressed and event.keycode == K
 ## 綜合開發建議
 
 ### 優先修復（MVP 阻礙）
-1. **B11** — 消除 PlayerTurnState 與 battle.gd 的回合結束重複路徑（待整合）
+**✅ 全部完成** — 所有 CRASH 和 BUG 均已解決
 
 ### 核心循環完善
 6. **U10** — 完成波次系統（load_next_enemy_wave 實際建立新敵人）

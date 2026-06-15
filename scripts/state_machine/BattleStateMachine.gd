@@ -424,20 +424,12 @@ class PlayerTurnState extends BaseState:
 		super.on_event(event_name, event_data)
 		
 		match event_name:
-			"player_turn_submit":
-				end_player_turn()
 			"block_placed":
 				# 檢查是否達到最大放置數量
 				if state_machine.player_tiles_placed >= state_machine.max_tiles_per_turn:
 					# 可以選擇自動結束回合或等待玩家確認
 					pass
-	
-	func end_player_turn():
-		print("[BattleStateMachine] Player turn ended")
-		# 注意：回合結束由 battle.gd 的結束回合按鈕觸發並帶入傷害數據
-		# 這裡只作為備援路徑（B11 待整合）
-		EventBus.turn_ended.emit(0, [])
-	
+
 	func can_transition_to(next_state_id: String) -> bool:
 		return next_state_id in ["calculating", "defeat", "victory"]
 
