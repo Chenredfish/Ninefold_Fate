@@ -100,25 +100,25 @@ func create_drop_zones():
 func create_navigation_tiles():
 	# === 導航圖塊 (第一排) ===
 	# 戰鬥圖塊
-	battle_tile = NavigationTile.create_battle_tile("res://scenes/BattleScene.tscn")
+	battle_tile = NavigationTile.create_battle_tile("res://scripts/scenes/battle.tscn")
 	battle_tile.size = Vector2(200, 200)
 	battle_tile.position = Vector2(100, 1200)
 	add_child(battle_tile)
-	
+
 	# 商店圖塊
-	shop_tile = NavigationTile.create_shop_tile("res://scenes/ShopScene.tscn")
+	shop_tile = NavigationTile.create_shop_tile("res://scripts/scenes/shop_scene.tscn")
 	shop_tile.size = Vector2(200, 200)
 	shop_tile.position = Vector2(320, 1200)
 	add_child(shop_tile)
-	
+
 	# 構築圖塊
-	deck_tile = NavigationTile.create_deck_tile("res://scenes/DeckScene.tscn")
+	deck_tile = NavigationTile.create_deck_tile("res://scripts/scenes/deck_scene.tscn")
 	deck_tile.size = Vector2(200, 200)
 	deck_tile.position = Vector2(540, 1200)
 	add_child(deck_tile)
-	
+
 	# 設定圖塊
-	settings_tile = NavigationTile.create_settings_tile("res://scenes/SettingsScene.tscn")
+	settings_tile = NavigationTile.create_settings_tile("res://scripts/scenes/settings_scene.tscn")
 	settings_tile.size = Vector2(200, 200)
 	settings_tile.position = Vector2(760, 1200)
 	add_child(settings_tile)
