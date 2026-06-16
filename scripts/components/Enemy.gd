@@ -6,7 +6,7 @@ extends BaseCharacter
 @export var base_attack: int = 10
 @export var max_countdown: int = 3
 var current_countdown: int = 3
-var attack_aim: Node = null  # 目標，需要在建立時設定
+var attack_aim: Node = null  # 預留：多英雄場景下的指定攻擊目標
 
 # === 敵人特有組件 ===
 @onready var countdown_label: Label = null  # 動態創建
