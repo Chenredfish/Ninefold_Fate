@@ -32,12 +32,7 @@ func setup_from_data(skill_data: Dictionary):
 	_apply_level_scaling(skill_data.get("level_scaling", {}))
 
 func _get_localized_name(name_data: Dictionary) -> String:
-	var scene_tree = Engine.get_main_loop() as SceneTree
-	var rm = null
-	if scene_tree:
-		rm = scene_tree.get_nodes_in_group("autoload_resource_manager")
-		rm = rm[0] if rm.size() > 0 else null
-	var language = rm.current_language if rm else "zh"
+	var language = ResourceManager.current_language if ResourceManager else "zh"
 	return name_data.get(language, name_data.get("zh", skill_id))
 
 func _apply_level_scaling(scaling_data: Dictionary):
