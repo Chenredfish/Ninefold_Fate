@@ -167,8 +167,7 @@ func set_dragging_visual(dragging: bool):
 		modulate.a = 0.5
 		scale = Vector2(0.95, 0.95)
 	else:
-		modulate = original_modulate
-		scale = Vector2(1.0, 1.0)
+		reset_visual()
 
 # 設定懸停效果
 func set_hover_effect(enabled: bool):
@@ -176,8 +175,12 @@ func set_hover_effect(enabled: bool):
 		modulate = Color(1.2, 1.2, 1.2, 1.0)  # 稍微變亮
 		scale = Vector2(1.05, 1.05)
 	else:
-		modulate = original_modulate
-		scale = Vector2(1.0, 1.0)
+		reset_visual()
+
+# 還原基本視覺狀態（modulate 與 scale）
+func reset_visual():
+	modulate = original_modulate
+	scale = Vector2(1.0, 1.0)
 
 # === 資料設定方法 ===
 
