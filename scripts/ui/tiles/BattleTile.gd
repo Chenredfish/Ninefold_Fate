@@ -124,6 +124,11 @@ func get_info_summary() -> String:
 
 # === 樣式設定 ===
 
+func setup_base_style():
+	if custom_minimum_size == Vector2.ZERO:
+		custom_minimum_size = Vector2(200, 200)
+	# 跳過父類的 TypeLabel 和灰色 StyleBox，由 setup_battle_tile_style() 統一處理
+
 # 設置戰鬥方塊的特殊樣式
 func setup_battle_tile_style():
 	# 清除舊的內容
