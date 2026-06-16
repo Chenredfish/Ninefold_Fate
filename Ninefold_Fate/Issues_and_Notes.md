@@ -249,13 +249,15 @@
 *影響：singletons/EventBus.gd*
 > **說明：** 參數命名已符合語意，傳入的是當前手牌 ID 陣列。
 
-**S02** `[⚠️ 建議]` **SkillManager.create_skill() 回傳 Dictionary 而非物件**
-`create_skill()` 回傳 Dictionary 副本，與 `BaseSkill.gd` 的物件導向設計不一致；若外部呼叫者期待 Node 或 RefCounted 實例，可能造成混淆。應考慮統一介面。
+**S02** `[✅ 已修復]` **SkillManager.create_skill() 命名誤導**
+`create_skill()` 回傳 Dictionary 副本，名稱暗示建立物件實例，與實際行為不符。已改名為 `get_skill_data_copy()`，語意精確。
 *影響：singletons/SkillManager.gd*
+> **修復說明：** 改名為 `get_skill_data_copy()`，調用方（test_skill_system）同步更新。
 
-**S03** `[⚠️ 建議]` **SkillManager 注釋混用繁/簡體中文**
+**S03** `[✅ 已修復]` **SkillManager 注釋混用繁/簡體中文**
 程式碼注釋存在繁體和簡體中文混用的情況，顯示有不同時期的修改，建議統一。
 *影響：singletons/SkillManager.gd*
+> **修復說明：** 全部改為繁體中文，順帶更新 print 訊息與注釋措辭以符合新方法名稱。
 
 **S04** `[✅ 已修復]` **BaseCharacter 全域 damage_dealt 訂閱已移除**
 移除了全域訂閱模式，改為 BattleStateMachine 直接呼叫 `take_damage()`。
