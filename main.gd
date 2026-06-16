@@ -14,7 +14,4 @@ func _ready():
 		# 備用方案：直接載入主菜單場景
 		get_tree().change_scene_to_file("res://scripts/scenes/main_menu.tscn")
 	
-	#print("\nPress F1 to start drag-drop system test")
-	#print("Press F2 to start SimpleTest")  
-	#print("Press F3 to start LevelTile test")
-	#print("Press F4 to start Enemy test (獨立測試)")
+	# 測試場景快捷鍵（F1~F4）已移至 singletons/DebugManager.gd
