@@ -284,8 +284,10 @@
 > - ResourceManager 新增 get_balance_data() 方法，暴露完整的平衡數據
 > - 數值調整為 1.1/0.9（相比 1.5/0.5 影響更溫和）
 
-**S07** `[⚠️ 建議]` **Enemy.attack_aim 為死碼**
-`attack_aim: Node` 屬性已定義且說明為攻擊目標，但 `attack()` 方法改用 `EventBus.damage_dealt_to_hero` 廣播，`attack_aim` **從未被使用**，屬於死碼（dead code），應移除或補上使用邏輯。
+**S07** `[✅ 已處理]` **Enemy.attack_aim 預留屬性**
+`attack_aim: Node` 屬性已定義但目前未使用，MVP 單英雄場景以 EventBus 廣播取代直接指定目標。確認為多英雄情境的預留設計，非死碼。
+*影響：scripts/components/Enemy.gd*
+> **處理說明：** 更新注釋為「預留：多英雄場景下的指定攻擊目標」，待多英雄功能實作時再接通邏輯。
 *影響：scripts/components/Enemy.gd*
 
 **S08** `[⚠️ 建議]` **SkillComponent 未設定 class_name**
