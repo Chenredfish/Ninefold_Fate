@@ -83,28 +83,54 @@ func create_grid_cell(index: int) -> Control:
 	cell.custom_minimum_size = cell_size
 	cell.size = cell_size
 	cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	
-	# 設置格子樣式
-	var style_box = create_cell_style(
-		Color(0.1, 0.1, 0.2, 0.8),  # 深藍色半透明
-		Color(0.3, 0.3, 0.5, 0.6),  # 邊框顏色
-		10,  # 圓角半徑
-		2   # 邊框寬度
-	)
-	cell.add_theme_stylebox_override("panel", style_box)
-	
-	# 添加格子編號標籤（用於除錯，正式版隱藏）
-	var label = Label.new()
-	label.text = str(index)
-	label.size = cell_size
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.add_theme_font_size_override("font_size", 12)
-	label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6, 0.5))
-	label.visible = show_debug_labels
-	cell.add_child(label)
-	
+
+	cell.add_theme_stylebox_override("panel", create_cell_style(
+		Color(0.1, 0.1, 0.2, 0.8),
+		Color(0.3, 0.3, 0.5, 0.6),
+		10, 2
+	))
+
+	# 除錯格子編號（只在 show_debug_labels 時顯示）
+	var debug_label = Label.new()
+	debug_label.name = "DebugLabel"
+	debug_label.text = str(index)
+	debug_label.size = cell_size
+	debug_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	debug_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	debug_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	debug_label.add_theme_font_size_override("font_size", 12)
+	debug_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6, 0.5))
+	debug_label.visible = show_debug_labels
+	cell.add_child(debug_label)
+
+	# 方塊資訊（放入後永遠顯示：屬性 + 加成值）
+	var info_box = VBoxContainer.new()
+	info_box.name = "TileInfoBox"
+	info_box.position = Vector2.ZERO
+	info_box.size = cell_size
+	info_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	info_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	info_box.visible = false
+
+	var element_label = Label.new()
+	element_label.name = "ElementLabel"
+	element_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	element_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	element_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	element_label.add_theme_font_size_override("font_size", 36)
+	info_box.add_child(element_label)
+
+	var bonus_label = Label.new()
+	bonus_label.name = "BonusLabel"
+	bonus_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	bonus_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	bonus_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bonus_label.add_theme_font_size_override("font_size", 24)
+	bonus_label.add_theme_color_override("font_color", Color.YELLOW)
+	info_box.add_child(bonus_label)
+
+	cell.add_child(info_box)
+
 	return cell
 
 # 設置棋盤整體樣式
@@ -367,32 +393,29 @@ func place_tile_at_position(tile_data: Dictionary, pos: Vector2i):
 
 # 更新格子的視覺效果
 func update_cell_visual(cell: Control, tile_data: Dictionary):
-	# 獲取方塊屬性
 	var element = tile_data.get("element", "neutral")
 	var bonus_value = tile_data.get("bonus_value", 1)
 
-	# 重設格子 scale，避免多次投放導致變大
 	cell.scale = Vector2(1, 1)
 
-	# 設置格子顏色
+	# 深色屬性底色 + 屬性邊框
 	var element_color = get_element_color(element)
 	var border_color = get_element_border_color(element)
-	var style_box = create_cell_style(element_color, border_color, 10, 3)
-	cell.add_theme_stylebox_override("panel", style_box)
-	
-	# 確保樣式立即應用
+	var bg_color = Color(element_color.r * 0.3, element_color.g * 0.3, element_color.b * 0.3, 0.95)
+	cell.add_theme_stylebox_override("panel", create_cell_style(bg_color, border_color, 10, 3))
 	cell.queue_redraw()
-	
-	print("[BattleBoard] 更新格子視覺：", element, " 顏色：", element_color)
 
-	# 更新格子內的標籤
-	var label = cell.get_child(0) as Label
-	if label:
-		label.text = get_element_display_name(element) + "\n+" + str(bonus_value)
-		label.add_theme_font_size_override("font_size", 14)
-		label.add_theme_color_override("font_color", Color.WHITE)
-	
-	print("[BattleBoard] 格子顏色已更新 - 屬性:", element, " 顏色:", element_color, " 邊框:", border_color)
+	# 顯示屬性名稱（屬性顏色）與加成值（黃色）
+	var info_box = cell.get_node_or_null("TileInfoBox")
+	if info_box:
+		var el_label = info_box.get_node_or_null("ElementLabel") as Label
+		var bo_label = info_box.get_node_or_null("BonusLabel") as Label
+		if el_label:
+			el_label.text = get_element_display_name(element)
+			el_label.add_theme_color_override("font_color", element_color.lightened(0.2))
+		if bo_label:
+			bo_label.text = "+" + str(bonus_value)
+		info_box.visible = true
 
 # === 棋盤邏輯 ===
 
@@ -507,24 +530,16 @@ func clear_board():
 	print("[BattleBoard] 棋盤已清空")
 
 # 重置格子視覺效果
-func reset_cell_visual(cell: Control, index: int):
-	# 恢復空格子樣式
-	var style_box = create_cell_style(
-		Color(0.1, 0.1, 0.2, 0.8),    # 深藍色半透明
-		Color(0.3, 0.3, 0.5, 0.6),    # 邊框顏色
-		10,  # 圓角半徑
-		2    # 邊框寬度
-	)
-	cell.add_theme_stylebox_override("panel", style_box)
-	
-	# 恢復格子編號
-	var label = cell.get_child(0) as Label
-	if label:
-		label.text = str(index)
-		label.add_theme_font_size_override("font_size", 12)
-		label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6, 0.5))
-	
-	print("[BattleBoard] 格子已重置為空狀態 - 編號:", index)
+func reset_cell_visual(cell: Control, _index: int):
+	cell.add_theme_stylebox_override("panel", create_cell_style(
+		Color(0.1, 0.1, 0.2, 0.8),
+		Color(0.3, 0.3, 0.5, 0.6),
+		10, 2
+	))
+
+	var info_box = cell.get_node_or_null("TileInfoBox")
+	if info_box:
+		info_box.visible = false
 
 # === 樣式輔助方法 ===
 
