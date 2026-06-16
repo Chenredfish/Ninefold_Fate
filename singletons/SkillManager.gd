@@ -38,13 +38,13 @@ func _load_skills_database():
 	print("[SkillManager] 技能列表: ", skills_database.keys())
 
 # 创建基础技能实例 (简化版)
-func create_skill(skill_id: String) -> Dictionary:
+func get_skill_data_copy(skill_id: String) -> Dictionary:
 	var skill_data = skills_database.get(skill_id)
 	if not skill_data:
 		push_warning("Skill data not found: " + skill_id)
 		return {}
-	
-	print("[SkillManager] 创建技能: ", skill_id)
+
+	print("[SkillManager] 取得技能副本: ", skill_id)
 	return skill_data.duplicate()
 
 # 获取技能数据
@@ -65,7 +65,7 @@ func test_skill_system():
 	
 	# 测试创建技能
 	if skill_ids.size() > 0:
-		var first_skill = create_skill(skill_ids[0])
+		var first_skill = get_skill_data_copy(skill_ids[0])
 		if first_skill.size() > 0:
 			print("成功创建技能: ", first_skill.get("name", {}))
 	
