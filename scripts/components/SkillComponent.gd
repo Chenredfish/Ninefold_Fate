@@ -1,4 +1,5 @@
 # SkillComponent.gd - 英雄技能組件
+class_name SkillComponent
 extends Node
 
 var skills: Array = []
