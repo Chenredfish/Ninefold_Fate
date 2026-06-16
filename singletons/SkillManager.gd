@@ -1,15 +1,15 @@
-# SkillManager.gd - 简化版技能管理系统
+# SkillManager.gd - 簡化版技能管理系統
 extends Node
 
-# 技能数据库
+# 技能資料庫
 var skills_database: Dictionary = {}
 
 func _ready():
 	print("==========================================")
-	print("[SkillManager] 简化版技能系统初始化中...")
-	print("当前时间: ", Time.get_datetime_string_from_system())
+	print("[SkillManager] 簡化版技能系統初始化中...")
+	print("當前時間: ", Time.get_datetime_string_from_system())
 	_load_skills_database()
-	print("[SkillManager] 简化版技能系统已就绪")
+	print("[SkillManager] 簡化版技能系統已就緒")
 	print("==========================================")
 
 func _load_skills_database():
@@ -37,7 +37,7 @@ func _load_skills_database():
 	print("[SkillManager] 載入 ", skills_database.size(), " 個技能數據")
 	print("[SkillManager] 技能列表: ", skills_database.keys())
 
-# 创建基础技能实例 (简化版)
+# 取得技能資料副本（簡化版）
 func get_skill_data_copy(skill_id: String) -> Dictionary:
 	var skill_data = skills_database.get(skill_id)
 	if not skill_data:
@@ -47,26 +47,26 @@ func get_skill_data_copy(skill_id: String) -> Dictionary:
 	print("[SkillManager] 取得技能副本: ", skill_id)
 	return skill_data.duplicate()
 
-# 获取技能数据
+# 取得技能資料
 func get_skill_data(skill_id: String) -> Dictionary:
 	return skills_database.get(skill_id, {})
 
-# 获取所有技能 ID
+# 取得所有技能 ID
 func get_all_skill_ids() -> Array:
 	return skills_database.keys()
 
-# 测试方法
+# 測試方法
 func test_skill_system():
-	print("[SkillManager] 测试简化版技能系统...")
-	
-	# 测试获取技能数据
+	print("[SkillManager] 測試簡化版技能系統...")
+
+	# 測試取得技能資料
 	var skill_ids = get_all_skill_ids()
 	print("可用技能: ", skill_ids)
-	
-	# 测试创建技能
+
+	# 測試取得技能副本
 	if skill_ids.size() > 0:
 		var first_skill = get_skill_data_copy(skill_ids[0])
 		if first_skill.size() > 0:
-			print("成功创建技能: ", first_skill.get("name", {}))
-	
-	print("[SkillManager] 简化版技能系统测试完成")
+			print("成功取得技能副本: ", first_skill.get("name", {}))
+
+	print("[SkillManager] 簡化版技能系統測試完成")
