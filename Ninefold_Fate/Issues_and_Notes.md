@@ -270,9 +270,10 @@
 > - take_damage() 內部仍發送 damage_dealt 訊號（用於 UI、日誌等通知）
 > - 效能改善：O(n) 廣播改為 O(1) 直接呼叫
 
-**S05** `[⚠️ 建議]` **BaseCharacter health_bar 初始化方式混用**
+**S05** `[✅ 已修復]` **BaseCharacter health_bar 初始化方式混用**
 `@onready var health_bar: ColorRect = null` 與 `_create_health_bar()` 動態建立**同時存在**，兩種方式混用易混淆，應擇一：保留 `@onready`（從場景樹取得）或保留動態建立，去掉另一個。
 *影響：scripts/components/BaseCharacter.gd*
+> **修復說明：** 移除 `@onready`，改為普通 `var health_bar: ColorRect = null`，明確表示由程式碼動態建立，執行邏輯不變。
 
 **S06** `[✅ 已修復]` **Enemy 屬性克制表已移至 balance.json**
 `_calculate_damage()` 的克制表已從硬編碼改為從 balance.json 讀取。
