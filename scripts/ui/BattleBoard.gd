@@ -92,7 +92,7 @@ func create_grid_cell(index: int) -> Control:
 	)
 	cell.add_theme_stylebox_override("panel", style_box)
 	
-	# 添加格子編號標籤（用於除錯）
+	# 添加格子編號標籤（用於除錯，正式版隱藏）
 	var label = Label.new()
 	label.text = str(index)
 	label.size = cell_size
@@ -101,6 +101,7 @@ func create_grid_cell(index: int) -> Control:
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.add_theme_font_size_override("font_size", 12)
 	label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6, 0.5))
+	label.visible = OS.is_debug_build()
 	cell.add_child(label)
 	
 	return cell
