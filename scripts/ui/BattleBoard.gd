@@ -7,6 +7,7 @@ extends DropZone
 @export var board_size: int = 3  # 棋盤大小 (3x3)
 @export var grid_spacing: int = 0  # 格子間距
 @export var cell_size: Vector2 = Vector2(200, 200)  # 單格尺寸
+@export var show_debug_labels: bool = false  # 顯示格子編號（除錯用）
 
 # === 棋盤狀態 ===
 var grid_cells: Array = []  # 存儲棋盤格子
@@ -101,7 +102,7 @@ func create_grid_cell(index: int) -> Control:
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.add_theme_font_size_override("font_size", 12)
 	label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6, 0.5))
-	label.visible = OS.is_debug_build()
+	label.visible = show_debug_labels
 	cell.add_child(label)
 	
 	return cell
