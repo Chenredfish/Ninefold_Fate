@@ -290,13 +290,15 @@
 > **處理說明：** 更新注釋為「預留：多英雄場景下的指定攻擊目標」，待多英雄功能實作時再接通邏輯。
 *影響：scripts/components/Enemy.gd*
 
-**S08** `[⚠️ 建議]` **SkillComponent 未設定 class_name**
+**S08** `[✅ 已修復]` **SkillComponent 未設定 class_name**
 `SkillComponent.gd` 沒有設定 `class_name`，相較於其他有命名的類別，命名一致性較差，建議加上。
 *影響：scripts/components/SkillComponent.gd*
+> **修復說明：** 加入 `class_name SkillComponent`。
 
-**S09** `[⚠️ 建議]` **main.gd 遺留大量注釋測試代碼**
+**S09** `[✅ 已修復]` **main.gd 遺留大量注釋測試代碼**
 有一大段被 `#` 注釋掉的 F1~F4 測試場景切換說明，顯示開發過程中有大量手動測試流程，建議清理或移至 DebugManager。
 *影響：main.gd*
+> **修復說明：** 四行注釋改為單行指引「測試場景快捷鍵（F1~F4）已移至 singletons/DebugManager.gd」。
 
 **S10** `[⚠️ 建議]` **main.gd StateManager 初始化失敗時靜默 Fallback**
 若 `StateManager` 初始化失敗，備用方案直接呼叫 `change_scene_to_file()` 而不印出任何警告，**使問題難以排查**。建議至少 `push_error()` 說明 StateManager 未找到。
