@@ -16,7 +16,7 @@ var status_effects: Array = []
 var tags: Array = []
 
 # === 視覺組件 ===
-@onready var health_bar: ColorRect = null  # 動態創建
+var health_bar: ColorRect = null
 @onready var sprite: Sprite2D = null
 @onready var animation_player: AnimationPlayer = null
 
