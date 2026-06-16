@@ -300,9 +300,10 @@
 *影響：main.gd*
 > **修復說明：** 四行注釋改為單行指引「測試場景快捷鍵（F1~F4）已移至 singletons/DebugManager.gd」。
 
-**S10** `[⚠️ 建議]` **main.gd StateManager 初始化失敗時靜默 Fallback**
+**S10** `[📝 不處理]` **main.gd StateManager 初始化失敗時靜默 Fallback**
 若 `StateManager` 初始化失敗，備用方案直接呼叫 `change_scene_to_file()` 而不印出任何警告，**使問題難以排查**。建議至少 `push_error()` 說明 StateManager 未找到。
 *影響：main.gd*
+> **決定：** Autoload 載入失敗時 Godot 引擎本身已會在 Debugger 拋出大量錯誤，額外加 `push_error()` 實際上淹沒在其中毫無幫助。現有的 `print()` 已足夠，不值得改動。
 
 **S11** `[✅ 已修復]` **debug_state.gd 縮排風格已統一**
 `debug_state.gd` 已轉換為 Tab 縮排，與 `BaseCharacter.gd` 等主要檔案統一。
