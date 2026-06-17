@@ -252,8 +252,11 @@ func _on_ui_unlock_end_turn_button():
 	if end_turn_button:
 		end_turn_button.disabled = false
 
-func _on_ui_load_next_enemy_wave():
-	#先把上一波的敵人清掉
+func _on_ui_load_next_enemy_wave(enemies: Array):
 	for enemy_scene in get_children():
 		if enemy_scene.is_in_group("enemy"):
 			enemy_scene.queue_free()
+	for enemy in enemies:
+		if enemy and not enemy.get_parent():
+			add_child(enemy)
+			print("[BattleScene] 添加第二波敵人：", enemy.name)

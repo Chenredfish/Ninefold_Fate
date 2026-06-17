@@ -156,7 +156,7 @@ func load_next_enemy_wave():
 	enemies_remaining = enemies_scenes.size()
 
 	print("[BattleStateMachine] 載入第 %d 波，共 %d 個敵人" % [current_wave, enemies_remaining])
-	EventBus.ui_load_next_enemy_wave.emit()
+	EventBus.ui_load_next_enemy_wave.emit(enemies_scenes)
 
 
 
