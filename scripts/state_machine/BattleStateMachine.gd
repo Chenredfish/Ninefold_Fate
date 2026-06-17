@@ -159,7 +159,9 @@ func load_next_enemy_wave():
 
 	print("[BattleStateMachine] 載入第 %d 波，共 %d 個敵人" % [current_wave, enemies_remaining])
 	EventBus.ui_load_next_enemy_wave.emit(enemies_scenes)
+	print("[BattleStateMachine] 呼叫 next_turn()")
 	next_turn()
+	print("[BattleStateMachine] next_turn() 完成，current_state：", current_state.state_id if current_state else "null")
 
 
 
@@ -437,7 +439,7 @@ class PlayerTurnState extends BaseState:
 					pass
 
 	func can_transition_to(next_state_id: String) -> bool:
-		return next_state_id in ["calculating", "player_turn", "defeat", "victory"]
+		return next_state_id in ["calculating", "defeat", "victory"]
 
 # 計算狀態
 class CalculatingState extends BaseState:
@@ -512,7 +514,7 @@ class CalculatingState extends BaseState:
 		print("[BattleStateMachine] Calculated damage: ", ui_damage, " to ", enemies_defeated, " enemies")
 	
 	func can_transition_to(next_state_id: String) -> bool:
-		return next_state_id in ["enemy_turn", "victory", "defeat"]
+		return next_state_id in ["enemy_turn", "player_turn", "victory", "defeat"]
 
 # 敵人回合狀態  
 class EnemyTurnState extends BaseState:
