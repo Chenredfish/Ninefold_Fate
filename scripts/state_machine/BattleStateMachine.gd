@@ -213,11 +213,6 @@ func _on_turn_ended(total_damage: int = 0, cards_in_ui: Array = []):
 func _on_enemy_defeated(enemy_id: String, rewards: Dictionary):
 	enemies_remaining -= 1
 	print("[BattleStateMachine] Enemy defeated, remaining: ", enemies_remaining)
-	
-	# 檢查是否所有敵人都被擊敗
-	if not check_battle_end():
-		# 繼續戰鬥
-		pass
 
 func _on_block_placed(block_instance: Node, position: Vector2):
 	player_tiles_placed += 1
