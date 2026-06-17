@@ -437,7 +437,7 @@ class PlayerTurnState extends BaseState:
 					pass
 
 	func can_transition_to(next_state_id: String) -> bool:
-		return next_state_id in ["calculating", "defeat", "victory"]
+		return next_state_id in ["calculating", "player_turn", "defeat", "victory"]
 
 # 計算狀態
 class CalculatingState extends BaseState:
