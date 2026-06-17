@@ -235,12 +235,12 @@ func create_hero_from_data(hero_data: Dictionary) -> Node:
 	return hero
 
 # 創建敵人場景
-func create_enemies_from_data(enemies_data: Array) -> Array[Node]:
+func create_enemies_from_data(enemies_data: Array, wave: int = 1) -> Array[Node]:
 	var created_enemies: Array[Node] = []
 	var number_of_enemies = 0
 	
 	for enemy_data in enemies_data:
-		if enemy_data.has("wave") and enemy_data.get("wave") == 1:
+		if enemy_data.has("wave") and enemy_data.get("wave") == wave:
 			var enemy_id = enemy_data.get("enemy_id", "")
 			if enemy_id != "":
 				var enemy = ResourceManager.create_enemy_with_overrides(enemy_data)
