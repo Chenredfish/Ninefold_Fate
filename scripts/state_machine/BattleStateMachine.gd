@@ -146,16 +146,17 @@ func load_next_enemy_wave():
 
 	enemies_scenes = enemies_scenes.filter(func(enemy): return enemy.is_alive) #要先真的移除節點，才刪除陣列中的參考
 
-	#理論上到這裡應該都是死的，但是檢查一下好了
 	if enemies_scenes.size() != 0:
-		print("[BattleStateMachine] 出現邏輯錯誤：載入下一波前仍有存活敵人")
+		push_warning("[BattleStateMachine] 出現邏輯錯誤：載入下一波前仍有存活敵人")
 		return
-	else :
-		#print("[BattleStateMachine] 確認所有敵人已被擊敗，準備載入下一波")
-		#載入下一波敵人
-		EventBus.ui_load_next_enemy_wave.emit()
 
-		pass
+	current_wave += 1
+	var enemies_data = battle_data.get("enemies", [])
+	enemies_scenes = create_enemies_from_data(enemies_data, current_wave)
+	enemies_remaining = enemies_scenes.size()
+
+	print("[BattleStateMachine] 載入第 %d 波，共 %d 個敵人" % [current_wave, enemies_remaining])
+	EventBus.ui_load_next_enemy_wave.emit()
 
 
 
