@@ -136,7 +136,8 @@ func check_battle_end():
 	return false
 
 func _has_more_waves() -> bool:
-	var enemies_data = battle_data.get("enemies", [])
+	var level_id = battle_data.get("level_id", "")
+	var enemies_data = ResourceManager.get_level_data(level_id).get("enemies", [])
 	return enemies_data.any(func(e): return e.get("wave", 1) == current_wave + 1)
 
 # 載入下一波敵人
@@ -151,7 +152,8 @@ func load_next_enemy_wave():
 		return
 
 	current_wave += 1
-	var enemies_data = battle_data.get("enemies", [])
+	var level_id = battle_data.get("level_id", "")
+	var enemies_data = ResourceManager.get_level_data(level_id).get("enemies", [])
 	enemies_scenes = create_enemies_from_data(enemies_data, current_wave)
 	enemies_remaining = enemies_scenes.size()
 
@@ -454,7 +456,10 @@ class CalculatingState extends BaseState:
 		_calculate_damage()
 
 		var alive = state_machine.enemies_scenes.filter(func(e): return e.is_alive)
+		print("[CalculatingState] 存活敵人數：", alive.size(), "，current_wave：", state_machine.current_wave)
+		print("[CalculatingState] battle_data enemies：", state_machine.battle_data.get("enemies", []))
 		if alive.size() == 0:
+			print("[CalculatingState] _has_more_waves：", state_machine._has_more_waves())
 			if state_machine._has_more_waves():
 				state_machine.load_next_enemy_wave()  # async，結束後自己呼叫 next_turn()
 			else:
