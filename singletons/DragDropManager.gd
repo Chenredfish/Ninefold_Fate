@@ -96,6 +96,7 @@ func create_drag_preview(original_tile):
 	drag_preview.size = original_tile.size
 	drag_preview.modulate.a = 0.9
 	drag_preview.z_index = 100  # 確保在最頂層
+	drag_preview.mouse_filter = Control.MOUSE_FILTER_IGNORE  # 不攔截滑鼠事件，讓 release 正確傳到 DraggableTile
 	
 	# 創建預覽背景
 	var preview_bg = ColorRect.new()
