@@ -411,7 +411,7 @@ func update_cell_visual(cell: Control, tile_data: Dictionary):
 		var bo_label = info_box.get_node_or_null("BonusLabel") as Label
 		if el_label:
 			el_label.text = get_element_display_name(element)
-			el_label.add_theme_color_override("font_color", Color.WHITE)
+			el_label.add_theme_color_override("font_color", Color.BLACK)
 		if bo_label:
 			bo_label.text = "+" + str(bonus_value)
 		info_box.visible = true
