@@ -39,7 +39,7 @@ signal request_used_cards()
 signal used_cards_response(used_cards: Array)
 
 signal ui_damage_animation_requested(target: Node, amount: int, damage_type: String)
-signal ui_damage_animation_complete()
+signal ui_lock_end_turn_button()
 signal ui_unlock_end_turn_button()
 signal ui_load_next_enemy_wave()
 

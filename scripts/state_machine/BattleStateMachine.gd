@@ -441,13 +441,12 @@ class CalculatingState extends BaseState:
 		super.enter(previous_state, data)
 		
 		print("[BattleStateMachine] calculating damage with data: ", data)
-		
-		# 計算傷害
-		_calculate_damage()
 
-		# 等傷害動畫播完再切換（有造成傷害才等，避免 0 傷害時訊號永遠不發）
-		if state_machine.battle_data.get("ui_damage", 0) > 0:
-			await EventBus.ui_damage_animation_complete
+		# 鎖住結束回合按鈕，進入玩家回合時再解鎖
+		EventBus.ui_lock_end_turn_button.emit()
+
+		# 計算傷害，動畫獨立播放不阻擋狀態切換
+		_calculate_damage()
 
 		# 檢查戰鬥是否結束
 		if not state_machine.check_battle_end():
