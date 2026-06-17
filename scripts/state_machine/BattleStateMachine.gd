@@ -115,13 +115,15 @@ func check_battle_end():
 	print("[BattleStateMachine] 剩餘的敵人物件數量: ", alive_enemies_scenes.size(), ", 剩餘的敵人數量: ", enemies_remaining)
 		
 	if alive_enemies_scenes.size() == 0:
-		if enemies_remaining > 0:
-			# 場上的敵人都被擊敗，但還有剩餘波次
+		if _has_more_waves():
 			print("[BattleStateMachine] 準備載入下一波敵人")
 			load_next_enemy_wave()
-			return false  
-		else :
-			# 所有敵人都被擊敗
+			return false
+		else:
+			var skipped = battle_data.get("enemies", []).filter(
+				func(e): return e.get("wave", 1) > current_wave)
+			if skipped.size() > 0:
+				push_warning("[BattleStateMachine] %d 個敵人因波次跳號未出場，請檢查關卡資料" % skipped.size())
 			transition_to("victory")
 			return true
 	
@@ -132,6 +134,10 @@ func check_battle_end():
 		return true
 	
 	return false
+
+func _has_more_waves() -> bool:
+	var enemies_data = battle_data.get("enemies", [])
+	return enemies_data.any(func(e): return e.get("wave", 1) == current_wave + 1)
 
 # 載入下一波敵人
 func load_next_enemy_wave():
