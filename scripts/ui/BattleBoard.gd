@@ -398,21 +398,20 @@ func update_cell_visual(cell: Control, tile_data: Dictionary):
 
 	cell.scale = Vector2(1, 1)
 
-	# 深色屬性底色 + 屬性邊框
+	# 格子整體改為屬性顏色
 	var element_color = get_element_color(element)
 	var border_color = get_element_border_color(element)
-	var bg_color = Color(element_color.r * 0.3, element_color.g * 0.3, element_color.b * 0.3, 0.95)
-	cell.add_theme_stylebox_override("panel", create_cell_style(bg_color, border_color, 10, 3))
+	cell.add_theme_stylebox_override("panel", create_cell_style(element_color, border_color, 10, 3))
 	cell.queue_redraw()
 
-	# 顯示屬性名稱（屬性顏色）與加成值（黃色）
+	# 顯示屬性名稱（白色）與加成值（黃色）
 	var info_box = cell.get_node_or_null("TileInfoBox")
 	if info_box:
 		var el_label = info_box.get_node_or_null("ElementLabel") as Label
 		var bo_label = info_box.get_node_or_null("BonusLabel") as Label
 		if el_label:
 			el_label.text = get_element_display_name(element)
-			el_label.add_theme_color_override("font_color", element_color.lightened(0.2))
+			el_label.add_theme_color_override("font_color", Color.WHITE)
 		if bo_label:
 			bo_label.text = "+" + str(bonus_value)
 		info_box.visible = true
