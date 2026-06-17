@@ -6,6 +6,8 @@ var tile_container: ScrollContainer
 var hand_hbox: HBoxContainer
 var drop_board: BattleBoard
 
+var _pending_damage_animations: int = 0
+
 func _ready():
 	print("[BattleScene] 載入戰鬥場景，主節點：", self, " parent：", get_parent())
 	
@@ -219,6 +221,8 @@ func _on_ui_damage_animation_requested(target: Node, amount: int, damage_type: S
 	damage_label.label_settings.outline_color = Color.BLACK
 	damage_label.label_settings.outline_size = 2
 	
+	_pending_damage_animations += 1
+
 	call_deferred("add_child", damage_label)
 
 	await damage_label.resized
@@ -237,6 +241,11 @@ func _on_ui_damage_animation_requested(target: Node, amount: int, damage_type: S
 	tween.tween_property(
 		damage_label, "scale", Vector2.ZERO, 0.5
 	).set_ease(Tween.EASE_IN).set_delay(0.5)
+
+	await tween.finished
+	_pending_damage_animations -= 1
+	if _pending_damage_animations == 0:
+		EventBus.ui_damage_animation_complete.emit()
 
 func _on_ui_lock_end_turn_button():
 	"""鎖住結束回合按鈕"""

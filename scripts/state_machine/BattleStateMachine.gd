@@ -444,10 +444,11 @@ class CalculatingState extends BaseState:
 		
 		# 計算傷害
 		_calculate_damage()
-		
-		# 短暫延遲顯示結果
-		await state_machine.get_tree().create_timer(1.0).timeout
-		
+
+		# 等傷害動畫播完再切換（有造成傷害才等，避免 0 傷害時訊號永遠不發）
+		if state_machine.battle_data.get("ui_damage", 0) > 0:
+			await EventBus.ui_damage_animation_complete
+
 		# 檢查戰鬥是否結束
 		if not state_machine.check_battle_end():
 			# 戰鬥未結束，進入敵人回合
