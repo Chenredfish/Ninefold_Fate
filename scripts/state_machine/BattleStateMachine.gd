@@ -23,6 +23,7 @@ var max_turns: int = 100  # 防止無限戰鬥
 var player_tiles_placed: int = 0
 var max_tiles_per_turn: int = 100
 var enemies_remaining: int = 0
+var current_wave: int = 1
 var hero_scene: Node = null        # 英雄場景實例 (Hero節點)
 var enemies_scenes: Array[Node] = []    # 敵人場景實例 (Enemy節點)
 var current_hands: Array[String] = []   # 當前手牌 (方塊ID字串陣列)
@@ -88,6 +89,7 @@ func _battle_clean():
 	turn_number = 0
 	player_tiles_placed = 0
 	enemies_remaining = 0
+	current_wave = 1
 	current_hands.clear()
 	deck_data.clear()
 	hero_scene = null
