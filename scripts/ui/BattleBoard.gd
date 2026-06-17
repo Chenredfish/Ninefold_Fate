@@ -78,7 +78,7 @@ func create_grid_layout():
 
 # 創建單個格子
 func create_grid_cell(index: int) -> Control:
-	var cell = Control.new()
+	var cell = Panel.new()
 	cell.name = "GridCell_" + str(index)
 	cell.custom_minimum_size = cell_size
 	cell.size = cell_size
