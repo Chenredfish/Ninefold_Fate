@@ -159,9 +159,7 @@ func load_next_enemy_wave():
 
 	print("[BattleStateMachine] 載入第 %d 波，共 %d 個敵人" % [current_wave, enemies_remaining])
 	EventBus.ui_load_next_enemy_wave.emit(enemies_scenes)
-	print("[BattleStateMachine] 呼叫 next_turn()")
 	next_turn()
-	print("[BattleStateMachine] next_turn() 完成，current_state：", current_state.state_id if current_state else "null")
 
 
 
@@ -458,10 +456,7 @@ class CalculatingState extends BaseState:
 		_calculate_damage()
 
 		var alive = state_machine.enemies_scenes.filter(func(e): return e.is_alive)
-		print("[CalculatingState] 存活敵人數：", alive.size(), "，current_wave：", state_machine.current_wave)
-		print("[CalculatingState] battle_data enemies：", state_machine.battle_data.get("enemies", []))
 		if alive.size() == 0:
-			print("[CalculatingState] _has_more_waves：", state_machine._has_more_waves())
 			if state_machine._has_more_waves():
 				state_machine.load_next_enemy_wave()  # async，結束後自己呼叫 next_turn()
 			else:

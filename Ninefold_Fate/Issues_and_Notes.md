@@ -200,9 +200,9 @@
 `VictoryState._calculate_rewards()` 有注釋 `# TODO: 根據表現計算獎勵`，**目前只有固定金幣/經驗值**，無任何基於表現的動態計算。
 *影響：scripts/state_machine/BattleStateMachine.gd (VictoryState)*
 
-**U10** `[🚧 未實作]` **load_next_enemy_wave() 不創建新敵人**
-`BattleStateMachine.load_next_enemy_wave()` 等待 1 秒後清除死亡敵人並發送 UI 清理訊號，但**完全沒有實際建立新波次敵人的程式碼**，波次系統是半成品。
-*影響：scripts/state_machine/BattleStateMachine.gd*
+**U10** `[✅ 已實現]` **波次系統完整實作**
+新增 `current_wave` 追蹤波次、`_has_more_waves()` 判斷下一波（嚴格比對 wave == current_wave+1，跳號敵人發出警告）、`load_next_enemy_wave()` 建立新敵人並切回玩家回合。`CalculatingState` 直接判斷換波次，`enemies_remaining` 語意改為當前波次場上存活數。
+*影響：scripts/state_machine/BattleStateMachine.gd、singletons/EventBus.gd、scripts/scenes/battle.gd*
 
 **U11** `[🚧 未實作]` **FireMasterySkill 傷害加成無 UI 反饋**
 被動技能觸發後只 `print`，**沒有任何 UI 顯示**（如傷害數字變色、特效提示等）。
