@@ -257,9 +257,9 @@ func _update_combo_state(board_was_full: bool):
 	combo_multiplier = ResourceManager.get_combo_multiplier(board_complete_count)
 	print("[BattleStateMachine] 棋盤填滿：", board_was_full, "，連續次數：", board_complete_count, "，combo_multiplier：x", combo_multiplier)
 
-func _on_turn_ended(total_damage: int = 0, cards_in_ui: Array = [], board_was_full: bool = false):
+func _on_turn_ended(cards_in_ui: Array = [], board_was_full: bool = false):
 	_update_combo_state(board_was_full)
-	print("[BattleStateMachine] Turn ended, damage dealt: ", total_damage, ", cards remaining: ", cards_in_ui)
+	print("[BattleStateMachine] Turn ended, cards remaining: ", cards_in_ui)
 	
 	# 處理已使用的卡片
 	var used_cards: Array[String] = []
@@ -270,8 +270,6 @@ func _on_turn_ended(total_damage: int = 0, cards_in_ui: Array = [], board_was_fu
 	remove_used_cards(used_cards)
 	refill_hand()
 	
-	# 儲存UI傷害數據供計算狀態使用
-	battle_data["ui_damage"] = total_damage
 	battle_data["combo_multiplier"] = combo_multiplier
 	
 	transition_to("calculating", battle_data)
@@ -535,48 +533,9 @@ class CalculatingState extends BaseState:
 			state_machine.transition_to("enemy_turn")
 	
 	func _calculate_damage():
-		# 使用從UI傳來的傷害數據
-		var ui_damage = state_machine.battle_data.get("ui_damage", 0)
-		var damage_info = {
-			"total_damage": ui_damage,
-			"combo_multiplier": 1.0,
-			"element_bonus": 1.0,
-			"targets": []
-		}
-		
-		# 如果沒有傷害，直接跳過
-		if ui_damage <= 0:
-			print("[BattleStateMachine] No damage dealt this turn")
-			EventBus.damage_calculated.emit(damage_info)
-			return
-		
-		# 對敵人造成傷害並檢查死亡
-		var enemies_defeated = 0
-		print("[BattleStateMachine] enemies_scenes 數組大小: ", state_machine.enemies_scenes.size())
-		#因為敵人不一定會立刻出現，所以還要看enemies_remaining
-		for i in range(state_machine.enemies_scenes.size()):
-			var enemy = state_machine.enemies_scenes[i]
-			print("[BattleStateMachine] 敵人 ", i, ": ", enemy, " 是否有效: ", enemy != null)
-			if enemy and enemy.has_method("take_damage"):
-				print("[BattleStateMachine] 對敵人 ", enemy.name, " 造成傷害: ", ui_damage)
-				EventBus.ui_damage_animation_requested.emit(enemy, ui_damage, state_machine.hero_scene.get("element"))
-				var was_alive = enemy.is_alive if "is_alive" in enemy else true
-				enemy.take_damage(ui_damage, "", state_machine.hero_scene)
-				# 檢查敵人是否在這次攻擊後死亡
-				var is_alive_now = enemy.is_alive if "is_alive" in enemy else true
-				if was_alive and not is_alive_now:
-					enemies_defeated += 1
-					print("[BattleStateMachine] Enemy defeated: ", enemy.name)
-					# 發送敵人被擊敗事件，這個事件只會減少enemies_remaining
-					EventBus.enemy_defeated.emit(enemy.name, {})
-					damage_info.targets.append(enemy.name)
-			else:
-				print("[BattleStateMachine] 敵人 ", i, " 無法接收傷害或已無效")
-		
-		print("[BattleStateMachine] 本回合擊倒的敵人數量: ", enemies_defeated)
-		
-		EventBus.damage_calculated.emit(damage_info)
-		print("[BattleStateMachine] Calculated damage: ", ui_damage, " to ", enemies_defeated, " enemies")
+		# 傷害計算將在 #6 重寫，目前為空殼
+		print("[BattleStateMachine] _calculate_damage: 待 #6 實作")
+		EventBus.damage_calculated.emit({})
 	
 	func can_transition_to(next_state_id: String) -> bool:
 		return next_state_id in ["enemy_turn", "player_turn", "victory", "defeat"]
@@ -677,3 +636,4 @@ class DefeatState extends BaseState:
 	
 	func can_transition_to(next_state_id: String) -> bool:
 		return false  # 失敗狀態是終結狀態
+

@@ -5,7 +5,7 @@ extends Node
 signal battle_started(level_data: Dictionary)
 signal battle_ended(result: String, rewards: Array)
 signal turn_started(turn_type: String)  # "player" 或 "enemy"
-signal turn_ended(total_damage: int, cards_in_ui: Array, board_was_full: bool)
+signal turn_ended(cards_in_ui: Array, board_was_full: bool)
 signal setup_battle_ui(level_data: Dictionary, enemies_scenes: Array, hero_scene: Node)
 signal setup_deck_ui(current_hands: Array)  # 傳手牌 ID 陣列
 signal battle_ui_update_complete()

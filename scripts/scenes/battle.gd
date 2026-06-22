@@ -253,7 +253,7 @@ func _on_end_turn_pressed():
 	_on_ui_lock_end_turn_button()
 
 	# 通知狀態機回合結束（傳遞UI數據）
-	EventBus.turn_ended.emit(0, cards_in_ui, board_was_full)
+	EventBus.turn_ended.emit(cards_in_ui, board_was_full)
 
 func _on_skill_pressed():
 	EventBus.skill_cast_requested.emit()
