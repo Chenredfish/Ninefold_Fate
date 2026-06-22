@@ -9,6 +9,12 @@
     "base_attack": 100,
     "hp": 1000,
     "mana": 100,
+    "mana_gain": [
+      {"trigger": "on_turn_start", "amount": 3},
+      {"trigger": "on_enemy_defeated", "amount": 10},
+      {"trigger": "on_damage_dealt", "amount": 10},
+      {"trigger": "on_damage_taken", "amount": 5}
+    ],
     "level": 1,
     "exp": 0,
     "growth_curve": "linear",
