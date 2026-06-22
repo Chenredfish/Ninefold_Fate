@@ -11,6 +11,7 @@ var mana_label: Label
 var mana_bar_max_width: float = 360.0
 var skill_button: Button
 var _hero_scene: Node = null
+var _target_arrow: Label = null
 
 
 func _ready():
@@ -24,9 +25,11 @@ func _ready():
 	EventBus.ui_lock_end_turn_button.connect(_on_ui_lock_end_turn_button)
 	EventBus.ui_unlock_end_turn_button.connect(_on_ui_unlock_end_turn_button)
 	EventBus.ui_load_next_enemy_wave.connect(_on_ui_load_next_enemy_wave)
-	
+	EventBus.battle_target_changed.connect(_on_battle_target_changed)
+
 	# 初始化UI
 	setup_ui()
+	_create_target_arrow()
 
 func setup_ui():
 	# 設置為全屏控制
@@ -330,3 +333,22 @@ func _on_ui_load_next_enemy_wave(enemies: Array):
 		if enemy and not enemy.get_parent():
 			add_child(enemy)
 			print("[BattleScene] 添加第二波敵人：", enemy.name)
+
+func _create_target_arrow():
+	_target_arrow = Label.new()
+	_target_arrow.text = "▲"
+	_target_arrow.add_theme_font_size_override("font_size", 32)
+	_target_arrow.modulate = Color(1.0, 0.9, 0.0, 1.0)
+	_target_arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_target_arrow.visible = false
+	_target_arrow.name = "TargetArrow"
+	add_child(_target_arrow)
+
+func _on_battle_target_changed(enemy: Node):
+	if not _target_arrow:
+		return
+	if enemy == null:
+		_target_arrow.visible = false
+		return
+	_target_arrow.visible = true
+	_target_arrow.position = enemy.position + Vector2(-16, 80)

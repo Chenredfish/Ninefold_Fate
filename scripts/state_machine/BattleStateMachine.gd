@@ -126,6 +126,7 @@ func _auto_select_first_enemy():
 
 func _on_enemy_selected(enemy: Node):
 	selected_target = enemy
+	EventBus.battle_target_changed.emit(enemy)
 	print("[BattleStateMachine] 選取目標：", enemy.character_name, "（", enemy.character_id, "）")
 
 # 檢查戰鬥的三個結果，勝利，失敗，載入下一波

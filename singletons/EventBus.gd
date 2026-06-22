@@ -64,6 +64,7 @@ signal scene_exited(scene_name: String)
 # DragDropManager 提供: tile_drag_started, tile_drag_ended, navigation_requested
 
 # 戰鬥狀態事件
+signal battle_target_changed(enemy: Node)
 signal player_turn_submit()
 signal damage_calculated(damage_info: Dictionary)
 signal enemies_updated(enemies: Array)
