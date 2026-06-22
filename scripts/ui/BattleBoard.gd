@@ -432,54 +432,11 @@ func check_board_completion():
 	
 	if filled_cells == total_cells:
 		on_board_completed()
-	elif filled_cells >= 3:  # 當放置3個或以上方塊時
-		calculate_combo_damage()
 
 # 棋盤完成時的處理
 func on_board_completed():
 	print("[BattleBoard] 棋盤已完成！")
-	
-	# 計算最終傷害
-	var total_damage = calculate_total_damage()
-	print("[BattleBoard] 總傷害：", total_damage)
-	
-	# 播放完成動畫
 	play_completion_animation()
-	
-	# 發送完成訊號
-	# EventBus.board_completed.emit(placed_tiles, total_damage)
-
-# 計算連擊傷害
-func calculate_combo_damage() -> int:
-	var element_counts = {}
-	var total_damage = 0
-	
-	# 統計各屬性方塊數量
-	for pos in placed_tiles:
-		var tile_data = placed_tiles[pos]
-		var element = tile_data.get("element", "neutral")
-		var bonus = tile_data.get("bonus_value", 1)
-		
-		if not element_counts.has(element):
-			element_counts[element] = {"count": 0, "total_bonus": 0}
-		
-		element_counts[element].count += 1
-		element_counts[element].total_bonus += bonus
-	
-	# 計算連擊加成
-	for element in element_counts:
-		var data = element_counts[element]
-		var combo_multiplier = 1.0 + (data.count - 1) * 0.5  # 每額外方塊 +50% 傷害
-		var element_damage = data.total_bonus * combo_multiplier
-		total_damage += int(element_damage)
-		
-		print("[BattleBoard] ", element, " 屬性：", data.count, " 個方塊，傷害 ", element_damage)
-	
-	return total_damage
-
-# 計算總傷害
-func calculate_total_damage() -> int:
-	return calculate_combo_damage()
 
 # 回傳所有已放置 tile 的資料陣列，供 CalculatingState 逐 tile 計算傷害
 func get_tiles_data() -> Array:

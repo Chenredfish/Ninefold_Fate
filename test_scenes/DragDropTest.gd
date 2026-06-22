@@ -299,9 +299,8 @@ func _input(event):
 func _on_submit_button_pressed():
 	print("\n[測試] 送出方塊按鈕被按下")
 	
-	#計算目前戰鬥棋盤上的方塊數值總和
-	var total_value:int = secondary_drop_zone.calculate_total_damage()
-	print("[測試] 戰鬥棋盤上方塊總傷害值：", total_value)
+	var tiles = secondary_drop_zone.get_tiles_data()
+	print("[測試] 戰鬥棋盤上方塊資料：", tiles)
 
 	secondary_drop_zone.clear_board()
 	print("[測試] 戰鬥棋盤已清空")

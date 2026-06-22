@@ -233,14 +233,11 @@ func update_hand_display(current_hands: Array):
 func _on_end_turn_pressed():
 	"""結束回合按鈕被按下 - 只處理UI相關邏輯"""
 	# 計算棋盤總傷害（這是UI功能）
-	var total_damage: int = 0
 	var board_was_full: bool = false
 	if drop_board:
 		var total_cells = drop_board.board_size * drop_board.board_size
 		board_was_full = drop_board.placed_tiles.size() == total_cells
 		print("[BattleScene] 棋盤填滿：", board_was_full, "（", drop_board.placed_tiles.size(), "/", total_cells, "）")
-		total_damage = drop_board.calculate_total_damage()
-		print("[BattleScene] 棋盤計算出的總傷害：", total_damage)
 		drop_board.clear_board()
 	
 	# 獲取UI中剩餘的卡片信息
@@ -256,7 +253,7 @@ func _on_end_turn_pressed():
 	_on_ui_lock_end_turn_button()
 
 	# 通知狀態機回合結束（傳遞UI數據）
-	EventBus.turn_ended.emit(total_damage, cards_in_ui, board_was_full)
+	EventBus.turn_ended.emit(0, cards_in_ui, board_was_full)
 
 func _on_skill_pressed():
 	EventBus.skill_cast_requested.emit()
