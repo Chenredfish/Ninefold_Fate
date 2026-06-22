@@ -7,6 +7,7 @@ var hand_hbox: HBoxContainer
 var drop_board: BattleBoard
 
 var mana_bar_fill: ColorRect
+var mana_label: Label
 var mana_bar_max_width: float = 360.0
 var skill_button: Button
 var _hero_scene: Node = null
@@ -109,11 +110,24 @@ func _create_mana_bar():
 	mana_bar_fill.name = "ManaBarFill"
 	bg.add_child(mana_bar_fill)
 
+	# 數字標籤（bar 上方）
+	mana_label = Label.new()
+	mana_label.position = Vector2(0, -38)
+	mana_label.size = Vector2(mana_bar_max_width, 34)
+	mana_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mana_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	mana_label.add_theme_font_size_override("font_size", 33)
+	mana_label.modulate = Color(0.6, 0.8, 1.0, 1.0)
+	mana_label.name = "ManaLabel"
+	bg.add_child(mana_label)
+
 func update_mana_bar(current: int, maximum: int):
 	if not mana_bar_fill:
 		return
 	var ratio = float(current) / float(maximum) if maximum > 0 else 0.0
 	mana_bar_fill.size.x = mana_bar_max_width * ratio
+	if mana_label:
+		mana_label.text = "%d/%d" % [current, maximum]
 
 func update_skill_button_state():
 	if not skill_button:
