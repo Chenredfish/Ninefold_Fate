@@ -441,8 +441,8 @@ func on_board_completed():
 # 回傳所有已放置 tile 的資料陣列，供 CalculatingState 逐 tile 計算傷害
 func get_tiles_data() -> Array:
 	var result: Array = []
-	for pos in placed_tiles:
-		var tile = placed_tiles[pos]
+	for entry in drop_history:
+		var tile = entry["tile_data"]
 		result.append({
 			"element": tile.get("element", "neutral"),
 			"bonus_value": tile.get("bonus_value", 1),
@@ -489,7 +489,8 @@ func clear_board():
 	stop_all_animations()
 	
 	placed_tiles.clear()
-	
+	drop_history.clear()
+
 	# 重置所有格子的視覺效果
 	for i in range(grid_cells.size()):
 		var cell = grid_cells[i]
