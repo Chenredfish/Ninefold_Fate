@@ -481,6 +481,18 @@ func calculate_combo_damage() -> int:
 func calculate_total_damage() -> int:
 	return calculate_combo_damage()
 
+# 回傳所有已放置 tile 的資料陣列，供 CalculatingState 逐 tile 計算傷害
+func get_tiles_data() -> Array:
+	var result: Array = []
+	for pos in placed_tiles:
+		var tile = placed_tiles[pos]
+		result.append({
+			"element": tile.get("element", "neutral"),
+			"bonus_value": tile.get("bonus_value", 1),
+			"target_type": tile.get("target_type", "single")
+		})
+	return result
+
 # 播放完成動畫
 func play_completion_animation():
 	# 整體棋盤發光效果
