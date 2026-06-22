@@ -217,8 +217,11 @@ func _on_skill_effect_requested(effect: Dictionary):
 		"damage":
 			if target.has_method("take_damage"):
 				target.take_damage(amount, element, source)
+				if "is_alive" in target and not target.is_alive:
+					EventBus.enemy_defeated.emit(target.name, {})
 			else:
 				push_warning("[BattleStateMachine] 目標沒有 take_damage 方法：" + target.name)
+			check_battle_end()
 		"heal":
 			if target.has_method("heal"):
 				target.heal(amount, source)
@@ -469,7 +472,7 @@ class PlayerTurnState extends BaseState:
 					pass
 
 	func can_transition_to(next_state_id: String) -> bool:
-		return next_state_id in ["calculating", "defeat", "victory"]
+		return next_state_id in ["calculating", "defeat", "victory", "player_turn"]
 
 # 計算狀態
 class CalculatingState extends BaseState:
