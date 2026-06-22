@@ -112,8 +112,12 @@ func _try_connect_skill_component():
 
 func _load_skills(skills_data: Array):
 	"""載入技能數據"""
-	if skill_component and skill_component.has_method("load_skills"):
-		skill_component.load_skills(skills_data)
+	var sc = get_node_or_null("SkillComponent")
+	if sc:
+		skill_component = sc
+		sc.load_skills(skills_data)
+	else:
+		push_warning("[Hero] _load_skills 找不到 SkillComponent，技能未載入")
 
 func _play_skill_animation(skill_id: String):
 	"""播放技能動畫"""
