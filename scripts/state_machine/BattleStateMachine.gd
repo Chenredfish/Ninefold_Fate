@@ -521,8 +521,7 @@ class CalculatingState extends BaseState:
 		# 鎖住結束回合按鈕，進入玩家回合時再解鎖
 		EventBus.ui_lock_end_turn_button.emit()
 
-		# 計算傷害，動畫獨立播放不阻擋狀態切換
-		_calculate_damage()
+		await _calculate_damage()
 
 		var alive = state_machine.enemies_scenes.filter(func(e): return e.is_alive)
 		if alive.size() == 0:
