@@ -147,6 +147,7 @@ func _create_health_bar():
 	health_bar.size = Vector2(60, 6)
 	health_bar.position = Vector2(-30, -60)
 	health_bar.color = _get_health_bar_color()
+	health_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	health_bar.name = "HealthBar"
 	add_child(health_bar)
 
@@ -202,6 +203,7 @@ func _create_default_appearance():
 	color_rect.size = Vector2(60, 60)
 	color_rect.position = Vector2(-30, -30)
 	color_rect.color = element_colors.get(element, Color.GOLD)
+	color_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(color_rect)
 
 # === 動畫系統 ===

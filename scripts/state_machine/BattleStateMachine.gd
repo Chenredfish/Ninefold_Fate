@@ -300,11 +300,13 @@ func create_enemies_from_data(enemies_data: Array, wave: int = 1) -> Array[Node]
 				var enemy = ResourceManager.create_enemy_with_overrides(enemy_data)
 				# 設置敵人位置（UI會負責添加到場景樹）
 				enemy.position = Vector2(540 + number_of_enemies * 220 - ((enemies_data.size() - 1) * 110), 300)
+				# 補上 instance index 確保 character_id 唯一
+				enemy.character_id = enemy_id + "_" + str(number_of_enemies)
 				#把它加入敵人群組
 				enemy.add_to_group("enemy")
 				created_enemies.append(enemy)
 				number_of_enemies += 1
-				print("[BattleStateMachine] 創建敵人: ", enemy_id, " 節點: ", enemy)
+				print("[BattleStateMachine] 創建敵人: ", enemy.character_id, " 節點: ", enemy)
 	
 	print("[BattleStateMachine] 總共創建了 ", created_enemies.size(), " 個敵人，等待UI添加到場景樹")
 	return created_enemies
