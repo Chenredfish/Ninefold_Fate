@@ -10,10 +10,12 @@ var attack_aim: Node = null  # 預留：多英雄場景下的指定攻擊目標
 
 # === 敵人特有組件 ===
 @onready var countdown_label: Label = null  # 動態創建
+var _select_button: Button = null
 
 # === 敵人特有信號 ===
 signal enemy_attacked(enemy: Enemy, damage: int)
 signal countdown_changed(enemy: Enemy, new_countdown: int)
+signal enemy_selected(enemy: Enemy)
 
 # === 向後兼容的屬性別名 ===
 var enemy_name: String:
@@ -34,6 +36,7 @@ func _ready():
 	# 敵人特有的初始化
 	current_countdown = max_countdown
 	_create_countdown_label()
+	_create_select_button()
 
 	# 連接回合事件（修 B06）
 	if not EventBus.turn_started.is_connected(_on_turn_started):
@@ -152,6 +155,48 @@ func _create_countdown_label():
 	add_child(countdown_label)
 	
 	_update_countdown_ui()
+
+func _create_select_button():
+	var ui = get_node_or_null("UI")
+	if not ui:
+		push_warning("[Enemy] _create_select_button: 找不到 UI 節點")
+		return
+
+	_select_button = Button.new()
+	_select_button.name = "SelectButton"
+
+	# 圓形透明樣式
+	var radius := 40
+	var size := radius * 2
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(1, 1, 1, 0)
+	style.corner_radius_top_left = radius
+	style.corner_radius_top_right = radius
+	style.corner_radius_bottom_left = radius
+	style.corner_radius_bottom_right = radius
+	_select_button.add_theme_stylebox_override("normal", style)
+	_select_button.add_theme_stylebox_override("hover", style)
+	_select_button.add_theme_stylebox_override("pressed", style)
+	_select_button.add_theme_stylebox_override("focus", style)
+
+	# 置中在 UI Control
+	_select_button.anchor_left = 0.5
+	_select_button.anchor_top = 0.5
+	_select_button.anchor_right = 0.5
+	_select_button.anchor_bottom = 0.5
+	_select_button.offset_left = -radius
+	_select_button.offset_top = -radius
+	_select_button.offset_right = radius
+	_select_button.offset_bottom = radius
+
+	_select_button.flat = true
+	_select_button.pressed.connect(_on_select_button_pressed)
+	ui.add_child(_select_button)
+	print("[Enemy] ", character_name, " 選取按鈕建立完成（半徑 ", radius, "）")
+
+func _on_select_button_pressed():
+	print("[Enemy] 點擊選取：", character_name, "（", character_id, "）")
+	enemy_selected.emit(self)
 
 func _update_countdown_ui():
 	"""更新倒數UI"""
