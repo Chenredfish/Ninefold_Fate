@@ -257,9 +257,10 @@ func _update_combo_state(board_was_full: bool):
 	combo_multiplier = ResourceManager.get_combo_multiplier(board_complete_count)
 	print("[BattleStateMachine] 棋盤填滿：", board_was_full, "，連續次數：", board_complete_count, "，combo_multiplier：x", combo_multiplier)
 
-func _on_turn_ended(cards_in_ui: Array = [], board_was_full: bool = false):
+func _on_turn_ended(cards_in_ui: Array = [], board_was_full: bool = false, tiles_data: Array = []):
 	_update_combo_state(board_was_full)
-	print("[BattleStateMachine] Turn ended, cards remaining: ", cards_in_ui)
+	battle_data["tiles_data"] = tiles_data
+	print("[BattleStateMachine] Turn ended, cards remaining: ", cards_in_ui, "，tiles: ", tiles_data.size())
 	
 	# 處理已使用的卡片
 	var used_cards: Array[String] = []
@@ -636,4 +637,5 @@ class DefeatState extends BaseState:
 	
 	func can_transition_to(next_state_id: String) -> bool:
 		return false  # 失敗狀態是終結狀態
+
 
