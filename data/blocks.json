@@ -31,7 +31,7 @@
 		"rotation_allowed": false,
 		"flip_allowed": false,
 		"bonus_value": 2,
-		"target_type": "single",
+		"target_type": "all",
 		"rarity": "common",
 		"icon_path": "res://art/blocks/B002_icon.png"
 	},
@@ -49,7 +49,7 @@
 		"rotation_allowed": false,
 		"flip_allowed": false,
 		"bonus_value": 2,
-		"target_type": "single",
+		"target_type": "all",
 		"rarity": "common",
 		"icon_path": "res://art/blocks/B003_icon.png"
 	},
@@ -143,7 +143,7 @@
 		"rotation_allowed": false,
 		"flip_allowed": false,
 		"bonus_value": 10,
-		"target_type": "all",
+		"target_type": "single",
 		"rarity": "rare",
 		"icon_path": "res://art/blocks/B201_icon.png"
 	},

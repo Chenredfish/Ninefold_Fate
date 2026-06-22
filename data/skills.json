@@ -76,7 +76,7 @@
     "trigger": "on_cast",
     "conditions": [
       {"type": "not_on_cooldown"},
-      {"type": "has_mana", "value": 30},
+      {"type": "has_mana", "value": 70},
       {"type": "has_target"}
     ],
     "effects": [
