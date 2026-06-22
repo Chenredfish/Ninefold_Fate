@@ -263,6 +263,8 @@ func _on_turn_ended(total_damage: int = 0, cards_in_ui: Array = []):
 func _on_enemy_defeated(enemy_id: String, rewards: Dictionary):
 	enemies_remaining -= 1
 	print("[BattleStateMachine] Enemy defeated, remaining: ", enemies_remaining)
+	if selected_target == null or not selected_target.is_alive:
+		_auto_select_first_enemy()
 
 func _on_block_placed(block_instance: Node, position: Vector2):
 	player_tiles_placed += 1
