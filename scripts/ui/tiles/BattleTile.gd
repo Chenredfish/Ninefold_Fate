@@ -14,6 +14,7 @@ extends DraggableTile
 @export var rotation_allowed: bool = false  # 是否可旋轉
 @export var flip_allowed: bool = false      # 是否可翻轉
 @export var icon_path: String = ""          # 圖標路徑
+@export var target_type: String = "single"  # 目標類型（"single" 或 "all"）
 
 # === 內部節點 ===
 var background_rect: ColorRect
@@ -62,13 +63,15 @@ func setup_from_resource_manager(block_id_param: String):
 	bonus_value = block_data.get("bonus_value", 1)
 	rarity = block_data.get("rarity", "common")
 	icon_path = block_data.get("icon_path", "")
-	
+	target_type = block_data.get("target_type", "single")
+
 	# 更新完整 tile_data
 	tile_data = {
 		"type": "battle_block",
 		"block_id": block_id,
 		"element": element,
 		"bonus_value": bonus_value,
+		"target_type": target_type,
 		"rarity": rarity,
 		"name": block_name,
 		"localized_name": get_localized_name(block_data),
