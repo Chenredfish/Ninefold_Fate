@@ -1,4 +1,4 @@
-﻿# BattleStateMachine.gd
+# BattleStateMachine.gd
 # 戰鬥狀態機，管理戰鬥內部的各種狀態轉換
 
 class_name BattleStateMachine
@@ -679,4 +679,3 @@ class DefeatState extends BaseState:
 	
 	func can_transition_to(next_state_id: String) -> bool:
 		return false  # 失敗狀態是終結狀態
-
