@@ -86,6 +86,12 @@ func _on_battle_started(_level_data: Dictionary):
 	_notify_trigger("on_battle_start")
 
 
+func tick_cooldowns():
+	for skill in skills:
+		skill.tick_cooldown()
+
+
 func _on_turn_started(turn_type: String):
 	if turn_type == "player":
+		tick_cooldowns()
 		_notify_trigger("on_turn_start")

@@ -15,8 +15,7 @@ var max_level: int = 1
 var max_uses: int = -1        # -1 表示無限制
 var uses_remaining: int = -1
 
-var is_on_cooldown: bool = false
-var cooldown_remaining: float = 0.0
+var cooldown_turns_remaining: int = 0
 
 
 func _init(skill_data: Dictionary, skill_owner: Node = null):
@@ -96,7 +95,7 @@ func check_conditions(context: Dictionary = {}) -> bool:
 func _check_single_condition(c: Dictionary, context: Dictionary) -> bool:
 	match c.get("type"):
 		"not_on_cooldown":
-			return not is_on_cooldown
+			return cooldown_turns_remaining <= 0
 		"has_mana":
 			if not c.has("value"):
 				push_warning("[BaseSkill] %s has_mana 缺少 value" % skill_id)
@@ -224,7 +223,7 @@ func _execute_single_effect(e: Dictionary, context: Dictionary) -> Dictionary:
 			if owner and owner.has_method("restore_mana"):
 				owner.restore_mana(e.get("value", 0))
 		"start_cooldown":
-			_start_cooldown(e.get("duration", 0.0))
+			cooldown_turns_remaining = int(e.get("duration", 0))
 		"consume_use":
 			if uses_remaining > 0:
 				uses_remaining -= 1
@@ -278,25 +277,9 @@ func activate(context: Dictionary = {}) -> bool:
 	return true
 
 
-func _start_cooldown(duration: float):
-	if duration <= 0:
-		return
-	is_on_cooldown = true
-	cooldown_remaining = duration
-	var timer = Timer.new()
-	timer.wait_time = duration
-	timer.one_shot = true
-	timer.timeout.connect(_on_cooldown_finished)
-	if owner and owner.is_inside_tree():
-		owner.add_child(timer)
-		timer.start()
-	else:
-		_on_cooldown_finished()
-
-
-func _on_cooldown_finished():
-	is_on_cooldown = false
-	cooldown_remaining = 0.0
+func tick_cooldown():
+	if cooldown_turns_remaining > 0:
+		cooldown_turns_remaining -= 1
 
 
 func level_up() -> bool:
@@ -315,6 +298,5 @@ func get_skill_info() -> Dictionary:
 		"max_level": max_level,
 		"uses_remaining": uses_remaining,
 		"max_uses": max_uses,
-		"is_on_cooldown": is_on_cooldown,
-		"cooldown_remaining": cooldown_remaining
+		"cooldown_turns_remaining": cooldown_turns_remaining
 	}
