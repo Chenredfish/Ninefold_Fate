@@ -122,7 +122,9 @@ func _auto_select_first_enemy():
 			_on_enemy_selected(enemy)
 			return
 	selected_target = null
-	print("[BattleStateMachine] 目前無存活敵人，selected_target = null")
+	EventBus.battle_target_changed.emit(null)
+	EventBus.ui_lock_end_turn_button.emit()
+	print("[BattleStateMachine] 目前無存活敵人，selected_target = null，鎖定回合結束按鈕")
 
 func _on_enemy_selected(enemy: Node):
 	selected_target = enemy
