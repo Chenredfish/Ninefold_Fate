@@ -81,6 +81,7 @@ func load_from_data(hero_data: Dictionary):
 
 	# 載入技能
 	_load_skills(hero_data.get("skills", []))
+	_setup_mana_gain()
 
 # === Mana 操作 ===
 func consume_mana(amount: int) -> bool:
@@ -127,6 +128,44 @@ func _load_skills(skills_data: Array):
 	else:
 		push_warning("[Hero] _load_skills 找不到 SkillComponent，技能未載入")
 
+
+func _setup_mana_gain():
+	var needs_damage_dealt := false
+	for rule in _mana_gain_rules:
+		match rule.get("trigger", ""):
+			"on_turn_start":
+				if not EventBus.turn_started.is_connected(_on_mana_turn_started):
+					EventBus.turn_started.connect(_on_mana_turn_started)
+			"on_enemy_defeated":
+				if not EventBus.enemy_defeated.is_connected(_on_mana_enemy_defeated):
+					EventBus.enemy_defeated.connect(_on_mana_enemy_defeated)
+			"on_damage_dealt", "on_damage_taken":
+				needs_damage_dealt = true
+	if needs_damage_dealt:
+		if not EventBus.damage_dealt.is_connected(_on_mana_damage_dealt):
+			EventBus.damage_dealt.connect(_on_mana_damage_dealt)
+
+func _on_mana_turn_started(turn_type: String):
+	if turn_type != "player":
+		return
+	for rule in _mana_gain_rules:
+		if rule.get("trigger") == "on_turn_start":
+			restore_mana(rule.get("amount", 0))
+
+func _on_mana_enemy_defeated(_enemy_id: String, _rewards: Dictionary):
+	for rule in _mana_gain_rules:
+		if rule.get("trigger") == "on_enemy_defeated":
+			restore_mana(rule.get("amount", 0))
+
+func _on_mana_damage_dealt(source: Node, target: Node, _amount: int, _type: String):
+	for rule in _mana_gain_rules:
+		match rule.get("trigger"):
+			"on_damage_dealt":
+				if source == self:
+					restore_mana(rule.get("amount", 0))
+			"on_damage_taken":
+				if target == self:
+					restore_mana(rule.get("amount", 0))
 
 func _on_skill_state_changed(can_cast: bool):
 	active_skill_state_changed.emit(can_cast)
