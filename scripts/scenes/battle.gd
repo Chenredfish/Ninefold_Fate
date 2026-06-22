@@ -6,6 +6,9 @@ var tile_container: ScrollContainer
 var hand_hbox: HBoxContainer
 var drop_board: BattleBoard
 
+var mana_bar_fill: ColorRect
+var mana_bar_max_width: float = 360.0
+
 
 func _ready():
 	print("[BattleScene] 載入戰鬥場景，主節點：", self, " parent：", get_parent())
@@ -79,6 +82,37 @@ func create_control_buttons():
 	pause_button.offset_bottom = 120
 	add_child(pause_button)
 
+	_create_mana_bar()
+
+func _create_mana_bar():
+	# 底色背景（深藍）
+	var bg = ColorRect.new()
+	bg.anchor_left = 1.0
+	bg.anchor_top = 1.0
+	bg.anchor_right = 1.0
+	bg.anchor_bottom = 1.0
+	bg.offset_left = -400.0
+	bg.offset_right = -40.0
+	bg.offset_top = -120.0
+	bg.offset_bottom = -108.0
+	bg.color = Color(0.05, 0.1, 0.3, 1.0)
+	bg.name = "ManaBarBg"
+	add_child(bg)
+
+	# 填充條（亮藍）
+	mana_bar_fill = ColorRect.new()
+	mana_bar_fill.position = Vector2.ZERO
+	mana_bar_fill.size = Vector2(mana_bar_max_width, 12.0)
+	mana_bar_fill.color = Color(0.2, 0.5, 1.0, 1.0)
+	mana_bar_fill.name = "ManaBarFill"
+	bg.add_child(mana_bar_fill)
+
+func update_mana_bar(current: int, maximum: int):
+	if not mana_bar_fill:
+		return
+	var ratio = float(current) / float(maximum) if maximum > 0 else 0.0
+	mana_bar_fill.size.x = mana_bar_max_width * ratio
+
 # 狀態機調用的UI設置函數
 func setup_battle_ui(level_data: Dictionary, enemies_scenes: Array = [], hero_scene: Node = null) -> void:
 	print("[BattleScene] 收到更新戰鬥UI的請求，關卡資料ID：", level_data.get("level_id", ""))
@@ -101,6 +135,11 @@ func setup_battle_ui(level_data: Dictionary, enemies_scenes: Array = [], hero_sc
 		add_child(hero_scene)
 		print("[BattleScene] 添加英雄場景到UI: ", hero_scene.name)
 
+	# 連接 mana 信號並初始化顯示
+	if hero_scene and hero_scene.has_signal("mana_changed"):
+		if not hero_scene.mana_changed.is_connected(update_mana_bar):
+			hero_scene.mana_changed.connect(update_mana_bar)
+		update_mana_bar(hero_scene.current_mana, hero_scene.max_mana)
 
 	EventBus.battle_ui_update_complete.emit()
 

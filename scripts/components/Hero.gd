@@ -16,6 +16,7 @@ var max_mana: int = 0
 signal hero_died(hero: Hero)
 signal hero_healed(hero: Hero, amount: int)
 signal skill_used(hero: Hero, skill_id: String)
+signal mana_changed(current: int, maximum: int)
 
 # === 向後兼容的屬性別名 ===
 var hero_name: String:
@@ -83,10 +84,12 @@ func consume_mana(amount: int) -> bool:
 	if current_mana < amount:
 		return false
 	current_mana -= amount
+	mana_changed.emit(current_mana, max_mana)
 	return true
 
 func restore_mana(amount: int):
 	current_mana = min(current_mana + amount, max_mana)
+	mana_changed.emit(current_mana, max_mana)
 
 # === 英雄特有功能 ===
 func use_skill(skill_id: String, target: Node = null, position: Vector2 = Vector2.ZERO) -> bool:
