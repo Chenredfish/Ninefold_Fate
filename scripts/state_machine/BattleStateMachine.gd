@@ -29,6 +29,8 @@ var enemies_scenes: Array[Node] = []    # 敵人場景實例 (Enemy節點)
 var selected_target: Node = null        # 玩家選定的攻擊目標
 var current_hands: Array[String] = []   # 當前手牌 (方塊ID字串陣列)
 var deck_data: Array[String] = []       # 牌組數據 (可用方塊ID字串陣列)
+var board_complete_count: int = 1       # 連續填滿棋盤的次數（跨回合累積）
+var combo_multiplier: float = 1.0      # 當前 combo 倍率
 
 func _init():
 	super._init()
@@ -97,6 +99,8 @@ func _battle_clean():
 	hero_scene = null
 	enemies_scenes.clear()
 	selected_target = null
+	board_complete_count = 1
+	combo_multiplier = 1.0
 
 
 # 下一回合
@@ -245,7 +249,16 @@ func _on_skill_effect_requested(effect: Dictionary):
 		_:
 			push_warning("[BattleStateMachine] 未知的技能效果類型：" + effect_type)
 
-func _on_turn_ended(total_damage: int = 0, cards_in_ui: Array = []):
+func _update_combo_state(board_was_full: bool):
+	if board_was_full:
+		board_complete_count += 1
+	else:
+		board_complete_count = 1
+	combo_multiplier = ResourceManager.get_combo_multiplier(board_complete_count)
+	print("[BattleStateMachine] 棋盤填滿：", board_was_full, "，連續次數：", board_complete_count, "，combo_multiplier：x", combo_multiplier)
+
+func _on_turn_ended(total_damage: int = 0, cards_in_ui: Array = [], board_was_full: bool = false):
+	_update_combo_state(board_was_full)
 	print("[BattleStateMachine] Turn ended, damage dealt: ", total_damage, ", cards remaining: ", cards_in_ui)
 	
 	# 處理已使用的卡片
@@ -259,6 +272,7 @@ func _on_turn_ended(total_damage: int = 0, cards_in_ui: Array = []):
 	
 	# 儲存UI傷害數據供計算狀態使用
 	battle_data["ui_damage"] = total_damage
+	battle_data["combo_multiplier"] = combo_multiplier
 	
 	transition_to("calculating", battle_data)
 
