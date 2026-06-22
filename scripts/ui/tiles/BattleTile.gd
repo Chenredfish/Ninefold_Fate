@@ -63,7 +63,11 @@ func setup_from_resource_manager(block_id_param: String):
 	bonus_value = block_data.get("bonus_value", 1)
 	rarity = block_data.get("rarity", "common")
 	icon_path = block_data.get("icon_path", "")
-	target_type = block_data.get("target_type", "single")
+	if block_data.has("target_type"):
+		target_type = block_data["target_type"]
+	else:
+		target_type = "single"
+		push_warning("[BattleTile] %s 缺少 target_type，預設為 single" % block_id)
 
 	# 更新完整 tile_data
 	tile_data = {
