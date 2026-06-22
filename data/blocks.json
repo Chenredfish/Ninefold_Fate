@@ -13,6 +13,7 @@
 		"rotation_allowed": false,
 		"flip_allowed": false,
 		"bonus_value": 2,
+		"target_type": "single",
 		"rarity": "common",
 		"icon_path": "res://art/blocks/B001_icon.png"
 	},
@@ -30,6 +31,7 @@
 		"rotation_allowed": false,
 		"flip_allowed": false,
 		"bonus_value": 2,
+		"target_type": "single",
 		"rarity": "common",
 		"icon_path": "res://art/blocks/B002_icon.png"
 	},
@@ -47,6 +49,7 @@
 		"rotation_allowed": false,
 		"flip_allowed": false,
 		"bonus_value": 2,
+		"target_type": "single",
 		"rarity": "common",
 		"icon_path": "res://art/blocks/B003_icon.png"
 	},
@@ -64,6 +67,7 @@
 		"rotation_allowed": false,
 		"flip_allowed": false,
 		"bonus_value": 2,
+		"target_type": "single",
 		"rarity": "common",
 		"icon_path": "res://art/blocks/B004_icon.png"
 	},
@@ -81,6 +85,7 @@
 		"rotation_allowed": false,
 		"flip_allowed": false,
 		"bonus_value": 2,
+		"target_type": "single",
 		"rarity": "common",
 		"icon_path": "res://art/blocks/B005_icon.png"
 	},
@@ -100,6 +105,7 @@
 		"rotation_allowed": true,
 		"flip_allowed": true,
 		"bonus_value": 6,
+		"target_type": "single",
 		"rarity": "uncommon",
 		"icon_path": "res://art/blocks/B101_icon.png"
 	},
@@ -117,6 +123,7 @@
 		"rotation_allowed": true,
 		"flip_allowed": false,
 		"bonus_value": 6,
+		"target_type": "single",
 		"rarity": "uncommon",
 		"icon_path": "res://art/blocks/B102_icon.png"
 	},
@@ -136,6 +143,7 @@
 		"rotation_allowed": false,
 		"flip_allowed": false,
 		"bonus_value": 10,
+		"target_type": "all",
 		"rarity": "rare",
 		"icon_path": "res://art/blocks/B201_icon.png"
 	},
@@ -154,6 +162,7 @@
 		"rotation_allowed": true,
 		"flip_allowed": false,
 		"bonus_value": 7,
+		"target_type": "single",
 		"rarity": "uncommon",
 		"icon_path": "res://art/blocks/B103_icon.png"
 	},
@@ -172,6 +181,7 @@
 		"rotation_allowed": false,
 		"flip_allowed": false,
 		"bonus_value": 8,
+		"target_type": "single",
 		"rarity": "uncommon",
 		"icon_path": "res://art/blocks/B104_icon.png"
 	}
