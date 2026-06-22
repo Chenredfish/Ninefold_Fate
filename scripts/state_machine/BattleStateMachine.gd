@@ -534,9 +534,49 @@ class CalculatingState extends BaseState:
 			state_machine.transition_to("enemy_turn")
 	
 	func _calculate_damage():
-		# 傷害計算將在 #6 重寫，目前為空殼
-		print("[BattleStateMachine] _calculate_damage: 待 #6 實作")
+		var tiles_data: Array = state_machine.battle_data.get("tiles_data", [])
+		var combo_multiplier: float = state_machine.battle_data.get("combo_multiplier", 1.0)
+		var hero = state_machine.hero_scene
+
+		if tiles_data.is_empty():
+			print("[BattleStateMachine] 本回合沒有放置方塊，跳過傷害計算")
+			EventBus.damage_calculated.emit({})
+			return
+
+		var base_attack: int = hero.get("base_attack") if hero else 0
+		if base_attack <= 0:
+			print("[BattleStateMachine] base_attack 為 0，跳過傷害計算")
+			EventBus.damage_calculated.emit({})
+			return
+
+		print("[BattleStateMachine] 傷害計算開始，base_attack:", base_attack, " combo_multiplier:x", combo_multiplier, " tiles:", tiles_data.size())
+
+		for tile in tiles_data:
+			var element: String = tile.get("element", "neutral")
+			var bonus_value: int = tile.get("bonus_value", 1)
+			var target_type: String = tile.get("target_type", "single")
+			var raw_damage: int = int(base_attack * bonus_value * combo_multiplier)
+
+			if target_type == "all":
+				var alive_enemies = state_machine.enemies_scenes.filter(func(e): return e.is_alive)
+				for enemy in alive_enemies:
+					_apply_damage_to_enemy(enemy, raw_damage, element, hero)
+			else:
+				var target = state_machine.selected_target
+				if target and target.is_alive:
+					_apply_damage_to_enemy(target, raw_damage, element, hero)
+				else:
+					print("[BattleStateMachine] 無有效目標，跳過此 tile (", element, " +", bonus_value, ")")
+
 		EventBus.damage_calculated.emit({})
+
+	func _apply_damage_to_enemy(enemy: Node, damage: int, element: String, source: Node):
+		EventBus.ui_damage_animation_requested.emit(enemy, damage, element)
+		var was_alive: bool = enemy.is_alive
+		enemy.take_damage(damage, element, source)
+		if was_alive and not enemy.is_alive:
+			print("[BattleStateMachine] Enemy defeated: ", enemy.name)
+			EventBus.enemy_defeated.emit(enemy.name, {})
 	
 	func can_transition_to(next_state_id: String) -> bool:
 		return next_state_id in ["enemy_turn", "player_turn", "victory", "defeat"]
@@ -637,5 +677,6 @@ class DefeatState extends BaseState:
 	
 	func can_transition_to(next_state_id: String) -> bool:
 		return false  # 失敗狀態是終結狀態
+
 
 
