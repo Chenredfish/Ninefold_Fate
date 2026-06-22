@@ -8,6 +8,8 @@ var drop_board: BattleBoard
 
 var mana_bar_fill: ColorRect
 var mana_bar_max_width: float = 360.0
+var skill_button: Button
+var _hero_scene: Node = null
 
 
 func _ready():
@@ -61,7 +63,7 @@ func create_control_buttons():
 	end_turn_button.connect("pressed", _on_end_turn_pressed)
 	bottom_right_container.add_child(end_turn_button)
 
-	var skill_button = Button.new()
+	skill_button = Button.new()
 	skill_button.text = "技能"
 	skill_button.custom_minimum_size = Vector2(240, 80) # 放大兩倍
 	skill_button.connect("pressed", _on_skill_pressed)
@@ -113,6 +115,18 @@ func update_mana_bar(current: int, maximum: int):
 	var ratio = float(current) / float(maximum) if maximum > 0 else 0.0
 	mana_bar_fill.size.x = mana_bar_max_width * ratio
 
+func update_skill_button_state():
+	if not skill_button:
+		return
+	var can_cast = false
+	if _hero_scene and _hero_scene.skill_component:
+		can_cast = _hero_scene.skill_component.can_cast_active_skill()
+	skill_button.disabled = not can_cast
+
+func _on_active_skill_state_changed(can_cast: bool):
+	if skill_button:
+		skill_button.disabled = not can_cast
+
 # 狀態機調用的UI設置函數
 func setup_battle_ui(level_data: Dictionary, enemies_scenes: Array = [], hero_scene: Node = null) -> void:
 	print("[BattleScene] 收到更新戰鬥UI的請求，關卡資料ID：", level_data.get("level_id", ""))
@@ -135,11 +149,15 @@ func setup_battle_ui(level_data: Dictionary, enemies_scenes: Array = [], hero_sc
 		add_child(hero_scene)
 		print("[BattleScene] 添加英雄場景到UI: ", hero_scene.name)
 
-	# 連接 mana 信號並初始化顯示
-	if hero_scene and hero_scene.has_signal("mana_changed"):
-		if not hero_scene.mana_changed.is_connected(update_mana_bar):
-			hero_scene.mana_changed.connect(update_mana_bar)
+	# 儲存 hero 引用，連接信號
+	if hero_scene:
+		_hero_scene = hero_scene
+		if hero_scene.has_signal("mana_changed") and not hero_scene.mana_changed.is_connected(func(c, m): update_mana_bar(c, m)):
+			hero_scene.mana_changed.connect(func(c, m): update_mana_bar(c, m))
+		if hero_scene.has_signal("active_skill_state_changed") and not hero_scene.active_skill_state_changed.is_connected(_on_active_skill_state_changed):
+			hero_scene.active_skill_state_changed.connect(_on_active_skill_state_changed)
 		update_mana_bar(hero_scene.current_mana, hero_scene.max_mana)
+		update_skill_button_state()
 
 	EventBus.battle_ui_update_complete.emit()
 

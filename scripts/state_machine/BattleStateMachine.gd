@@ -186,20 +186,11 @@ func _on_skill_cast_requested():
 	var context = {"target": target}
 	var skill_component = hero_scene.skill_component
 
-	# 找第一個 on_cast 技能施放
-	var casted = false
-	for skill in skill_component.skills:
-		if skill.trigger == "on_cast":
-			var success = skill.activate(context)
-			if not success:
-				print("[BattleStateMachine] 技能 %s 條件不滿足，無法施放" % skill.skill_id)
-			else:
-				print("[BattleStateMachine] 施放技能：%s" % skill.skill_id)
-			casted = true
-			break
-
-	if not casted:
-		print("[BattleStateMachine] 英雄沒有可施放的主動技能")
+	var success = skill_component.cast_active_skill(context)
+	if not success:
+		print("[BattleStateMachine] 技能條件不滿足或無主動技能，無法施放")
+	else:
+		print("[BattleStateMachine] 施放技能成功")
 
 
 func _on_skill_effect_requested(effect: Dictionary):

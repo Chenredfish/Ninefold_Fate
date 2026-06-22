@@ -17,6 +17,7 @@ signal hero_died(hero: Hero)
 signal hero_healed(hero: Hero, amount: int)
 signal skill_used(hero: Hero, skill_id: String)
 signal mana_changed(current: int, maximum: int)
+signal active_skill_state_changed(can_cast: bool)
 
 # === 向後兼容的屬性別名 ===
 var hero_name: String:
@@ -119,8 +120,14 @@ func _load_skills(skills_data: Array):
 	if sc:
 		skill_component = sc
 		sc.load_skills(skills_data)
+		if not sc.active_skill_state_changed.is_connected(_on_skill_state_changed):
+			sc.active_skill_state_changed.connect(_on_skill_state_changed)
 	else:
 		push_warning("[Hero] _load_skills 找不到 SkillComponent，技能未載入")
+
+
+func _on_skill_state_changed(can_cast: bool):
+	active_skill_state_changed.emit(can_cast)
 
 func _play_skill_animation(skill_id: String):
 	"""播放技能動畫"""

@@ -3,6 +3,9 @@ class_name SkillComponent
 extends Node
 
 var skills: Array = []
+var _last_can_cast: bool = false
+
+signal active_skill_state_changed(can_cast: bool)
 
 
 func _ready():
@@ -25,6 +28,32 @@ func load_skills(skills_data: Array):
 		var skill = BaseSkill.new(skill_data, get_parent())
 		skills.append(skill)
 		print("[SkillComponent] 載入技能：%s（trigger: %s）" % [skill_id, skill.trigger])
+	_connect_owner_signals()
+
+
+func _connect_owner_signals():
+	var owner = get_parent()
+	if not owner:
+		return
+	if owner.has_signal("mana_changed") and not owner.mana_changed.is_connected(_on_owner_mana_changed):
+		owner.mana_changed.connect(_on_owner_mana_changed)
+	if owner.has_signal("health_changed") and not owner.health_changed.is_connected(_on_owner_health_changed):
+		owner.health_changed.connect(_on_owner_health_changed)
+
+
+func _check_and_emit_state():
+	var can_cast = can_cast_active_skill()
+	if can_cast != _last_can_cast:
+		_last_can_cast = can_cast
+		active_skill_state_changed.emit(can_cast)
+
+
+func _on_owner_mana_changed(_current: int, _maximum: int):
+	_check_and_emit_state()
+
+
+func _on_owner_health_changed(_character: Node, _old_hp: int, _new_hp: int):
+	_check_and_emit_state()
 
 
 # 主動施放技能（by 技能按鈕）
@@ -36,7 +65,19 @@ func cast_skill(skill_id: String, context: Dictionary = {}) -> bool:
 	if skill.trigger != "on_cast":
 		push_warning("[SkillComponent] 技能 %s 不是主動技能（trigger: %s）" % [skill_id, skill.trigger])
 		return false
-	return skill.activate(context)
+	var success = skill.activate(context)
+	_check_and_emit_state()
+	return success
+
+
+# 施放第一個 on_cast 技能（供 BattleStateMachine 呼叫）
+func cast_active_skill(context: Dictionary = {}) -> bool:
+	for skill in skills:
+		if skill.trigger == "on_cast":
+			var success = skill.activate(context)
+			_check_and_emit_state()
+			return success
+	return false
 
 
 # 傷害計算時呼叫，讓被動技能有機會修改傷害
@@ -80,6 +121,13 @@ func can_cast_skill(skill_id: String) -> bool:
 		return false
 	return skill.check_conditions({})
 
+func can_cast_active_skill() -> bool:
+	for skill in skills:
+		if skill.trigger == "on_cast":
+			# has_target 是施放時才驗證，UI 只檢查 mana 和冷卻，用 dummy target 略過
+			return skill.check_conditions({"target": true})
+	return false
+
 
 # 戰鬥事件回調
 func _on_battle_started(_level_data: Dictionary):
@@ -94,4 +142,5 @@ func tick_cooldowns():
 func _on_turn_started(turn_type: String):
 	if turn_type == "player":
 		tick_cooldowns()
+		_check_and_emit_state()
 		_notify_trigger("on_turn_start")
