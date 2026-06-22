@@ -35,5 +35,6 @@
     "10": 1.9,
     "11": 2.0
   },
-  "combo_multiplier_formula": "11連之後每+1連擊，倍率+0.5"
+  "combo_multiplier_formula": "11連之後每+1連擊，倍率+0.5",
+  "tile_hit_interval": 0.3
 }

@@ -537,6 +537,7 @@ class CalculatingState extends BaseState:
 		var tiles_data: Array = state_machine.battle_data.get("tiles_data", [])
 		var combo_multiplier: float = state_machine.battle_data.get("combo_multiplier", 1.0)
 		var hero = state_machine.hero_scene
+		var interval: float = ResourceManager.get_balance_value("tile_hit_interval", 0.3)
 
 		if tiles_data.is_empty():
 			print("[BattleStateMachine] 本回合沒有放置方塊，跳過傷害計算")
@@ -567,6 +568,8 @@ class CalculatingState extends BaseState:
 					_apply_damage_to_enemy(target, raw_damage, element, hero)
 				else:
 					print("[BattleStateMachine] 無有效目標，跳過此 tile (", element, " +", bonus_value, ")")
+
+			await state_machine.get_tree().create_timer(interval).timeout
 
 		EventBus.damage_calculated.emit({})
 
@@ -677,6 +680,4 @@ class DefeatState extends BaseState:
 	
 	func can_transition_to(next_state_id: String) -> bool:
 		return false  # 失敗狀態是終結狀態
-
-
 
