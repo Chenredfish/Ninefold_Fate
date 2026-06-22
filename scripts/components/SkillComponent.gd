@@ -1,111 +1,91 @@
-# SkillComponent.gd - 英雄技能組件
+# SkillComponent.gd - 英雄技能組件，管理技能載入與事件路由
 class_name SkillComponent
 extends Node
 
 var skills: Array = []
-var passive_skills: Array = []
-var active_skills: Array = []
+
 
 func _ready():
-	skills = get_meta("skills", [])
-	_categorize_skills()
-	_setup_passive_skills()
-	
-	# 連接戰鬥事件
-	var eb = get_node_or_null("/root/EventBus")
-	if eb:
-		eb.battle_started.connect(_on_battle_started)
-		eb.turn_started.connect(_on_turn_started)
-		eb.turn_ended.connect(_on_turn_ended)
+	EventBus.battle_started.connect(_on_battle_started)
+	EventBus.turn_started.connect(_on_turn_started)
 
-func _categorize_skills():
-	passive_skills.clear()
-	active_skills.clear()
-	
-	for skill in skills:
-		if skill.skill_type == "passive":
-			passive_skills.append(skill)
-		else:
-			active_skills.append(skill)
 
-func _setup_passive_skills():
-	# 被動技能立即生效
-	for passive_skill in passive_skills:
-		print("[SkillComponent] 啟用被動技能: ", passive_skill.skill_name)
+# 從英雄 JSON 的 skills 陣列載入技能
+func load_skills(skills_data: Array):
+	skills.clear()
+	for skill_entry in skills_data:
+		var skill_id = skill_entry.get("id", "")
+		if skill_id == "":
+			push_warning("[SkillComponent] skill 缺少 id 欄位：%s" % str(skill_entry))
+			continue
+		var skill_data = SkillManager.get_skill_data(skill_id)
+		if skill_data.is_empty():
+			push_warning("[SkillComponent] 找不到技能資料：%s" % skill_id)
+			continue
+		var skill = BaseSkill.new(skill_data, get_parent())
+		skills.append(skill)
+		print("[SkillComponent] 載入技能：%s（trigger: %s）" % [skill_id, skill.trigger])
 
-# 主動技能使用
-func use_skill(skill_id: String, target: Node = null, position: Vector2 = Vector2.ZERO) -> bool:
-	var skill = get_skill_by_id(skill_id)
+
+# 主動施放技能（by 技能按鈕）
+func cast_skill(skill_id: String, context: Dictionary = {}) -> bool:
+	var skill = _get_skill_by_id(skill_id)
 	if not skill:
-		push_warning("技能不存在: " + skill_id)
+		push_warning("[SkillComponent] 找不到技能：%s" % skill_id)
 		return false
-	
-	return skill.activate(target, position)
+	if skill.trigger != "on_cast":
+		push_warning("[SkillComponent] 技能 %s 不是主動技能（trigger: %s）" % [skill_id, skill.trigger])
+		return false
+	return skill.activate(context)
 
-func get_skill_by_id(skill_id: String) -> BaseSkill:
+
+# 傷害計算時呼叫，讓被動技能有機會修改傷害
+func notify_damage_dealt(damage_info: Dictionary) -> Dictionary:
+	return _notify_trigger("on_damage_dealt", {"damage_info": damage_info}).get("damage_info", damage_info)
+
+
+func notify_damage_received(damage_info: Dictionary) -> Dictionary:
+	return _notify_trigger("on_damage_received", {"damage_info": damage_info}).get("damage_info", damage_info)
+
+
+# 通用觸發：找出所有符合 trigger 的技能，逐一檢查 conditions 後執行 effects
+func _notify_trigger(trigger: String, context: Dictionary = {}) -> Dictionary:
+	for skill in skills:
+		if skill.trigger != trigger:
+			continue
+		if not skill.check_conditions(context):
+			continue
+		context = skill.execute_effects(context)
+	return context
+
+
+func _get_skill_by_id(skill_id: String) -> BaseSkill:
 	for skill in skills:
 		if skill.skill_id == skill_id:
 			return skill
 	return null
 
-func get_skills() -> Array:
-	return skills
 
 func get_active_skills() -> Array:
-	return active_skills
+	return skills.filter(func(s): return s.trigger == "on_cast")
 
-func get_passive_skills() -> Array:
-	return passive_skills
 
-# 傷害修正 - 被動技能介入點
-func modify_outgoing_damage(damage_info: Dictionary) -> Dictionary:
-	var modified_info = damage_info.duplicate()
-	
-	for passive_skill in passive_skills:
-		modified_info = passive_skill.on_damage_dealt(modified_info)
-	
-	return modified_info
+func get_skills_info() -> Array:
+	return skills.map(func(s): return s.get_skill_info())
 
-func modify_incoming_damage(damage_info: Dictionary) -> Dictionary:
-	var modified_info = damage_info.duplicate()
-	
-	for passive_skill in passive_skills:
-		modified_info = passive_skill.on_damage_received(modified_info)
-	
-	return modified_info
+
+func can_cast_skill(skill_id: String) -> bool:
+	var skill = _get_skill_by_id(skill_id)
+	if not skill:
+		return false
+	return skill.check_conditions({})
+
 
 # 戰鬥事件回調
-func _on_battle_started(level_data: Dictionary):
-	for skill in skills:
-		skill.on_battle_start()
+func _on_battle_started(_level_data: Dictionary):
+	_notify_trigger("on_battle_start")
+
 
 func _on_turn_started(turn_type: String):
-	for skill in skills:
-		skill.on_turn_start()
-
-func _on_turn_ended():
-	for skill in skills:
-		skill.on_turn_end()
-
-# 技能升級
-func upgrade_skill(skill_id: String) -> bool:
-	var skill = get_skill_by_id(skill_id)
-	if skill:
-		return skill.level_up()
-	return false
-
-# 獲取技能資訊（供 UI 顯示）
-func get_skills_info() -> Array:
-	var info_array: Array = []
-	
-	for skill in skills:
-		info_array.append(skill.get_skill_info())
-	
-	return info_array
-
-# 檢查技能可用性
-func can_use_skill(skill_id: String) -> bool:
-	var skill = get_skill_by_id(skill_id)
-	if skill:
-		return skill.can_activate()
-	return false
+	if turn_type == "player":
+		_notify_trigger("on_turn_start")
