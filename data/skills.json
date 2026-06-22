@@ -1,81 +1,113 @@
 {
+  "_example": {
+    "_注意": "此條目僅供參考，程式讀取時會跳過底線開頭的鍵",
+
+    "id": "SXXX",
+    "name": {"zh": "技能名稱", "en": "Skill Name"},
+    "desc": {"zh": "技能說明", "en": "Skill description"},
+    "icon_path": "res://art/skills/SXXX_icon.png",
+    "max_level": 1,
+    "max_uses": 3,
+
+    "trigger": "on_cast | on_damage_dealt | on_turn_start | on_battle_start",
+
+    "conditions": [
+      {"type": "not_on_cooldown"},
+      {"type": "has_mana", "value": 30},
+      {"type": "has_target"},
+      {"type": "has_uses_remaining"},
+      {"type": "damage_element_is", "value": "fire | water | grass | light | dark"},
+      {"type": "damage_above", "value": 100}
+    ],
+
+    "effects": [
+      {"type": "damage", "amount": 150, "element": "fire | water | grass | light | dark"},
+      {"type": "damage_all_enemies", "amount": 80, "element": "fire"},
+      {"type": "damage_percent", "percent": 0.2},
+      {"type": "heal", "amount": 200},
+      {"type": "heal_percent", "percent": 0.3},
+      {"type": "apply_status", "target": "hero | enemy", "effect_id": "EXXX"},
+      {"type": "add_tile_to_hand", "tile_id": "TXXX"},
+      {"type": "add_tile_to_deck", "tile_id": "TXXX"},
+      {"type": "affect_tile", "target": "TXXX", "effect_id": "EXXX"},
+      {"type": "affect_board", "effect_id": "EXXX"},
+      {"type": "consume_mana", "value": 30},
+      {"type": "restore_mana", "value": 20},
+      {"type": "start_cooldown", "duration": 2},
+      {"type": "consume_use"},
+      {"type": "gain_extra_turn"},
+      {"type": "multiply_damage", "value": 1.1},
+      {"type": "multiply_healing", "value": 1.2},
+      {"type": "reduce_damage_taken", "percent": 0.1}
+    ],
+
+    "level_scaling": {
+      "effects[0].amount": [150, 165, 180],
+      "effects[0].value": [1.1, 1.15, 1.2]
+    }
+  },
+
   "S001": {
     "id": "S001",
-    "name": {
-      "zh": "火焰精通",
-      "en": "Fire Mastery"
-    },
-    "type": "passive",
-    "category": "damage_boost",
-    "desc": {
-      "zh": "火屬性傷害+10%",
-      "en": "+10% fire damage"
-    },
-    "parameters": {
-      "element": "fire",
-      "damage_multiplier": 1.1,
-      "trigger_condition": "on_fire_damage"
-    },
-    "script_class": "FireMasterySkill",
+    "name": {"zh": "火焰精通", "en": "Fire Mastery"},
+    "desc": {"zh": "火屬性傷害+10%", "en": "+10% fire damage"},
     "icon_path": "res://art/skills/S001_icon.png",
-    "unlock_level": 1,
     "max_level": 5,
+
+    "trigger": "on_damage_dealt",
+    "conditions": [
+      {"type": "damage_element_is", "value": "fire"}
+    ],
+    "effects": [
+      {"type": "multiply_damage", "value": 1.1}
+    ],
     "level_scaling": {
-      "damage_multiplier": [1.1, 1.15, 1.2, 1.25, 1.3]
+      "effects[0].value": [1.1, 1.15, 1.2, 1.25, 1.3]
     }
   },
+
   "S002": {
     "id": "S002",
-    "name": {
-      "zh": "火球術",
-      "en": "Fireball"
-    },
-    "type": "active",
-    "category": "spell",
-    "desc": {
-      "zh": "發射火球攻擊敵人",
-      "en": "Launch fireball at enemy"
-    },
-    "parameters": {
-      "element": "fire",
-      "base_damage": 150,
-      "range": 3,
-      "cooldown": 2,
-      "mana_cost": 30
-    },
-    "script_class": "FireballSkill",
+    "name": {"zh": "火球術", "en": "Fireball"},
+    "desc": {"zh": "消耗30魔力，對敵人造成150火焰傷害", "en": "Consume 30 mana to deal 150 fire damage"},
     "icon_path": "res://art/skills/S002_icon.png",
-    "unlock_level": 5,
     "max_level": 10,
+
+    "trigger": "on_cast",
+    "conditions": [
+      {"type": "not_on_cooldown"},
+      {"type": "has_mana", "value": 30},
+      {"type": "has_target"}
+    ],
+    "effects": [
+      {"type": "damage", "amount": 150, "element": "fire"},
+      {"type": "consume_mana", "value": 30},
+      {"type": "start_cooldown", "duration": 2}
+    ],
     "level_scaling": {
-      "base_damage": [150, 165, 180, 195, 210, 225, 240, 255, 270, 300]
+      "effects[0].amount": [150, 165, 180, 195, 210, 225, 240, 255, 270, 300]
     }
   },
+
   "S003": {
     "id": "S003",
-    "name": {
-      "zh": "治療術",
-      "en": "Heal"
-    },
-    "type": "active",
-    "category": "support",
-    "desc": {
-      "zh": "恢復目標生命值",
-      "en": "Restore target's HP"
-    },
-    "parameters": {
-      "element": "light",
-      "heal_amount": 200,
-      "range": 2,
-      "cooldown": 3,
-      "mana_cost": 25
-    },
-    "script_class": "HealSkill",
+    "name": {"zh": "治療術", "en": "Heal"},
+    "desc": {"zh": "消耗25魔力，恢復200點生命值", "en": "Consume 25 mana to restore 200 HP"},
     "icon_path": "res://art/skills/S003_icon.png",
-    "unlock_level": 3,
     "max_level": 8,
+
+    "trigger": "on_cast",
+    "conditions": [
+      {"type": "not_on_cooldown"},
+      {"type": "has_mana", "value": 25}
+    ],
+    "effects": [
+      {"type": "heal", "amount": 200},
+      {"type": "consume_mana", "value": 25},
+      {"type": "start_cooldown", "duration": 3}
+    ],
     "level_scaling": {
-      "heal_amount": [200, 220, 240, 260, 280, 300, 320, 350]
+      "effects[0].amount": [200, 220, 240, 260, 280, 300, 320, 350]
     }
   }
 }
