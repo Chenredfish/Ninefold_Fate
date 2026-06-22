@@ -72,6 +72,13 @@
       },
       {
         "enemy_id": "E001",
+        "wave": 1,
+        "hp_override": null,
+        "atk_override": null,
+        "cd_override": null
+      },
+      {
+        "enemy_id": "E001",
         "wave": 2,
         "hp_override": null,
         "atk_override": null,

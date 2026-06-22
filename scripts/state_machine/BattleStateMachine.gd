@@ -1,4 +1,4 @@
-# BattleStateMachine.gd
+﻿# BattleStateMachine.gd
 # 戰鬥狀態機，管理戰鬥內部的各種狀態轉換
 
 class_name BattleStateMachine
@@ -26,6 +26,7 @@ var enemies_remaining: int = 0
 var current_wave: int = 1
 var hero_scene: Node = null        # 英雄場景實例 (Hero節點)
 var enemies_scenes: Array[Node] = []    # 敵人場景實例 (Enemy節點)
+var selected_target: Node = null        # 玩家選定的攻擊目標
 var current_hands: Array[String] = []   # 當前手牌 (方塊ID字串陣列)
 var deck_data: Array[String] = []       # 牌組數據 (可用方塊ID字串陣列)
 
@@ -95,6 +96,7 @@ func _battle_clean():
 	deck_data.clear()
 	hero_scene = null
 	enemies_scenes.clear()
+	selected_target = null
 
 
 # 下一回合
@@ -108,6 +110,23 @@ func next_turn():
 		return
 	
 	transition_to("player_turn", {"turn_number": turn_number})
+
+func _connect_enemy_select_signals():
+	for enemy in enemies_scenes:
+		if enemy.has_signal("enemy_selected") and not enemy.enemy_selected.is_connected(_on_enemy_selected):
+			enemy.enemy_selected.connect(_on_enemy_selected)
+
+func _auto_select_first_enemy():
+	for enemy in enemies_scenes:
+		if enemy.is_alive:
+			_on_enemy_selected(enemy)
+			return
+	selected_target = null
+	print("[BattleStateMachine] 目前無存活敵人，selected_target = null")
+
+func _on_enemy_selected(enemy: Node):
+	selected_target = enemy
+	print("[BattleStateMachine] 選取目標：", enemy.character_name, "（", enemy.character_id, "）")
 
 # 檢查戰鬥的三個結果，勝利，失敗，載入下一波
 func check_battle_end():
@@ -156,6 +175,8 @@ func load_next_enemy_wave():
 	var level_id = battle_data.get("level_id", "")
 	var enemies_data = ResourceManager.get_level_data(level_id).get("enemies", [])
 	enemies_scenes = create_enemies_from_data(enemies_data, current_wave)
+	_connect_enemy_select_signals()
+	_auto_select_first_enemy()
 	enemies_remaining = enemies_scenes.size()
 
 	print("[BattleStateMachine] 載入第 %d 波，共 %d 個敵人" % [current_wave, enemies_remaining])
@@ -392,7 +413,9 @@ class PreparingState extends BaseState:
 		# 先創建敵人場景實例
 		var enemies_data = level_data.get("enemies", [])
 		state_machine.enemies_scenes = state_machine.create_enemies_from_data(enemies_data)
-		
+		state_machine._connect_enemy_select_signals()
+		state_machine._auto_select_first_enemy()
+
 		# enemies_remaining = 當前波次場上的敵人數，_on_enemy_defeated 每次扣 1
 		# 歸零時代表這一波全滅，由 current_wave 決定是否還有下一波
 		state_machine.enemies_remaining = state_machine.enemies_scenes.size()
