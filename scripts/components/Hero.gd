@@ -5,6 +5,10 @@ extends BaseCharacter
 # === 英雄特有屬性 ===
 @export var base_attack: int = 100
 
+# === Mana 系統 ===
+var current_mana: int = 0
+var max_mana: int = 0
+
 # === 技能系統 ===
 @onready var skill_component: Node = null
 
@@ -68,9 +72,21 @@ func load_from_data(hero_data: Dictionary):
 	base_attack = hero_data.get("base_attack", 100)
 	max_hp = hero_data.get("hp", 1000)
 	current_hp = max_hp
+	max_mana = hero_data.get("mana", 0)
+	current_mana = max_mana
 	
 	# 載入技能
 	_load_skills(hero_data.get("skills", []))
+
+# === Mana 操作 ===
+func consume_mana(amount: int) -> bool:
+	if current_mana < amount:
+		return false
+	current_mana -= amount
+	return true
+
+func restore_mana(amount: int):
+	current_mana = min(current_mana + amount, max_mana)
 
 # === 英雄特有功能 ===
 func use_skill(skill_id: String, target: Node = null, position: Vector2 = Vector2.ZERO) -> bool:

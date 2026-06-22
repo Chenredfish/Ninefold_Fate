@@ -8,6 +8,7 @@
     "element": "fire",
     "base_attack": 100,
     "hp": 1000,
+    "mana": 100,
     "level": 1,
     "exp": 0,
     "growth_curve": "linear",

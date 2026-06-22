@@ -101,7 +101,7 @@ func _check_single_condition(c: Dictionary, context: Dictionary) -> bool:
 			if not c.has("value"):
 				push_warning("[BaseSkill] %s has_mana 缺少 value" % skill_id)
 				return false
-			if not owner or not owner.get("current_mana") != null:
+			if not owner or owner.get("current_mana") == null:
 				return true  # owner 沒有 mana 系統，略過
 			return owner.current_mana >= c.get("value", 0)
 		"has_target":
