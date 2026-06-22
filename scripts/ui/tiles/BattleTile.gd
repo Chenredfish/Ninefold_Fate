@@ -67,7 +67,7 @@ func setup_from_resource_manager(block_id_param: String):
 		target_type = block_data["target_type"]
 	else:
 		target_type = "single"
-		push_warning("[BattleTile] %s 缺少 target_type，預設為 single" % block_id)
+		print("[BattleTile] %s 缺少 target_type，預設為 single" % block_id)
 
 	# 更新完整 tile_data
 	tile_data = {
