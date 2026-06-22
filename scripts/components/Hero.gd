@@ -8,6 +8,7 @@ extends BaseCharacter
 # === Mana 系統 ===
 var current_mana: int = 0
 var max_mana: int = 0
+var _mana_gain_rules: Array = []
 
 # === 技能系統 ===
 @onready var skill_component: Node = null
@@ -76,7 +77,8 @@ func load_from_data(hero_data: Dictionary):
 	current_hp = max_hp
 	max_mana = hero_data.get("mana", 0)
 	current_mana = max_mana
-	
+	_mana_gain_rules = hero_data.get("mana_gain", [])
+
 	# 載入技能
 	_load_skills(hero_data.get("skills", []))
 
