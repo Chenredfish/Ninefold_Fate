@@ -17,6 +17,9 @@ libraries = {
 "": SubResource("AnimationLibrary_1k9x2")
 }
 
+[node name="SkillComponent" type="Node" parent="."]
+script = ExtResource("2_wh3kj")
+
 [node name="UI" type="Control" parent="."]
 layout_mode = 3
 anchors_preset = 0
