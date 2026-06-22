@@ -56,6 +56,7 @@ func _connect_event_bus():
 	EventBus.block_placed.connect(_on_block_placed)
 	EventBus.damage_dealt.connect(_on_damage_dealt)
 	EventBus.skill_effect_requested.connect(_on_skill_effect_requested)
+	EventBus.skill_cast_requested.connect(_on_skill_cast_requested)
 
 # 開始戰鬥
 func start_battle(level_data: Dictionary):
@@ -169,6 +170,37 @@ func _on_battle_started(level_data: Dictionary):
 
 func _on_turn_started(turn_type: String):
 	print("[BattleStateMachine] Turn started: ", turn_type)
+
+func _on_skill_cast_requested():
+	if not hero_scene or not hero_scene.skill_component:
+		push_warning("[BattleStateMachine] 無法施放技能：hero 或 SkillComponent 不存在")
+		return
+
+	# 找第一個存活的敵人作為目標（之後有目標選擇 UI 再改）
+	var target: Node = null
+	for enemy in enemies_scenes:
+		if enemy.is_alive:
+			target = enemy
+			break
+
+	var context = {"target": target}
+	var skill_component = hero_scene.skill_component
+
+	# 找第一個 on_cast 技能施放
+	var casted = false
+	for skill in skill_component.skills:
+		if skill.trigger == "on_cast":
+			var success = skill.activate(context)
+			if not success:
+				print("[BattleStateMachine] 技能 %s 條件不滿足，無法施放" % skill.skill_id)
+			else:
+				print("[BattleStateMachine] 施放技能：%s" % skill.skill_id)
+			casted = true
+			break
+
+	if not casted:
+		print("[BattleStateMachine] 英雄沒有可施放的主動技能")
+
 
 func _on_skill_effect_requested(effect: Dictionary):
 	var effect_type = effect.get("type", "")

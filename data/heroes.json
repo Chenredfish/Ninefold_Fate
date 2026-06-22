@@ -14,12 +14,10 @@
     "growth_curve": "linear",
     "skills": [
       {
-        "id": "S001",
-        "type": "passive",
-        "desc": {
-          "zh": "火屬性傷害+10%",
-          "en": "+10% fire damage"
-        }
+        "id": "S001"
+      },
+      {
+        "id": "S002"
       }
     ],
     "passives": [],

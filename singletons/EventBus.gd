@@ -18,7 +18,8 @@ signal enemy_defeated(enemy_id: String, rewards: Dictionary)
 signal block_placed(block_instance: Node, position: Vector2)
 signal block_removed(block_id: String)
 
-# 技能效果事件（技能透過此訊號請求效果，由 BattleStateMachine 執行）
+# 技能事件
+signal skill_cast_requested()  # 玩家按下技能按鈕
 # effect 格式：{ "type": "damage"/"heal", "amount": int, "element": String, "source": Node, "target": Node }
 signal skill_effect_requested(effect: Dictionary)
 

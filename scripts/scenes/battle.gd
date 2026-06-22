@@ -182,8 +182,7 @@ func _on_end_turn_pressed():
 	EventBus.turn_ended.emit(total_damage, cards_in_ui)
 
 func _on_skill_pressed():
-	# 施放技能，需要看能量是否足夠，反正也是之後再說
-	pass
+	EventBus.skill_cast_requested.emit()
 
 func _on_tile_dropped(tile_data: Dictionary):
 	"""棋盤放置方塊事件 - 只負責UI反饋"""
