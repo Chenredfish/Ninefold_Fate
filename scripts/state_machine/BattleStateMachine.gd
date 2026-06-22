@@ -517,7 +517,7 @@ class CalculatingState extends BaseState:
 				print("[BattleStateMachine] 對敵人 ", enemy.name, " 造成傷害: ", ui_damage)
 				EventBus.ui_damage_animation_requested.emit(enemy, ui_damage, state_machine.hero_scene.get("element"))
 				var was_alive = enemy.is_alive if "is_alive" in enemy else true
-				enemy.take_damage(ui_damage)
+				enemy.take_damage(ui_damage, "", state_machine.hero_scene)
 				# 檢查敵人是否在這次攻擊後死亡
 				var is_alive_now = enemy.is_alive if "is_alive" in enemy else true
 				if was_alive and not is_alive_now:
