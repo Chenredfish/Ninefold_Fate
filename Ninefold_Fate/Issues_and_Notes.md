@@ -156,6 +156,10 @@
 `battle_old.gd` 保留著重構前的戰鬥場景，已與新版邏輯（UI 與遊戲狀態分離）不一致，應在確認新版穩定後刪除，避免混淆。
 *影響：scripts/scenes/battle_old.gd*
 
+**S41** `[⚠️ 建議]` **SkillManager 職責與 ResourceManager 重疊，可考慮合併**
+`SkillManager` 只負責 `skills.json` 的讀取與查詢，和 `ResourceManager` 管理其他 JSON（heroes、enemies、blocks 等）的做法完全相同。目前 `ResourceManager.get_skill_data()` 還需要轉呼叫 `SkillManager`，形成不必要的依賴。可將 `SkillManager` 的邏輯合併進 `ResourceManager`，減少一個 Autoload。
+*影響：singletons/SkillManager.gd、singletons/ResourceManager.gd*
+
 ---
 
 ## 📝 備注 — 中性觀察與設計說明
