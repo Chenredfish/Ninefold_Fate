@@ -2,11 +2,14 @@
 
 ## 概述
 
-本文檔說明九重運命遊戲中四個核心單例的所有可用函數、參數和功能。這四個單例分別是：
+本文檔說明九重運命遊戲中核心單例的所有可用函數、參數和功能。目前共有七個 AutoLoad 單例：
 - **EventBus** - 全局事件系統
-- **ResourceManager** - 資源管理和物件創建  
-- **SkillManager** - 技能數據管理 (簡化版)
+- **ResourceManager** - 資源管理和物件創建（唯讀遊戲資料）
+- **SkillManager** - 技能數據管理
 - **DebugManager** - 除錯和開發工具
+- **DragDropManager** - 拖放系統管理
+- **StateManager** - 場景狀態機管理
+- **SaveManager** - 玩家存檔讀寫（可寫入的持久資料）
 
 ### 🚀 **最新更新 (2025.10.10)**
 - ✅ 新增 **SkillManager** 簡化版技能系統
@@ -724,6 +727,91 @@ EventBus.emit_object_event("defeated", "enemy", enemy_instance, {"rewards": rewa
 
 ---
 
+## 💾 SaveManager (存檔管理)
+
+**文件位置:** `singletons/SaveManager.gd`  
+**用途:** 管理玩家的持久資料（進度、英雄狀態、資源、設定），讀寫 `user://save_data.json`
+
+> **與 ResourceManager 的區別：**  
+> ResourceManager 管理 `res://data/` 的靜態遊戲設計資料（唯讀）；SaveManager 管理 `user://` 的動態玩家資料（可讀寫）。
+
+### 存檔結構
+
+```json
+{
+  "version": 1,
+  "progress": {
+    "levels_unlocked": ["level_001"],
+    "levels_completed": {}
+  },
+  "hero": { "id": "H001", "level": 1, "exp": 0, "skills_unlocked": [] },
+  "resources": { "gold": 0 },
+  "deck": { "current_blocks": [] },
+  "settings": { "bgm_volume": 1.0, "sfx_volume": 1.0, "language": "zh" }
+}
+```
+
+### 主要函數
+
+#### load_save()
+```gdscript
+func load_save()
+```
+從 `user://save_data.json` 讀取存檔。若檔案不存在（首次啟動），自動建立預設存檔並寫入硬碟。由 `_ready()` 自動呼叫，通常不需要手動呼叫。
+
+#### save()
+```gdscript
+func save()
+```
+將目前的 `data` 寫入硬碟。**`set_value()` 只改記憶體，需要手動呼叫 `save()` 才會持久化。**  
+建議在關卡通關、設定變更、離開戰鬥場景時呼叫。
+
+#### get_value()
+```gdscript
+func get_value(path: String, default = null)
+```
+用點號路徑讀取存檔資料。路徑不存在時回傳 `default`。
+
+```gdscript
+var level = int(SaveManager.get_value("hero.level", 1))
+var gold  = int(SaveManager.get_value("resources.gold", 0))
+var vol   = SaveManager.get_value("settings.bgm_volume", 1.0)
+var unlocked = SaveManager.get_value("progress.levels_unlocked", [])
+```
+
+#### set_value()
+```gdscript
+func set_value(path: String, value)
+```
+用點號路徑寫入存檔資料（只改記憶體）。
+
+```gdscript
+SaveManager.set_value("hero.level", 2)
+SaveManager.set_value("resources.gold", 150)
+SaveManager.set_value("settings.bgm_volume", 0.8)
+SaveManager.save()   # 記得寫入硬碟
+```
+
+#### debug_print()
+```gdscript
+func debug_print()
+```
+印出完整存檔內容，除錯用。
+
+### 除錯快捷鍵
+
+| 按鍵 | 功能 |
+|------|------|
+| `F8` | 重置存檔為預設值（僅 debug build 生效） |
+
+### 注意事項
+
+- `get_value()` 回傳的數值型別為 `float`（JSON 限制），做整數運算時需要 `int()`
+- 存檔路徑：`C:/Users/[使用者]/AppData/Roaming/Godot/app_userdata/Ninefold_Fate/save_data.json`
+- `"version"` 欄位保留給未來存檔格式升級使用
+
+---
+
 ## 💡 最佳實踐
 
 ### 🏗️ 架構原則
@@ -770,7 +858,7 @@ func quick_test():
 
 ---
 
-**文檔版本:** 2.0 (簡化架構版)  
-**最後更新:** 2025年10月10日  
+**文檔版本:** 3.0  
+**最後更新:** 2026年06月23日  
 **適用版本:** Godot 4.5 / GDScript  
 **架構狀態:** ✅ 穩定 - 無編譯錯誤 - 完整測試覆蓋
