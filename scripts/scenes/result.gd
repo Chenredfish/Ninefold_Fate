@@ -167,7 +167,7 @@ func _create_confirm_grid() -> void:
 			var drop_zone = DropZone.new()
 			drop_zone.position = Vector2(j * 200, i * 200)
 			drop_zone.size = Vector2(200, 200)
-			drop_zone.set_accepted_types(["back_level", "main_menu", "confirm_level", "level_select"])
+			drop_zone.set_accepted_types(["back_level", "main_menu", "confirm_level", "level_select", "retry", "next_level"])
 			unified_confirm_grid.add_child(drop_zone)
 			drop_zone.modulate = Color(1.2, 1.2, 1.0, 1.0)
 			drop_zone.tile_dropped.connect(_on_tile_dropped)
@@ -199,6 +199,12 @@ func _create_tile_area() -> void:
 	var level_select_tile = NavigationTile.create_level_select_tile("res://scripts/scenes/level_selection.tscn")
 	level_select_tile.size = Vector2(200, 200)
 	control_container.add_child(level_select_tile)
+
+	var level_id: String = result_data.get("level_id", "")
+	if not level_id.is_empty():
+		var retry_tile = NavigationTile.create_retry_tile(level_id)
+		retry_tile.size = Vector2(200, 200)
+		control_container.add_child(retry_tile)
 
 func _on_tile_dropped(tile_data: Dictionary) -> void:
 	print("[ResultScene] tile 投放：", tile_data)

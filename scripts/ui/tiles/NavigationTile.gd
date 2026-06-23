@@ -44,6 +44,10 @@ func setup_navigation_style():
 			style_box.bg_color = Color(0.267, 0.8, 1.0, 0.9)    # 藍色 - 構築
 		"settings":
 			style_box.bg_color = Color(0.6, 0.6, 0.6, 0.9)      # 灰色 - 設定
+		"retry":
+			style_box.bg_color = Color(0.2, 0.8, 0.4, 0.9)      # 綠色 - 重來
+		"next_level":
+			style_box.bg_color = Color(0.267, 0.6, 1.0, 0.9)    # 藍色 - 下一關
 		_:
 			style_box.bg_color = Color(0.4, 0.4, 0.5, 0.9)      # 預設灰色
 	
@@ -130,6 +134,10 @@ func get_function_display_name() -> String:
 			return "設定"
 		"level_select":
 			return "關卡選擇"
+		"retry":
+			return "重來一次"
+		"next_level":
+			return "下一關"
 		_:
 			return function_name.capitalize()
 
@@ -146,6 +154,10 @@ func get_function_description() -> String:
 			return "遊戲設定"
 		"level_select":
 			return "選擇關卡挑戰"
+		"retry":
+			return "再挑戰一次"
+		"next_level":
+			return "挑戰下一關"
 		_:
 			return ""
 
@@ -294,6 +306,12 @@ func _get_scene_type_from_function(func_name: String) -> int:
 			return GameSceneStateMachine.SceneType.SETTINGS
 		"main_menu":
 			return GameSceneStateMachine.SceneType.MAIN_MENU
+		"retry", "next_level":
+			if navigation_data.has("level_id"):
+				return GameSceneStateMachine.SceneType.BATTLE
+			else:
+				print("[NavigationTile] 錯誤：缺少 level_id 導航資料")
+				return -1
 		_:
 			return -1
 
@@ -310,6 +328,8 @@ func get_state_name_from_function(func_name: String) -> String:
 			return "deck_build"
 		"settings":
 			return "settings"
+		"retry", "next_level":
+			return "battle"
 		_:
 			return "main_menu"
 
@@ -355,6 +375,16 @@ static func create_back_tile(chapter_tree: Dictionary) -> NavigationTile:
 static func create_main_menu_tile(scene_path: String = "") -> NavigationTile:
 	var tile = NavigationTile.new()
 	tile.set_navigation_data(scene_path, "main_menu")
+	return tile
+
+static func create_retry_tile(level_id: String) -> NavigationTile:
+	var tile = NavigationTile.new()
+	tile.set_navigation_data("res://scripts/scenes/battle.tscn", "retry", {"level_id": level_id})
+	return tile
+
+static func create_next_level_tile(level_id: String) -> NavigationTile:
+	var tile = NavigationTile.new()
+	tile.set_navigation_data("res://scripts/scenes/battle.tscn", "next_level", {"level_id": level_id})
 	return tile
 
 #確認關卡會進入戰鬥狀態，然後戰鬥狀態會根據導航資料來決定要進入哪個關卡
