@@ -1,0 +1,114 @@
+extends Node
+
+const SAVE_PATH = "user://save_data.json"
+
+var data: Dictionary = {}
+var _is_loaded: bool = false
+
+func _ready():
+	print("[SaveManager] 初始化存檔系統...")
+	load_save()
+	print("[SaveManager] 存檔系統就緒，存檔路徑：", ProjectSettings.globalize_path(SAVE_PATH))
+
+# ── 讀檔 ──────────────────────────────────────────────────────────────────────
+
+func load_save():
+	if not FileAccess.file_exists(SAVE_PATH):
+		print("[SaveManager] 找不到存檔，建立預設存檔（首次啟動）")
+		data = _default_save()
+		save()
+		_is_loaded = true
+		return
+
+	var file = FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if not file:
+		push_error("[SaveManager] 無法開啟存檔：" + SAVE_PATH)
+		data = _default_save()
+		_is_loaded = true
+		return
+
+	var json = JSON.new()
+	var err = json.parse(file.get_as_text())
+	file.close()
+
+	if err != OK:
+		push_error("[SaveManager] 存檔 JSON 格式損毀，使用預設值（行 " + str(json.get_error_line()) + "）")
+		data = _default_save()
+		_is_loaded = true
+		return
+
+	data = json.get_data()
+	_is_loaded = true
+	print("[SaveManager] 存檔載入成功")
+	print("  - 英雄等級：", get_value("hero.level", 1))
+	print("  - 已解鎖關卡：", get_value("progress.levels_unlocked", []))
+	print("  - 金幣：", get_value("resources.gold", 0))
+
+# ── 寫檔 ──────────────────────────────────────────────────────────────────────
+
+func save():
+	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if not file:
+		push_error("[SaveManager] 無法寫入存檔：" + SAVE_PATH)
+		return
+
+	file.store_string(JSON.stringify(data, "\t"))
+	file.close()
+	print("[SaveManager] 存檔已儲存")
+
+# ── 讀取 helper（支援 "." 路徑，例如 "hero.level"）────────────────────────────
+
+func get_value(path: String, default = null):
+	var keys = path.split(".")
+	var current = data
+	for key in keys:
+		if not current is Dictionary or not current.has(key):
+			return default
+		current = current[key]
+	return current
+
+# ── 寫入 helper（只改記憶體，需手動呼叫 save() 才寫入硬碟）──────────────────
+
+func set_value(path: String, value):
+	var keys = path.split(".")
+	var current = data
+	for i in range(keys.size() - 1):
+		if not current.has(keys[i]) or not current[keys[i]] is Dictionary:
+			current[keys[i]] = {}
+		current = current[keys[i]]
+	current[keys[-1]] = value
+
+# ── 預設存檔（新遊戲初始狀態）────────────────────────────────────────────────
+
+func _default_save() -> Dictionary:
+	return {
+		"version": 1,
+		"progress": {
+			"levels_unlocked": ["level_001"],
+			"levels_completed": {}
+		},
+		"hero": {
+			"id": "H001",
+			"level": 1,
+			"exp": 0,
+			"skills_unlocked": []
+		},
+		"resources": {
+			"gold": 0
+		},
+		"deck": {
+			"current_blocks": []
+		},
+		"settings": {
+			"bgm_volume": 1.0,
+			"sfx_volume": 1.0,
+			"language": "zh"
+		}
+	}
+
+# ── 除錯用：印出完整存檔內容 ──────────────────────────────────────────────────
+
+func debug_print():
+	print("[SaveManager] ===== 當前存檔內容 =====")
+	print(JSON.stringify(data, "\t"))
+	print("[SaveManager] =============================")

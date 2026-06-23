@@ -39,5 +39,5 @@
   "tile_hit_interval": 0.3,
   "hand_size": 4,
   "max_turns": 100,
-  "wave_transition_delay": 1.0
+  "wave_transition_delay": 0.3
 }

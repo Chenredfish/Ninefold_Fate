@@ -69,7 +69,7 @@
   "S002": {
     "id": "S002",
     "name": {"zh": "火球術", "en": "Fireball"},
-    "desc": {"zh": "消耗30魔力，對敵人造成150火焰傷害", "en": "Consume 30 mana to deal 150 fire damage"},
+    "desc": {"zh": "消耗70魔力，對敵人造成150火焰傷害", "en": "Consume 70 mana to deal 150 fire damage"},
     "icon_path": "res://art/skills/S002_icon.png",
     "max_level": 10,
 
@@ -81,7 +81,7 @@
     ],
     "effects": [
       {"type": "damage", "amount": 150, "element": "fire"},
-      {"type": "consume_mana", "value": 30},
+      {"type": "consume_mana", "value": 70},
       {"type": "start_cooldown", "duration": 2}
     ],
     "level_scaling": {
