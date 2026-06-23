@@ -17,7 +17,7 @@ enum BattleStateType {
 # 戰鬥相關數據
 var battle_data: Dictionary = {}
 var turn_number: int = 0
-var max_turns: int = 100  # 防止無限戰鬥
+var max_turns: int = ResourceManager.get_balance_value("max_turns", 100)
 
 # 戰鬥狀態
 var player_tiles_placed: int = 0
@@ -170,7 +170,7 @@ func _has_more_waves() -> bool:
 # 載入下一波敵人
 func load_next_enemy_wave():
 
-	await get_tree().create_timer(1.0).timeout
+	await get_tree().create_timer(ResourceManager.get_balance_value("wave_transition_delay", 1.0)).timeout
 
 	enemies_scenes = enemies_scenes.filter(func(enemy): return enemy.is_alive) #要先真的移除節點，才刪除陣列中的參考
 
@@ -338,8 +338,8 @@ func setup_initial_hand(deck: Dictionary):
 	var deck_size = deck_data.size()
 	current_hands.clear()
 	
-	# 隨機抽4張卡
-	while current_hands.size() < 4 and deck_size > 0:
+	var hand_size: int = ResourceManager.get_balance_value("hand_size", 4)
+	while current_hands.size() < hand_size and deck_size > 0:
 		var rand_index = randi() % deck_size
 		var random_block = deck_data[rand_index]
 		if not random_block in current_hands:
@@ -348,9 +348,9 @@ func setup_initial_hand(deck: Dictionary):
 	print("[BattleStateMachine] 初始手牌: ", current_hands)
 	EventBus.hand_updated.emit(current_hands)
 
-# 補充手牌到4張
 func refill_hand():
-	while current_hands.size() < 4:
+	var hand_size: int = ResourceManager.get_balance_value("hand_size", 4)
+	while current_hands.size() < hand_size:
 		var available_cards: Array[String] = []
 		for card_id in deck_data:
 			if card_id not in current_hands:

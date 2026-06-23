@@ -422,16 +422,14 @@ func get_battle_power() -> int:
 
 # 檢查屬性克制關係
 func check_element_advantage(target_element: String) -> float:
-	# 簡單的屬性克制關係
-	match [element, target_element]:
-		["fire", "grass"], ["water", "fire"], ["grass", "water"]:
-			return 1.5  # 優勢
-		["grass", "fire"], ["fire", "water"], ["water", "grass"]:
-			return 0.75  # 劣勢
-		["light", "dark"], ["dark", "light"]:
-			return 1.25  # 光暗互克
-		_:
-			return 1.0  # 無克制關係
+	var adv = ResourceManager.get_balance_value("advantage_multiplier", 1.1)
+	var dis = ResourceManager.get_balance_value("disadvantage_multiplier", 0.9)
+	var table = ResourceManager.get_balance_value("element_advantage_table", {})
+	if table.has(element) and target_element in table[element]:
+		return adv
+	if table.has(target_element) and element in table[target_element]:
+		return dis
+	return 1.0
 
 # === 多格圖塊輔助方法 ===
 

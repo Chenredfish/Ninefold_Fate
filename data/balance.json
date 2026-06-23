@@ -36,5 +36,8 @@
     "11": 2.0
   },
   "combo_multiplier_formula": "11連之後每+1連擊，倍率+0.5",
-  "tile_hit_interval": 0.3
+  "tile_hit_interval": 0.3,
+  "hand_size": 4,
+  "max_turns": 100,
+  "wave_transition_delay": 1.0
 }

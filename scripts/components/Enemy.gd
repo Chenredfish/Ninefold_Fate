@@ -99,7 +99,7 @@ func load_from_data(enemy_data: Dictionary):
 	base_attack = enemy_data.get("base_attack", 10)
 	max_hp = enemy_data.get("base_hp", 100)
 	current_hp = max_hp
-	max_countdown = enemy_data.get("max_countdown", 3)
+	max_countdown = enemy_data.get("countdown", 3)
 	current_countdown = max_countdown
 
 # === 敵人特有功能 ===

@@ -75,7 +75,7 @@ func load_from_data(hero_data: Dictionary):
 	base_attack = hero_data.get("base_attack", 100)
 	max_hp = hero_data.get("hp", 1000)
 	current_hp = max_hp
-	max_mana = hero_data.get("mana", 0)
+	max_mana = hero_data.get("mana", 100)
 	current_mana = max_mana
 	_mana_gain_rules = hero_data.get("mana_gain", [])
 
