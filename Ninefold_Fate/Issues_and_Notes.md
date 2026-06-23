@@ -4,7 +4,7 @@
 >
 > **已完成摘要**：✅ CRASH 5/5、BUG 22/22、建議 11/40（S01~S09、S11~S15、S17~S19、S21~S24、S26、S30、S33、S40）
 >
-> **未實裝功能進度**：U05、U07、U10、U13 已完成（4/20），其餘 16 項待處理
+> **未實裝功能進度**：U05、U07、U10、U13、U17 已完成（5/20），其餘 15 項待處理
 >
 > **戰鬥系統重構**：傷害計算 #1~#6 全部完成（2026-06-23）——逐 tile 計算、target_type 分流、combo_multiplier 跨回合追蹤、await 等待結算完畢
 
@@ -72,9 +72,9 @@
 `levels.json` 中 `board.blocked` 欄位可設定障礙格子，但 `BattleBoard` 中完全沒有實作此功能，障礙格子設定目前無效。
 *影響：scripts/ui/BattleBoard.gd*
 
-**U17** `[🚧 未實作]` **關卡解鎖條件（unlock_conditions）未讀取**
-`levels.json` 的 `unlock_conditions` 欄位已設計（如 level_002 需完成 level_001），但程式碼中沒有讀取此欄位並自動解鎖下一關的邏輯，關卡解鎖狀態完全靠 JSON 中的初始值。
-*影響：scripts/state_machine/BattleStateMachine.gd、singletons/ResourceManager.gd*
+**U17** `[✅ 完成]` **關卡解鎖條件（unlock_conditions）已實作（2026-06-23）**
+VictoryState 通關後寫入 SaveManager（completed/stars/clear_count/cleared_at），並掃描所有關卡的 unlock_conditions，條件滿足自動解鎖並 save()。level_selection.start_level() 加入 locked 檢查，拒絕時清空 confirm tile 防止殘留。
+*影響：scripts/state_machine/BattleStateMachine.gd、scripts/scenes/level_selection.gd*
 
 **U18** `[🚧 未實作]` **敵人進階欄位尚未設計**
 `enemies.json` 目前每個敵人缺少特殊技能（`skills`/`abilities`）、掉落物（`drops`）、對話（`dialogue`）等進階設計欄位，敵人多樣性極度不足（只有 2 個）。
@@ -241,7 +241,7 @@ F9 熱鍵使用 `event is InputEventKey and event.pressed and event.keycode == K
 | 優先 | ID | 說明 |
 |------|----|----|
 | 🟡 中 | U06 | level_selection 返回/主選單導航（`pass` 改接通） |
-| 🟡 中 | U17 | unlock_conditions 自動解鎖（讀 JSON 欄位即可） |
+| ✅ 完成 | U17 | unlock_conditions 自動解鎖（2026-06-23） |
 | 🟡 中 | U15 | 方塊旋轉/翻轉 UI 觸發（邏輯已備，補 UI 操作） |
 | 🟡 中 | U20 | 棋盤滿格自動送出（設定開關 + BattleBoard 訊號） |
 | 🟢 低 | S39 | 刪除 battle_old.gd（確認新版穩定後） |
