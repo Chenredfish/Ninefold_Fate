@@ -3,7 +3,7 @@ extends Node
 
 # 戰鬥流程事件
 signal battle_started(level_data: Dictionary)
-signal battle_ended(result: String, rewards: Array)
+signal battle_ended(result: String, level_id: String)
 signal turn_started(turn_type: String)  # "player" 或 "enemy"
 signal turn_ended(cards_in_ui: Array, board_was_full: bool, tiles_data: Array)
 signal setup_battle_ui(level_data: Dictionary, enemies_scenes: Array, hero_scene: Node)
@@ -86,7 +86,7 @@ func emit_battle_event(event_name: String, data: Dictionary = {}):
 		"started":
 			battle_started.emit(data)
 		"ended":
-			battle_ended.emit(data.get("result", ""), data.get("rewards", []))
+			battle_ended.emit(data.get("result", ""), data.get("level_id", ""))
 		_:
 			push_warning("Unknown battle event: " + event_name)
 

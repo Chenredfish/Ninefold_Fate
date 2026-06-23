@@ -235,8 +235,7 @@ func _on_battle_started(level_data: Dictionary):
 	if battle_sm:
 		battle_sm.start_battle(level_data)
 
-func _on_battle_ended(result: String, rewards: Array):
-	# 銷毀戰鬥狀態機
+func _on_battle_ended(result: String, level_id: String):
 	destroy_battle_state_machine()
 
 # 狀態機信號處理（帶名稱綁定）

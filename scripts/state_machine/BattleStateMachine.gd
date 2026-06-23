@@ -76,8 +76,8 @@ func start_battle(level_data: Dictionary):
 	transition_to("preparing", battle_data)
 
 # 結束戰鬥
-func end_battle(result: String, rewards: Array = []):
-	EventBus.battle_ended.emit(result, rewards)
+func end_battle(result: String, level_id: String = ""):
+	EventBus.battle_ended.emit(result, level_id)
 	
 	# 清理敵人場景
 	for enemy in enemies_scenes:
@@ -647,11 +647,8 @@ class VictoryState extends BaseState:
 			_check_unlock_conditions(level_id)
 			SaveManager.save()
 
-		# 計算獎勵
-		var rewards = _calculate_rewards()
-
 		# 結束戰鬥
-		state_machine.end_battle("victory", rewards)
+		state_machine.end_battle("victory", level_id)
 
 	func _save_level_completion(level_id: String) -> void:
 		var path = "progress.levels." + level_id
@@ -684,20 +681,6 @@ class VictoryState extends BaseState:
 				return false
 		return true
 	
-	func _calculate_rewards() -> Array:
-		# TODO: 根據表現計算獎勵
-		var rewards = []
-		
-		# 基礎獎勵
-		rewards.append({"type": "gold", "amount": 100})
-		rewards.append({"type": "exp", "amount": 50})
-		
-		# 根據回合數給予額外獎勵
-		if state_machine.turn_number <= 5:
-			rewards.append({"type": "perfect_bonus", "amount": 50})
-		
-		return rewards
-	
 	func can_transition_to(next_state_id: String) -> bool:
 		return false  # 勝利狀態是終結狀態
 
@@ -710,9 +693,10 @@ class DefeatState extends BaseState:
 		super.enter(previous_state, data)
 		
 		print("[BattleStateMachine] Defeat...")
-		
+
+		var level_id: String = state_machine.battle_data.get("level_id", "")
 		# 結束戰鬥
-		state_machine.end_battle("defeat", [])
+		state_machine.end_battle("defeat", level_id)
 	
 	func can_transition_to(next_state_id: String) -> bool:
 		return false  # 失敗狀態是終結狀態

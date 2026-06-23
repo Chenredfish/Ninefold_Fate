@@ -8,10 +8,29 @@ var result_control_tile_container: ScrollContainer
 
 var result_data: Dictionary = {}
 
+const VALID_RESOURCES: Array = ["gold", "gems", "shards"]
+
 func set_result_data(data: Dictionary) -> void:
 	print("[ResultScene] 收到結算資料：", data)
 	result_data = data
+	_apply_rewards()
 	_setup_ui()
+
+func _apply_rewards() -> void:
+	if result_data.get("battle_result") != "victory":
+		return
+	var level_id: String = result_data.get("level_id", "")
+	var level_data: Dictionary = ResourceManager.level_database.get(level_id, {})
+	var rewards: Array = level_data.get("rewards", [])
+	for reward in rewards:
+		var type: String = reward.get("type", "")
+		if type not in VALID_RESOURCES:
+			print("[ResultScene] 警告：不認識的獎勵類型 '%s'，略過" % type)
+			continue
+		var key: String = "resources." + type
+		var current: int = SaveManager.get_value(key, 0)
+		SaveManager.set_value(key, current + reward.get("amount", 0))
+	SaveManager.save()
 
 func _setup_ui() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -58,7 +77,8 @@ func _create_panel_content(is_victory: bool) -> void:
 	_create_stats_section(is_victory)
 
 func _create_stars(is_victory: bool) -> void:
-	var stars: int = 3 if is_victory else 0
+	var level_id: String = result_data.get("level_id", "")
+	var stars: int = SaveManager.get_value("progress.levels." + level_id + ".stars", 0) if is_victory and not level_id.is_empty() else 0
 	var star_text: String = ""
 	for i in range(3):
 		star_text += "★" if i < stars else "☆"
@@ -87,7 +107,9 @@ func _create_rewards_section() -> void:
 	div.color = Color(0.5, 0.5, 0.7, 0.5)
 	result_detail_panel.add_child(div)
 
-	var rewards: Array = result_data.get("rewards", [])
+	var level_id: String = result_data.get("level_id", "")
+	var level_data: Dictionary = ResourceManager.level_database.get(level_id, {})
+	var rewards: Array = level_data.get("rewards", []) if result_data.get("battle_result") == "victory" else []
 	var y: int = 168
 	for reward in rewards:
 		var label = Label.new()
@@ -184,6 +206,5 @@ func _on_tile_dropped(tile_data: Dictionary) -> void:
 func _reward_name(type: String) -> String:
 	match type:
 		"gold": return "金幣"
-		"exp": return "經驗值"
-		"perfect_bonus": return "完美獎勵"
+		"gems": return "寶石"
 		_: return type

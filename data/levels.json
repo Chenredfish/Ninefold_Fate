@@ -47,7 +47,10 @@
     "star_rating": 0,
     "bgm": "",
     "background": "",
-    "rewards": [],
+    "rewards": [
+      {"type": "gold", "amount": 100},
+      {"type": "gems", "amount": 50}
+    ],
     "objectives": [],
     "turn_limit": null,
     "special_rules": "",
@@ -102,7 +105,10 @@
     "star_rating": 0,
     "bgm": "",
     "background": "",
-    "rewards": [],
+    "rewards": [
+      {"type": "gold", "amount": 150},
+      {"type": "gems", "amount": 75}
+    ],
     "objectives": [],
     "turn_limit": null,
     "special_rules": "",

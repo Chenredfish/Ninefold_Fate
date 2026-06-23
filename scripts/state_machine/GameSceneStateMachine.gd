@@ -163,11 +163,10 @@ func _on_scene_transition_requested(target_scene: String, data: Dictionary = {})
 	
 	print("[GameSceneStateMachine] Unknown scene requested: ", target_scene)
 
-func _on_battle_ended(result: String, rewards: Array):
-	# 戰鬥結束，切換到結算畫面
+func _on_battle_ended(result: String, level_id: String):
 	change_scene_to(SceneType.RESULT, {
 		"battle_result": result,
-		"rewards": rewards
+		"level_id": level_id
 	})
 
 func _on_level_selected(level_id: String):
