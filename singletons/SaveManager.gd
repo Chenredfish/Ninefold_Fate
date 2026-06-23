@@ -133,7 +133,7 @@ func _default_save() -> Dictionary:
 		"progress": {
 			"levels": {
 				"level_000": { "status": "completed", "stars": 3, "clear_count": 1, "cleared_at": today },
-				"level_001": { "status": "unlocked" },
+				"level_001": { "status": "available" },
 				"level_002": { "status": "locked" }
 			}
 		},

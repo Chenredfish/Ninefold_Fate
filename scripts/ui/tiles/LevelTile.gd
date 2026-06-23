@@ -66,11 +66,11 @@ func _ready():
 	# 設置基本屬性
 	tile_type = "level"
 
+	# 資料取出（必須在 super._ready() 之前，setup_style/create_level_content 會用到這些值）
+	setup_self_data()
+
 	# 調用父類初始化
 	super._ready()
-
-	#資料取出
-	setup_self_data()
 
 	# ✅ 預先快取敵人資料，避免後續重複查詢
 	var first_enemy_id = _get_first_enemy_id()
@@ -88,7 +88,7 @@ func setup_level_tile_style():
 	
 	print("[LevelTile] 設置樣式，關卡ID：", level_id, " 解鎖狀態：", unlock_status, " 難度：", difficulty)
 	# 根據解鎖狀態設定顏色
-	match self.level_data.get("unlock_status", "locked"):
+	match unlock_status:
 		"locked":
 			style_box.bg_color = Color(0.3, 0.3, 0.3, 0.8)      # 灰色 - 鎖定
 		"available":
@@ -154,7 +154,7 @@ func create_level_content():
 	level_number_label.text = "Lv." + level_id.replace("level_", "").replace("_", "-")
 	level_number_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	level_number_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	level_number_label.add_theme_font_size_override("font_size", 14)
+	level_number_label.add_theme_font_size_override("font_size", 20)
 	level_number_label.add_theme_color_override("font_color", Color.WHITE)
 	level_number_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_row.add_child(level_number_label)
@@ -169,7 +169,7 @@ func create_level_content():
 	difficulty_label.text = get_difficulty_text()
 	difficulty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	difficulty_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	difficulty_label.add_theme_font_size_override("font_size", 12)
+	difficulty_label.add_theme_font_size_override("font_size", 18)
 	difficulty_label.add_theme_color_override("font_color", get_difficulty_color())
 	difficulty_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top_row.add_child(difficulty_label)
@@ -184,7 +184,7 @@ func create_level_content():
 	status_label.text = get_status_text()
 	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	status_label.add_theme_font_size_override("font_size", 16)
+	status_label.add_theme_font_size_override("font_size", 22)
 	status_label.add_theme_color_override("font_color", get_status_color())
 	status_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	middle_section.add_child(status_label)
@@ -195,7 +195,7 @@ func create_level_content():
 		element_label.text = get_element_text()
 		element_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		element_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		element_label.add_theme_font_size_override("font_size", 14)
+		element_label.add_theme_font_size_override("font_size", 18)
 		element_label.add_theme_color_override("font_color", get_element_color())
 		element_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		middle_section.add_child(element_label)
@@ -214,7 +214,7 @@ func create_level_content():
 		level_title_label.text = str(level_name)
 	level_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	level_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	level_title_label.add_theme_font_size_override("font_size", 14)
+	level_title_label.add_theme_font_size_override("font_size", 18)
 	level_title_label.add_theme_color_override("font_color", Color.WHITE)
 	level_title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	level_title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -226,7 +226,7 @@ func create_level_content():
 		star_label.text = get_star_text()
 		star_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		star_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		star_label.add_theme_font_size_override("font_size", 12)
+		star_label.add_theme_font_size_override("font_size", 18)
 		star_label.add_theme_color_override("font_color", Color.GOLD)
 		star_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		bottom_section.add_child(star_label)
@@ -417,7 +417,10 @@ func get_star_text() -> String:
 	return "★ " + str(star_rating) + " / 3"
 
 func setup_self_data():
-	if level_data.has("unlock_status"):
+	var save_level: Dictionary = SaveManager.get_value("progress.levels." + level_id, {})
+	if not save_level.is_empty():
+		unlock_status = save_level.get("status", "locked")
+	elif level_data.has("unlock_status"):
 		unlock_status = level_data["unlock_status"]
 	else:
 		print("[LevelTile] 警告：關卡資料缺少 unlock_status 欄位，使用預設值 'locked'")

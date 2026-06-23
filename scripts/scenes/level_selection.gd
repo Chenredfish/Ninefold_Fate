@@ -199,8 +199,10 @@ func _on_level_tile_input(event: InputEvent, tile: LevelTile):
 		print("Selected level: ", selected_level_id)
 
 func update_level_details(level_data: Dictionary):
+	var level_id: String = level_data.get("id", "")
+	var status: String = SaveManager.get_value("progress.levels." + level_id + ".status", "locked")
 	#如果關卡鎖住(locked)就不顯示細節
-	if level_data.get("unlock_status", "locked") == "locked":
+	if status == "locked":
 		level_detail_panel.get_child(0).text = "關卡尚未解鎖。"
 		return
 
