@@ -98,8 +98,8 @@ func _default_save() -> Dictionary:
 	return {
 		"version": 1,
 		"player": {
-			"name": "",
-			"id": "",
+			"name": "玩家",
+			"id": "P%08x" % (randi() ^ Time.get_ticks_msec()),
 			"created_at": today
 		},
 		"resources": {
