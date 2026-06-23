@@ -245,9 +245,12 @@ func _on_tile_dropped(tile_data: Dictionary):
 				print("[LevelSelection] 錯誤：投放的tile缺少 level_id 資料")
 
 func start_level(level_id: String):
+	var status: String = SaveManager.get_value("progress.levels." + level_id + ".status", "locked")
+	if status == "locked":
+		print("[LevelSelection] 關卡 %s 尚未解鎖，無法進入" % level_id)
+		confirm_level_control_tile.navigation_data = {}
+		return
 	print("[LevelSelection] Starting level: ", level_id)
-	# 需要修改導航資料讓確認關卡tile知道要進入哪個關卡
-	# 第一個資料是戰鬥要載入的場景路徑，第二個是功能名稱(改動狀態需要)，第三個是導航資料
 	confirm_level_control_tile.set_navigation_data("res://scripts/scenes/battle.tscn", "confirm_level", {"level_id": level_id, "deck_data": ""})
 	print("[LevelSelection] 已更新確認關卡tile的導航資料：", confirm_level_control_tile.navigation_data)
 	#EventBus.emit_signal("level_selected", level_id)

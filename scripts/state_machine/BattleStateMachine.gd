@@ -638,14 +638,51 @@ class VictoryState extends BaseState:
 	
 	func enter(previous_state: BaseState = null, data: Dictionary = {}):
 		super.enter(previous_state, data)
-		
+
 		print("[BattleStateMachine] Victory!")
-		
+
+		var level_id: String = state_machine.battle_data.get("level_id", "")
+		if not level_id.is_empty():
+			_save_level_completion(level_id)
+			_check_unlock_conditions(level_id)
+			SaveManager.save()
+
 		# 計算獎勵
 		var rewards = _calculate_rewards()
-		
+
 		# 結束戰鬥
 		state_machine.end_battle("victory", rewards)
+
+	func _save_level_completion(level_id: String) -> void:
+		var path = "progress.levels." + level_id
+		var existing = SaveManager.get_value(path, {})
+		var clear_count: int = existing.get("clear_count", 0) + 1
+		SaveManager.set_value(path + ".status", "completed")
+		SaveManager.set_value(path + ".stars", 3)  # TODO: 根據表現計算星數
+		SaveManager.set_value(path + ".clear_count", clear_count)
+		SaveManager.set_value(path + ".cleared_at", Time.get_date_string_from_system())
+		print("[BattleStateMachine] 關卡 %s 完成，第 %d 次通關" % [level_id, clear_count])
+
+	func _check_unlock_conditions(completed_level_id: String) -> void:
+		var all_levels: Dictionary = ResourceManager.level_database
+		for lid in all_levels:
+			var level_data: Dictionary = all_levels[lid]
+			var conditions: Array = level_data.get("unlock_conditions", [])
+			if completed_level_id not in conditions:
+				continue
+			var current_status: String = SaveManager.get_value("progress.levels." + lid + ".status", "locked")
+			if current_status != "locked":
+				continue
+			if _all_conditions_met(conditions):
+				SaveManager.set_value("progress.levels." + lid + ".status", "available")
+				print("[BattleStateMachine] 關卡 %s 已解鎖" % lid)
+
+	func _all_conditions_met(conditions: Array) -> bool:
+		for cond_id in conditions:
+			var status: String = SaveManager.get_value("progress.levels." + cond_id + ".status", "locked")
+			if status != "completed":
+				return false
+		return true
 	
 	func _calculate_rewards() -> Array:
 		# TODO: 根據表現計算獎勵
