@@ -145,7 +145,7 @@ func _create_confirm_grid() -> void:
 			var drop_zone = DropZone.new()
 			drop_zone.position = Vector2(j * 200, i * 200)
 			drop_zone.size = Vector2(200, 200)
-			drop_zone.set_accepted_types(["back_level", "main_menu", "confirm_level"])
+			drop_zone.set_accepted_types(["back_level", "main_menu", "confirm_level", "level_select"])
 			unified_confirm_grid.add_child(drop_zone)
 			drop_zone.modulate = Color(1.2, 1.2, 1.0, 1.0)
 			drop_zone.tile_dropped.connect(_on_tile_dropped)
@@ -165,7 +165,18 @@ func _create_tile_area() -> void:
 	result_control_tile_container.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	result_control_tile_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	add_child(result_control_tile_container)
-	result_control_tile_container.add_child(HBoxContainer.new())
+
+	var control_container = HBoxContainer.new()
+	control_container.add_theme_constant_override("separation", 20)
+	result_control_tile_container.add_child(control_container)
+
+	var main_menu_tile = NavigationTile.create_main_menu_tile("res://scripts/scenes/main_menu.tscn")
+	main_menu_tile.size = Vector2(200, 200)
+	control_container.add_child(main_menu_tile)
+
+	var level_select_tile = NavigationTile.create_level_select_tile("res://scripts/scenes/level_selection.tscn")
+	level_select_tile.size = Vector2(200, 200)
+	control_container.add_child(level_select_tile)
 
 func _on_tile_dropped(tile_data: Dictionary) -> void:
 	print("[ResultScene] tile 投放：", tile_data)
