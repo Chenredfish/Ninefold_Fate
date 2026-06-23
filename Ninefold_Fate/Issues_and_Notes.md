@@ -4,9 +4,11 @@
 >
 > **已完成摘要**：✅ CRASH 5/5、BUG 22/22、建議 11/40（S01~S09、S11~S15、S17~S19、S21~S24、S26、S30、S33、S40）
 >
-> **未實裝功能進度**：U05、U07、U10、U13、U17 已完成（5/20），其餘 15 項待處理
+> **未實裝功能進度**：U05、U07、U10、U13、U17、U18 已完成（6/20），其餘 14 項待處理
 >
 > **戰鬥系統重構**：傷害計算 #1~#6 全部完成（2026-06-23）——逐 tile 計算、target_type 分流、combo_multiplier 跨回合追蹤、await 等待結算完畢
+>
+> **結算場景**：result.gd 完整實作（2026-06-23）——UI、rewards 寫入 SaveManager、NavigationTile 跳轉（主畫面、關卡選擇、重來一次、下一關）
 
 ---
 
@@ -48,9 +50,9 @@
 「暫停」按鈕已放入場景但無任何連接處理，點擊無效果。
 *影響：scripts/scenes/battle.gd*
 
-**U09** `[🚧 未實作]` **VictoryState._calculate_rewards() 為 TODO**
-`VictoryState._calculate_rewards()` 有注釋 `# TODO: 根據表現計算獎勵`，目前只有固定金幣/經驗值，無任何基於表現的動態計算。
-*影響：scripts/state_machine/BattleStateMachine.gd (VictoryState)*
+**U09** `[🚧 未實作]` **動態獎勵計算尚未實作**
+`_calculate_rewards()` 已移除，基礎 rewards 現在定義在 `levels.json` 並於 result.gd 寫入 SaveManager。動態計算（根據回合數、表現給加成）仍未實作，留待未來處理。
+*影響：scripts/state_machine/BattleStateMachine.gd、data/levels.json*
 
 **U11** `[🚧 未實作]` **FireMasterySkill 傷害加成無 UI 反饋**
 被動技能觸發後只 `print`，沒有任何 UI 顯示（如傷害數字變色、特效提示等）。
