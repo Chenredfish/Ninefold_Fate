@@ -521,7 +521,17 @@ class CalculatingState extends BaseState:
 		# 鎖住結束回合按鈕，進入玩家回合時再解鎖
 		EventBus.ui_lock_end_turn_button.emit()
 
+		# 鎖定敵人選取
+		for enemy in state_machine.enemies_scenes:
+			if is_instance_valid(enemy):
+				enemy.set_selectable(false)
+
 		await _calculate_damage()
+
+		# 解除敵人選取鎖定
+		for enemy in state_machine.enemies_scenes:
+			if is_instance_valid(enemy):
+				enemy.set_selectable(true)
 
 		var alive = state_machine.enemies_scenes.filter(func(e): return e.is_alive)
 		if alive.size() == 0:

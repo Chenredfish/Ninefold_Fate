@@ -21,7 +21,7 @@ func load_skills(skills_data: Array):
 		if skill_id == "":
 			push_warning("[SkillComponent] skill 缺少 id 欄位：%s" % str(skill_entry))
 			continue
-		var skill_data = SkillManager.get_skill_data(skill_id)
+		var skill_data = ResourceManager.get_skill_data(skill_id)
 		if skill_data.is_empty():
 			push_warning("[SkillComponent] 找不到技能資料：%s" % skill_id)
 			continue

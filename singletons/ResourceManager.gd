@@ -12,6 +12,7 @@ var enemy_database: Dictionary = {}
 var block_database: Dictionary = {}  # 為 BattleTile 系統保留
 var level_database: Dictionary = {}
 var deck_database: Dictionary = {}
+var skill_database: Dictionary = {}
 
 # 預載入的場景
 var preloaded_scenes: Dictionary = {}
@@ -38,7 +39,8 @@ func _load_databases():
 	block_database = _load_json_database("res://data/blocks.json")  # 為 BattleTile 系統保留
 	level_database = _load_json_database("res://data/levels.json")
 	deck_database = _load_json_database("res://data/decks.json")
-	
+	skill_database = _load_json_database("res://data/skills.json")
+
 	print("[ResourceManager] 數據庫載入完成")
 	print("  - Balance: ", "已載入" if balance_data.size() > 0 else "空")
 	print("  - Heroes: ", hero_database.size(), " 個")
@@ -46,6 +48,7 @@ func _load_databases():
 	print("  - Blocks: ", block_database.size(), " 個 (為 BattleTile 使用)")
 	print("  - Levels: ", level_database.size(), " 個")
 	print("  - Decks: ", deck_database.size(), " 個")
+	print("  - Skills: ", skill_database.size(), " 個")
 
 func _load_json_database(file_path: String) -> Dictionary:
 	if not FileAccess.file_exists(file_path):
@@ -441,10 +444,7 @@ func return_to_pool(object_instance: Node):
 # 測試方法
 # 工具方法：技能相關
 func get_skill_data(skill_id: String) -> Dictionary:
-	var skill_manager = get_node_or_null("/root/SkillManager")
-	if skill_manager:
-		return skill_manager.get_skill_data(skill_id)
-	return {}
+	return skill_database.get(skill_id, {})
 
 func create_hero_with_skills(hero_id: String) -> Node2D:
 	var hero = create_hero(hero_id)
@@ -730,3 +730,13 @@ func create_hero_with_overrides(hero_data: Dictionary) -> Node2D:
 		if eb:
 			eb.emit_object_event("created", "hero", hero_instance, {"id": hero_id, "has_overrides": true})
 		return hero_instance
+
+func get_skill_data_copy(skill_id: String) -> Dictionary:
+	var data = skill_database.get(skill_id)
+	if not data:
+		push_warning("[ResourceManager] 找不到技能：" + skill_id)
+		return {}
+	return data.duplicate()
+
+func get_all_skill_ids() -> Array:
+	return skill_database.keys()

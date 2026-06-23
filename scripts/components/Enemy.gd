@@ -194,6 +194,10 @@ func _create_select_button():
 	ui.add_child(_select_button)
 	print("[Enemy] ", character_name, " 選取按鈕建立完成（半徑 ", radius, "）")
 
+func set_selectable(enabled: bool) -> void:
+	if _select_button:
+		_select_button.disabled = not enabled
+
 func _on_select_button_pressed():
 	print("[Enemy] 點擊選取：", character_name, "（", character_id, "）")
 	enemy_selected.emit(self)
