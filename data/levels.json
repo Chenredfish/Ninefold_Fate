@@ -30,6 +30,7 @@
     },
     "hero_id": "H001",
     "enemies": [],
+    "next_level": "level_001",
     "win_condition": "all_enemies_defeated"
   },
   "level_001": {
@@ -88,6 +89,7 @@
         "cd_override": null
       }
     ],
+    "next_level": "level_002",
     "win_condition": "all_enemies_defeated"
   },
   "level_002": {
@@ -132,6 +134,7 @@
         "cd_override": null
       }
     ],
+    "next_level": null,
     "win_condition": "all_enemies_defeated"
   }
 }

@@ -201,10 +201,21 @@ func _create_tile_area() -> void:
 	control_container.add_child(level_select_tile)
 
 	var level_id: String = result_data.get("level_id", "")
+	var is_victory: bool = result_data.get("battle_result", "") == "victory"
+
 	if not level_id.is_empty():
 		var retry_tile = NavigationTile.create_retry_tile(level_id)
 		retry_tile.size = Vector2(200, 200)
 		control_container.add_child(retry_tile)
+
+	if is_victory and not level_id.is_empty():
+		var level_data: Dictionary = ResourceManager.level_database.get(level_id, {})
+		var next_id = level_data.get("next_level", null)
+		print("[ResultScene] 下一關：", next_id if next_id != null else "（無）")
+		if next_id != null and next_id != "":
+			var next_tile = NavigationTile.create_next_level_tile(next_id)
+			next_tile.size = Vector2(200, 200)
+			control_container.add_child(next_tile)
 
 func _on_tile_dropped(tile_data: Dictionary) -> void:
 	print("[ResultScene] tile 投放：", tile_data)
