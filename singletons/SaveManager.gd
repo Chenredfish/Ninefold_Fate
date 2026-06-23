@@ -38,6 +38,7 @@ func load_save():
 		return
 
 	data = json.get_data()
+	_migrate()
 	_is_loaded = true
 	print("[SaveManager] 存檔載入成功")
 	print("  - 英雄等級：", get_value("hero.level", 1))
@@ -77,6 +78,18 @@ func set_value(path: String, value):
 			current[keys[i]] = {}
 		current = current[keys[i]]
 	current[keys[-1]] = value
+
+# ── 版本升遷（每個 if v < N 區塊負責從上一版升到 N）──────────────────────────
+
+func _migrate():
+	var v: int = data.get("version", 1)
+	var original_v: int = v
+	# v1 是基準版本，未來在這裡依序加：
+	# if v < 2:
+	#     data["version"] = 2; v = 2
+	if v != original_v:
+		save()
+		print("[SaveManager] 存檔已從 v", original_v, " 升遷至 v", v)
 
 # ── 預設存檔（新遊戲初始狀態）────────────────────────────────────────────────
 
