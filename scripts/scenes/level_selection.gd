@@ -219,8 +219,9 @@ func update_level_details(level_data: Dictionary):
 		detail_text += "敵人: " + str(enemy_name) + " (" + str(enemy_element) + ")\n"
 
 	#如果是通過關卡就顯示星級評價
-	if level_data.get("unlock_status", "locked") == "completed":
-		detail_text += "星級評價: " + str(level_data.get("star_rating", 0)) + " 星\n"
+	if status == "completed":
+		var stars: int = SaveManager.get_value("progress.levels." + level_id + ".stars", 0)
+		detail_text += "星級評價: " + str(stars) + " 星\n"
 	
 	var label = level_detail_panel.get_child(0)
 	label.text = detail_text

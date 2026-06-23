@@ -430,8 +430,5 @@ func setup_self_data():
 	else:
 		print("[LevelTile] 警告：關卡資料缺少 difficulty 欄位，使用預設值 'normal'")
 
-	if level_data.has("star_rating"):
-		star_rating = level_data["star_rating"]
-	else:
-		print("[LevelTile] 警告：關卡資料缺少 star_rating 欄位，使用預設值 0")
+	star_rating = save_level.get("stars", 0)
 	
