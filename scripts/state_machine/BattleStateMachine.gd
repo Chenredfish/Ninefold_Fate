@@ -331,7 +331,7 @@ func create_enemies_from_data(enemies_data: Array, wave: int = 1) -> Array[Node]
 
 # 初始化手牌
 func setup_initial_hand(deck: Dictionary):
-	var blocks_data = deck.get("blocks", [])
+	var blocks_data = deck.get("block_ids", [])
 	deck_data.clear()
 	for block in blocks_data:
 		deck_data.append(str(block))
@@ -390,18 +390,17 @@ class PreparingState extends BaseState:
 			state_machine.transition_to("defeat")
 			return
 		
-		var deck_id = data.get("deck_id", "")
-		if deck_id.is_empty():
-			#先用預設deck
-			deck_id = "deck00"
-		
+		var active_deck: Dictionary = _get_active_deck()
+		if active_deck.is_empty():
+			print("[BattleStateMachine] Error: 無法取得卡組，請先建立卡組")
+			state_machine.transition_to("defeat")
+			return
+
 		# 初始化戰場
 		print("[BattleStateMachine] 準備關卡的UI, ID: ", level_id)
-		print("[BattleStateMachine] 使用的牌組UI, ID: ", deck_id)
-		
-		# 模擬載入時間（實際中可能需要載入資源）
-		# _setup_ui() 內部已 await process_frame，確保 battle.gd 的 setup_battle_ui() 完成
-		await _setup_ui(level_id, deck_id)
+		print("[BattleStateMachine] 使用的牌組：", active_deck.get("name", "未命名"))
+
+		await _setup_ui(level_id, active_deck)
 
 		# 開始第一回合
 		state_machine.next_turn()
@@ -415,14 +414,15 @@ class PreparingState extends BaseState:
 		#print("[BattleStateMachine] Retrieved level data: ", level_data)
 		return level_data
 
-	func _get_deck_data(deck_id: String) -> Dictionary:
-		var deck_data = ResourceManager.get_deck_data(deck_id)
-		print("[BattleStateMachine] Retrieved deck data: ", deck_data)
-		return deck_data
+	func _get_active_deck() -> Dictionary:
+		var index: int = SaveManager.get_value("active_deck_index", -1)
+		var decks: Array = SaveManager.get_value("decks", [])
+		if index < 0 or index >= decks.size():
+			return {}
+		return decks[index]
 
-	func _setup_ui(level_id: String, deck_id: String) -> void:
+	func _setup_ui(level_id: String, deck_data: Dictionary) -> void:
 		var level_data: Dictionary = _get_level_data(level_id)
-		var deck_data: Dictionary = _get_deck_data(deck_id)
 
 		#創建英雄場景
 		var hero_id:String = level_data.get("hero_id", "") #關卡裡面的英雄只有ID
