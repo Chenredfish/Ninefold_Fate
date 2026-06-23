@@ -134,6 +134,12 @@ func get_function_display_name() -> String:
 			return "設定"
 		"level_select":
 			return "關卡選擇"
+		"back_level":
+			return "上一頁"
+		"main_menu":
+			return "主畫面"
+		"confirm_level":
+			return "確認"
 		"retry":
 			return "重來一次"
 		"next_level":
@@ -154,6 +160,12 @@ func get_function_description() -> String:
 			return "遊戲設定"
 		"level_select":
 			return "選擇關卡挑戰"
+		"back_level":
+			return "返回上一層"
+		"main_menu":
+			return "返回主選單"
+		"confirm_level":
+			return "確認進入"
 		"retry":
 			return "再挑戰一次"
 		"next_level":

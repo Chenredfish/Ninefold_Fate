@@ -4,7 +4,6 @@ var main_info_area: Control
 var result_detail_panel: Panel
 var unified_confirm_grid: Control
 var result_tile_container: ScrollContainer
-var result_control_tile_container: ScrollContainer
 
 var result_data: Dictionary = {}
 
@@ -181,16 +180,14 @@ func _create_tile_area() -> void:
 	add_child(result_tile_container)
 	result_tile_container.add_child(HBoxContainer.new())
 
-	result_control_tile_container = ScrollContainer.new()
-	result_control_tile_container.position = Vector2(40, 1660)
-	result_control_tile_container.size = Vector2(1000, 240)
-	result_control_tile_container.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	result_control_tile_container.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	add_child(result_control_tile_container)
+	var center = CenterContainer.new()
+	center.position = Vector2(0, 1660)
+	center.size = Vector2(1080, 240)
+	add_child(center)
 
 	var control_container = HBoxContainer.new()
 	control_container.add_theme_constant_override("separation", 20)
-	result_control_tile_container.add_child(control_container)
+	center.add_child(control_container)
 
 	var main_menu_tile = NavigationTile.create_main_menu_tile("res://scripts/scenes/main_menu.tscn")
 	main_menu_tile.size = Vector2(200, 200)

@@ -647,6 +647,8 @@ class VictoryState extends BaseState:
 			_check_unlock_conditions(level_id)
 			SaveManager.save()
 
+		await state_machine.get_tree().create_timer(ResourceManager.get_balance_value("battle_end_delay", 1.5)).timeout
+
 		# 結束戰鬥
 		state_machine.end_battle("victory", level_id)
 
@@ -695,6 +697,8 @@ class DefeatState extends BaseState:
 		print("[BattleStateMachine] Defeat...")
 
 		var level_id: String = state_machine.battle_data.get("level_id", "")
+		await state_machine.get_tree().create_timer(ResourceManager.get_balance_value("battle_end_delay", 1.5)).timeout
+
 		# 結束戰鬥
 		state_machine.end_battle("defeat", level_id)
 	
