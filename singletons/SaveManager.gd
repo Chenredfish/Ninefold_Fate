@@ -106,6 +106,15 @@ func _default_save() -> Dictionary:
 		}
 	}
 
+# ── 除錯用：F8 重置存檔（僅 debug build）────────────────────────────────────
+
+func _input(event):
+	if OS.is_debug_build() and event is InputEventKey:
+		if event.pressed and event.keycode == KEY_F8:
+			data = _default_save()
+			save()
+			print("[SaveManager] [DEBUG] 存檔已重置為預設值")
+
 # ── 除錯用：印出完整存檔內容 ──────────────────────────────────────────────────
 
 func debug_print():
