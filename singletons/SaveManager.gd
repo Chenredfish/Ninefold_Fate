@@ -94,23 +94,48 @@ func _migrate():
 # ── 預設存檔（新遊戲初始狀態）────────────────────────────────────────────────
 
 func _default_save() -> Dictionary:
+	var today: String = Time.get_date_string_from_system()
 	return {
 		"version": 1,
-		"progress": {
-			"levels_unlocked": ["level_001"],
-			"levels_completed": {}
-		},
-		"hero": {
-			"id": "H001",
-			"level": 1,
-			"exp": 0,
-			"skills_unlocked": []
+		"player": {
+			"name": "",
+			"id": "",
+			"created_at": today
 		},
 		"resources": {
-			"gold": 0
+			"gold": 0,
+			"gems": 0,
+			"shards": 0
 		},
-		"deck": {
-			"current_blocks": []
+		"collection": {
+			"heroes": [
+				{ "id": "H001", "level": 1, "obtained_at": today }
+			],
+			"blocks": [
+				{ "id": "B001", "obtained_at": today },
+				{ "id": "B002", "obtained_at": today },
+				{ "id": "B003", "obtained_at": today },
+				{ "id": "B004", "obtained_at": today },
+				{ "id": "B005", "obtained_at": today },
+				{ "id": "B101", "obtained_at": today },
+				{ "id": "B102", "obtained_at": today },
+				{ "id": "B201", "obtained_at": today }
+			]
+		},
+		"decks": [
+			{
+				"name": "預設卡組",
+				"hero_id": "H001",
+				"block_ids": ["B001", "B002", "B003", "B004", "B005", "B101", "B102", "B201"]
+			}
+		],
+		"active_deck_index": 0,
+		"progress": {
+			"levels": {
+				"level_000": { "status": "completed", "stars": 3, "clear_count": 1, "cleared_at": today },
+				"level_001": { "status": "unlocked" },
+				"level_002": { "status": "locked" }
+			}
 		},
 		"settings": {
 			"bgm_volume": 1.0,
